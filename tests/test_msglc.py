@@ -12,11 +12,12 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import random
 
 import pytest
 
-from msglc import Reader, Writer
+from msglc import Reader, Writer, FileInfo, combine
 from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
 from msglc.reader import ReaderStats
 
@@ -82,6 +83,18 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir):
         stats.bytes_per_call()
 
 
+def test_combine_archives(tmpdir):
+    with tmpdir.as_cwd():
+        with Writer("test.msg") as writer:
+            writer.write([x for x in range(30)])
+
+        combine("combined.msg", [FileInfo("first", "test.msg"), FileInfo("second", "test.msg")])
+
+        with Reader("combined.msg") as reader:
+            assert reader.read("first/2") == 2
+            assert reader.read("second/0") == 0
+
+
 def test_configure_with_valid_values():
     configure(
         small_obj_optimization_threshold=2**14,
@@ -92,6 +105,7 @@ def test_configure_with_valid_values():
         trivial_size=30,
         disable_gc=True,
         simple_repr=True,
+        copy_chunk_size=2**24,
     )
     assert config.small_obj_optimization_threshold == 2**14
     assert config.write_buffer_size == 2**24

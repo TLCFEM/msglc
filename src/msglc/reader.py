@@ -15,13 +15,16 @@
 
 from __future__ import annotations
 
-from io import BytesIO
+from io import BytesIO, BufferedReader
+from typing import Union
 
 from bitarray import bitarray
 from msgpack import unpackb, Unpacker
 
 from .config import config, increment_gc_counter, decrement_gc_counter
 from .writer import Writer
+
+Buffer = Union[BytesIO, BufferedReader]
 
 
 def to_obj(v):
@@ -50,8 +53,8 @@ class ReaderStats:
 
 
 class LazyItem:
-    def __init__(self, buffer: BytesIO, offset: int, *, counter: ReaderStats = None):
-        self._buffer: BytesIO = buffer
+    def __init__(self, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
+        self._buffer: Buffer = buffer
         self._offset: int = offset
         self._counter: ReaderStats = counter
 
@@ -80,8 +83,12 @@ class LazyItem:
     def _read(self, start: int, end: int):
         return unpackb(self._readb(start, end))
 
-    def _child(self, toc: dict):
+    def _child(self, toc: dict | int):
         self._accessed_items += 1
+
+        if isinstance(toc, int):
+            self._buffer.seek(toc + self._offset)
+            return Reader(self._buffer, counter=self._counter)
 
         if (child_toc := toc.get("t", None)) is None:
             if 2 == len(toc["p"]) and isinstance(toc["p"][0], int) and isinstance(toc["p"][1], int):
@@ -106,7 +113,7 @@ class LazyItem:
 
 
 class LazyList(LazyItem):
-    def __init__(self, toc: dict, buffer: BytesIO, offset: int, *, counter: ReaderStats = None):
+    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: list = toc.get("t", [])
         self._pos: list = toc["p"]
@@ -192,10 +199,10 @@ class LazyList(LazyItem):
 
 
 class LazyDict(LazyItem):
-    def __init__(self, toc: dict, buffer: BytesIO, offset: int, *, counter: ReaderStats = None):
+    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: dict = toc["t"]
-        self._pos: list = toc["p"]
+        self._pos: list = toc.get("p", [])
         self._cache: dict = {}
         self._full_loaded: bool = False
 
@@ -234,7 +241,7 @@ class LazyDict(LazyItem):
     def to_obj(self):
         if not self._full_loaded:
             self._full_loaded = True
-            if self._fast_loading:
+            if self._fast_loading and self._pos:
                 self._cache = self._read(*self._pos)
             else:
                 for k in self:
@@ -244,12 +251,12 @@ class LazyDict(LazyItem):
 
 
 class Reader(LazyItem):
-    def __init__(self, buffer_or_path: str | BytesIO, counter: ReaderStats = None):
-        self._buffer_or_path: str | BytesIO = buffer_or_path
+    def __init__(self, buffer_or_path: str | Buffer, counter: ReaderStats = None):
+        self._buffer_or_path: str | Buffer = buffer_or_path
 
         if isinstance(self._buffer_or_path, str):
             buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)
-        elif isinstance(self._buffer_or_path, BytesIO):
+        elif isinstance(self._buffer_or_path, Buffer):
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
@@ -266,7 +273,7 @@ class Reader(LazyItem):
 
         super().__init__(buffer, original_pos + sep_c, counter=counter)
 
-        toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0")) - self._offset  # trick to reuse utility function
+        toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0"))
         toc_size: int = unpackb(header[sep_b:sep_c].lstrip(b"\0"))
 
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))
@@ -284,6 +291,9 @@ class Reader(LazyItem):
         decrement_gc_counter()
         if isinstance(self._buffer_or_path, str):
             self._buffer.close()
+
+    def __getitem__(self, item):
+        return self.read(item)
 
     def read(self, path: str | list = None):
         if path is None:

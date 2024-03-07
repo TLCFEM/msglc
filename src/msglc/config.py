@@ -26,6 +26,7 @@ class Config:
         self.trivial_size: int = 20
         self.disable_gc: bool = True
         self.simple_repr: bool = True
+        self.copy_chunk_size: int = 2**24  # 16MB
 
 
 config = Config()
@@ -71,6 +72,10 @@ def configure(**kwargs):
     if (simple_repr := kwargs.get("simple_repr", None)) is not None:
         if isinstance(simple_repr, bool):
             config.simple_repr = simple_repr
+
+    if copy_chunk_size := kwargs.get("copy_chunk_size", None):
+        if isinstance(copy_chunk_size, int) and copy_chunk_size > 0:
+            config.copy_chunk_size = copy_chunk_size
 
 
 __gc_counter: int = 0

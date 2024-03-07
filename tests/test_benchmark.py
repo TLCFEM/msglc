@@ -16,8 +16,7 @@
 import random
 import string
 
-from msglc import dump
-from msglc.config import config
+from msglc import dump, config
 from msglc.reader import LazyDict, LazyList, ReaderStats, Reader
 
 

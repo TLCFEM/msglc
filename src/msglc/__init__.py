@@ -13,11 +13,33 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .config import configure
+import dataclasses
+
+from .config import configure, config
 from .reader import Reader, to_obj
-from .writer import Writer
+from .writer import Writer, Combiner
 
 
 def dump(file: str, obj, **kwargs):
     with Writer(file, **kwargs) as msglc_writer:
         msglc_writer.write(obj)
+
+
+@dataclasses.dataclass
+class FileInfo:
+    name: str
+    path: str
+
+
+def combine(archive: str, files: list[FileInfo]):
+    def _iter(path: str):
+        with open(path, "rb") as _file:
+            while True:
+                _data = _file.read(config.copy_chunk_size)
+                if not _data:
+                    break
+                yield _data
+
+    with Combiner(archive) as combiner:
+        for file in files:
+            combiner.write(file.name, _iter(file.path))
