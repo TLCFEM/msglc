@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from io import BytesIO
+from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
 from msgpack import unpackb, Unpacker
@@ -264,7 +264,7 @@ class LazyReader(LazyItem):
 
         if isinstance(self._buffer_or_path, str):
             buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)
-        elif isinstance(self._buffer_or_path, Buffer):
+        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")

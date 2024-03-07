@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from io import BytesIO, BufferedReader
 from typing import Generator
 
 from msgpack import Packer, packb
@@ -43,7 +44,7 @@ class LazyWriter:
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
             self._buffer = open(self._buffer_or_path, "wb", buffering=config.write_buffer_size)
-        elif isinstance(self._buffer_or_path, Buffer):
+        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
