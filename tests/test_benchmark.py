@@ -18,7 +18,7 @@ import string
 
 from msglc import dump
 from msglc.config import config
-from msglc.reader import LazyDict, LazyList, ReaderStats, Reader, to_obj
+from msglc.reader import LazyDict, LazyList, ReaderStats, Reader
 
 
 def generate_random_json(depth=10, width=4, simple=False):
@@ -42,10 +42,10 @@ def generate_random_json(depth=10, width=4, simple=False):
             for _ in range(width)
         }
 
-    if seed < 0.9 or not simple:
+    if seed < 0.95 or not simple:
         return [generate_random_json(depth - 1, width, True) for _ in range(width)]
 
-    return [random.randint(-(2**30), 2**30)] * random.randint(1, 2**14)
+    return [random.randint(2**10, 2**30)] * random.randint(2**10, 2**14)
 
 
 def find_all_paths(json_obj, path=None, path_list=None):
@@ -67,10 +67,17 @@ def find_all_paths(json_obj, path=None, path_list=None):
     return path_list
 
 
+def goto_path(json_obj, path):
+    target = json_obj
+    for i in path:
+        target = target[i]
+    return target
+
+
 def test_random_benchmark(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 8192)
 
-    archive = {f"id": generate_random_json(6, 10)}
+    archive = {"id": generate_random_json(6, 10)}
     path = find_all_paths(archive)
     random.shuffle(path)
 
@@ -81,8 +88,9 @@ def test_random_benchmark(monkeypatch, tmpdir):
 
         with Reader("archive.msg", counter=counter) as reader:
             for i in path[: min(1000, len(path))]:
-                _ = to_obj(reader.read(i))
+                assert goto_path(archive, i) == reader.read(i)
                 counter()
+            assert archive == reader
 
         counter.bytes_per_call()
 
