@@ -24,7 +24,7 @@ from msglc.reader import LazyDict, LazyList, ReaderStats, Reader, to_obj
 def generate_random_json(depth=10, width=4, simple=False):
     seed = random.random()
 
-    if depth == 0 or (simple and seed < 0.4):
+    if depth == 0 or (simple and seed < 0.3):
         return random.choice(
             [
                 random.randint(-(2**30), 2**30),
@@ -34,7 +34,7 @@ def generate_random_json(depth=10, width=4, simple=False):
             ]
         )
 
-    if seed < 0.7:
+    if seed < 0.6:
         return {
             "".join(random.choices(string.ascii_lowercase, k=random.randint(5, 10))): generate_random_json(
                 depth - 1, width, True
@@ -42,7 +42,10 @@ def generate_random_json(depth=10, width=4, simple=False):
             for _ in range(width)
         }
 
-    return [generate_random_json(depth - 1, width, True) for _ in range(width)]
+    if seed < 0.9 or not simple:
+        return [generate_random_json(depth - 1, width, True) for _ in range(width)]
+
+    return [random.randint(-(2**30), 2**30)] * random.randint(1, 2**14)
 
 
 def find_all_paths(json_obj, path=None, path_list=None):

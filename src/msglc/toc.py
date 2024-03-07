@@ -56,6 +56,14 @@ class TOC:
 
         start_pos = self._pos
 
+        def _simple_toc(_v) -> bool:
+            return (
+                2 == len(_v["p"])
+                and isinstance(_v["p"][0], int)
+                and isinstance(_v["p"][1], int)
+                and _v["p"][1] < _v["p"][0] + config.trivial_size
+            )
+
         obj_toc: dict | list
         all_small_obj: bool = False
         if isinstance(obj, dict):
@@ -64,12 +72,12 @@ class TOC:
             for k, v in self._transform(obj.items()):
                 _pack_obj(k)
                 obj_toc[k] = self._pack(v)
-            if all(v["p"][1] < v["p"][0] + config.trivial_size for v in obj_toc.values()):
+            if all(_simple_toc(v) for v in obj_toc.values()):
                 all_small_obj = True
         elif isinstance(obj, list):
             _pack_bin(self._packer.pack_array_header(len(obj)))
             obj_toc = [self._pack(v) for v in self._transform(obj)]
-            if all(v["p"][1] < v["p"][0] + config.trivial_size for v in obj_toc):
+            if all(_simple_toc(v) for v in obj_toc):
                 all_small_obj = True
         else:
             raise ValueError(f"Expecting dict or list, got {obj.__class__}.")
