@@ -314,7 +314,11 @@ class LazyReader(LazyItem):
         target = self._obj
         while path_stack:
             key = path_stack.pop(0)
-            if isinstance(key, str) and key.isdigit() and isinstance(target, list):
+            if (
+                isinstance(key, str)
+                and (key.isdigit() or key.startswith("-") and key[1:].isdigit())
+                and isinstance(target, list)
+            ):
                 key = int(key)
             target = target[key]
         return target

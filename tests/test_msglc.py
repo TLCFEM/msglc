@@ -96,6 +96,7 @@ def test_combine_archives(tmpdir, json_example):
         with LazyReader("combined.msg") as reader:
             assert reader.read("first_outer/second_inner/glossary/title") == "example glossary"
             assert reader.read("second_outer/first_inner/2") == 2
+            assert reader.read("second_outer/first_inner/-1") == 29
 
 
 def test_configure_with_valid_values():
