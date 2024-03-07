@@ -90,6 +90,8 @@ def test_configure_with_valid_values():
         fast_loading=False,
         fast_loading_threshold=0.5,
         trivial_size=30,
+        disable_gc=True,
+        simple_repr=True,
     )
     assert config.small_obj_optimization_threshold == 2**14
     assert config.write_buffer_size == 2**24
