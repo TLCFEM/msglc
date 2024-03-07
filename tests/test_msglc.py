@@ -59,7 +59,7 @@ def test_msglc(monkeypatch, tmpdir, json_example, size):
 
         with Reader("test.msg", stats) as reader:
             assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
-            assert reader.to_obj() == json_example
+            assert reader == json_example
 
         stats.bytes_per_call()
 
