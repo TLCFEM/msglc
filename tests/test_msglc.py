@@ -12,6 +12,8 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import random
+
 import pytest
 
 from msglc import Reader, Writer
@@ -58,6 +60,24 @@ def test_msglc(monkeypatch, tmpdir, json_example, size):
         with Reader("test.msg", stats) as reader:
             assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
             assert reader.to_obj() == json_example
+
+        stats.bytes_per_call()
+
+
+def test_large_list_with_small_elements(monkeypatch, tmpdir):
+    monkeypatch.setattr(config, "small_obj_optimization_threshold", 128)
+
+    total_size: int = 2**12
+    with tmpdir.as_cwd():
+        with Writer("test.msg") as writer:
+            writer.write([x for x in range(total_size)])
+
+        stats = ReaderStats()
+
+        with Reader("test.msg", stats) as reader:
+            for _ in range(2**10):
+                x = random.randint(0, total_size - 1)
+                assert reader.read(f"{x}") == x
 
         stats.bytes_per_call()
 

@@ -92,6 +92,9 @@ class TOC:
                     accu_list = []
                     accu_size = 0
 
+            if accu_list:
+                groups.append((len(accu_list), accu_list[0]["p"][0], accu_list[-1]["p"][1]))
+
             return {"p": groups} if len(groups) > 1 else {"p": [start_pos, self._pos]}
 
         return {"t": obj_toc, "p": [start_pos, self._pos]}
