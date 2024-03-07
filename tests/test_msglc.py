@@ -83,16 +83,19 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir):
         stats.bytes_per_call()
 
 
-def test_combine_archives(tmpdir):
+def test_combine_archives(tmpdir, json_example):
     with tmpdir.as_cwd():
-        with Writer("test.msg") as writer:
+        with Writer("test_list.msg") as writer:
             writer.write([x for x in range(30)])
+        with Writer("test_dict.msg") as writer:
+            writer.write(json_example)
 
-        combine("combined.msg", [FileInfo("first", "test.msg"), FileInfo("second", "test.msg")])
+        combine("combined_a.msg", [FileInfo("first_inner", "test_list.msg"), FileInfo("second_inner", "test_dict.msg")])
+        combine("combined.msg", [FileInfo("first_outer", "combined_a.msg"), FileInfo("second_outer", "combined_a.msg")])
 
         with Reader("combined.msg") as reader:
-            assert reader.read("first/2") == 2
-            assert reader.read("second/0") == 0
+            assert reader.read("first_outer/second_inner/glossary/title") == "example glossary"
+            assert reader.read("second_outer/first_inner/2") == 2
 
 
 def test_configure_with_valid_values():

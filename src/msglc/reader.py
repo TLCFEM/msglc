@@ -55,7 +55,7 @@ class ReaderStats:
 class LazyItem:
     def __init__(self, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
         self._buffer: Buffer = buffer
-        self._offset: int = offset
+        self._offset: int = offset  # start of original data
         self._counter: ReaderStats = counter
 
         self._accessed_items: int = 0
@@ -86,19 +86,30 @@ class LazyItem:
     def _child(self, toc: dict | int):
         self._accessed_items += 1
 
+        # {"t": {"name1": start_pos, "name2": start_pos}}
+        # this is used in combined archives
         if isinstance(toc, int):
             self._buffer.seek(toc + self._offset)
             return Reader(self._buffer, counter=self._counter)
 
         if (child_toc := toc.get("t", None)) is None:
-            if 2 == len(toc["p"]) and isinstance(toc["p"][0], int) and isinstance(toc["p"][1], int):
+            child_pos = toc["p"]
+            # {"p": [start_pos, end_pos]}
+            # this is used in small objects
+            if 2 == len(child_pos) and isinstance(child_pos[0], int) and isinstance(child_pos[1], int):
                 return self._read(*toc["p"])
 
+            # {"p": [[size1, start_pos, end_pos], [size2, start_pos, end_pos], [size3, start_pos, end_pos]]}
+            # this is used in arrays of small objects
             return LazyList(toc, self._buffer, self._offset, counter=self._counter)
 
+        # {"t": [...], "p": [start_pos, end_pos]}
+        # this is used in lazy lists
         if isinstance(child_toc, list):
             return LazyList(toc, self._buffer, self._offset, counter=self._counter)
 
+        # {"t": {...}, "p": [start_pos, end_pos]}
+        # this is used in lazy dicts
         if isinstance(child_toc, dict):
             return LazyDict(toc, self._buffer, self._offset, counter=self._counter)
 
@@ -115,7 +126,7 @@ class LazyItem:
 class LazyList(LazyItem):
     def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
         super().__init__(buffer, offset, counter=counter)
-        self._toc: list = toc.get("t", [])
+        self._toc: list = toc.get("t", [])  # if empty, it's a list of small objects
         self._pos: list = toc["p"]
         self._index: int = 0
         self._cache: list = [None] * len(self)
@@ -202,7 +213,7 @@ class LazyDict(LazyItem):
     def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: dict = toc["t"]
-        self._pos: list = toc.get("p", [])
+        self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
         self._cache: dict = {}
         self._full_loaded: bool = False
 
