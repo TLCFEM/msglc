@@ -97,6 +97,10 @@ def test_combine_archives(tmpdir, json_example):
             assert reader.read("first_outer/second_inner/glossary/title") == "example glossary"
             assert reader.read("second_outer/first_inner/2") == 2
             assert reader.read("second_outer/first_inner/-1") == 29
+            assert reader.read("second_outer/first_inner/0:2") == [0, 1]
+            assert reader.read("second_outer/first_inner/:2") == [0, 1]
+            assert reader.read("second_outer/first_inner/28:") == [28, 29]
+            assert reader.read("second_outer/first_inner/24:2:30") == [24, 26, 28]
 
 
 def test_configure_with_valid_values():

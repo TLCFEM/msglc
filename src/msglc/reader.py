@@ -21,6 +21,7 @@ from bitarray import bitarray
 from msgpack import unpackb, Unpacker
 
 from .config import config, increment_gc_counter, decrement_gc_counter, Buffer
+from .utility import is_index, is_slice, normalise_index
 from .writer import LazyWriter
 
 
@@ -148,11 +149,7 @@ class LazyList(LazyItem):
             raise TypeError(f"Invalid type: {type(index)} for index {index}.")
 
         for item in index_range:
-            total_size = len(self)
-            while item < 0:
-                item += total_size
-            while item >= total_size:
-                item -= total_size
+            item = normalise_index(item, len(self))
 
             if 0 == self._mask[item]:
                 if self._toc:
@@ -314,12 +311,11 @@ class LazyReader(LazyItem):
         target = self._obj
         while path_stack:
             key = path_stack.pop(0)
-            if (
-                isinstance(key, str)
-                and (key.isdigit() or key.startswith("-") and key[1:].isdigit())
-                and isinstance(target, list)
-            ):
-                key = int(key)
+            if isinstance(key, str) and isinstance(target, (list, LazyList)):
+                if is_index(key):
+                    key = int(key)
+                elif slicing := is_slice(key, len(target)):
+                    key = slice(*slicing)
             target = target[key]
         return target
 
