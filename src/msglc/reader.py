@@ -255,6 +255,11 @@ class Reader(LazyItem):
 
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))
 
+    def __repr__(self):
+        file_path: str = f" ({self._buffer_or_path})" if isinstance(self._buffer_or_path, str) else ""
+
+        return f"Reader{file_path}" if config.simple_repr else self.to_obj().__repr__()
+
     def __enter__(self):
         increment_gc_counter()
         return self
