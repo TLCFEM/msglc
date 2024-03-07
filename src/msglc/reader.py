@@ -174,7 +174,8 @@ class LazyList(LazyItem):
         if not self._full_loaded:
             self._full_loaded = True
             if not self._fast_loading:
-                self._cache = [to_obj(v) for v in self]
+                for index in range(len(self)):
+                    self._cache[index] = to_obj(self[index])
             elif self._toc:
                 self._cache = self._read(*self._pos)
             else:
@@ -236,7 +237,8 @@ class LazyDict(LazyItem):
             if self._fast_loading:
                 self._cache = self._read(*self._pos)
             else:
-                self._cache = {k: to_obj(v) for k, v in self.items()}
+                for k in self:
+                    self._cache[k] = to_obj(self[k])
 
         return self._cache
 
