@@ -14,6 +14,10 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gc
+from io import BytesIO, BufferedReader
+from typing import Union
+
+Buffer = Union[BytesIO, BufferedReader]
 
 
 class Config:

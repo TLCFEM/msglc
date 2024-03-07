@@ -17,7 +17,7 @@ import random
 import string
 
 from msglc import dump, config
-from msglc.reader import LazyDict, LazyList, ReaderStats, Reader
+from msglc.reader import LazyDict, LazyList, LazyStats, LazyReader
 
 
 def generate_random_json(depth=10, width=4, simple=False):
@@ -83,9 +83,9 @@ def test_random_benchmark(monkeypatch, tmpdir):
     with tmpdir.as_cwd():
         dump("archive.msg", archive)
 
-        counter = ReaderStats()
+        counter = LazyStats()
 
-        with Reader("archive.msg", counter=counter) as reader:
+        with LazyReader("archive.msg", counter=counter) as reader:
             for i in path[: min(1000, len(path))]:
                 assert goto_path(archive, i) == reader.read(i)
                 counter()

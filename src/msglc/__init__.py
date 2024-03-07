@@ -16,12 +16,12 @@
 import dataclasses
 
 from .config import configure, config
-from .reader import Reader, to_obj
-from .writer import Writer, Combiner
+from .reader import LazyReader, to_obj
+from .writer import LazyWriter, LazyCombiner
 
 
 def dump(file: str, obj, **kwargs):
-    with Writer(file, **kwargs) as msglc_writer:
+    with LazyWriter(file, **kwargs) as msglc_writer:
         msglc_writer.write(obj)
 
 
@@ -40,6 +40,6 @@ def combine(archive: str, files: list[FileInfo]):
                     break
                 yield _data
 
-    with Combiner(archive) as combiner:
+    with LazyCombiner(archive) as combiner:
         for file in files:
             combiner.write(file.name, _iter(file.path))

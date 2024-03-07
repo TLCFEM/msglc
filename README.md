@@ -13,12 +13,12 @@ data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10000}}
 dump("data.msg", data)
 ```
 
-Use `Reader` to read a file.
+Use `LazyReader` to read a file.
 
 ```python
-from msglc import Reader, to_obj
+from msglc import LazyReader, to_obj
 
-with Reader("data.msg") as reader:
+with LazyReader("data.msg") as reader:
     data = reader.read("b/c")
     print(data)  # 4
     b_dict = reader.read("b")

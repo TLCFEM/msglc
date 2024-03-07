@@ -17,9 +17,9 @@ import random
 
 import pytest
 
-from msglc import Reader, Writer, FileInfo, combine
+from msglc import LazyReader, LazyWriter, FileInfo, combine
 from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
-from msglc.reader import ReaderStats
+from msglc.reader import LazyStats
 
 
 @pytest.fixture(scope="function")
@@ -53,12 +53,12 @@ def test_msglc(monkeypatch, tmpdir, json_example, size):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
     with tmpdir.as_cwd():
-        with Writer("test.msg") as writer:
+        with LazyWriter("test.msg") as writer:
             writer.write(json_example)
 
-        stats = ReaderStats()
+        stats = LazyStats()
 
-        with Reader("test.msg", stats) as reader:
+        with LazyReader("test.msg", stats) as reader:
             assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
             assert reader == json_example
 
@@ -70,12 +70,12 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir):
 
     total_size: int = 2**12
     with tmpdir.as_cwd():
-        with Writer("test.msg") as writer:
+        with LazyWriter("test.msg") as writer:
             writer.write([x for x in range(total_size)])
 
-        stats = ReaderStats()
+        stats = LazyStats()
 
-        with Reader("test.msg", stats) as reader:
+        with LazyReader("test.msg", stats) as reader:
             for _ in range(2**10):
                 x = random.randint(0, total_size - 1)
                 assert reader.read(f"{x}") == x
@@ -85,15 +85,15 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir):
 
 def test_combine_archives(tmpdir, json_example):
     with tmpdir.as_cwd():
-        with Writer("test_list.msg") as writer:
+        with LazyWriter("test_list.msg") as writer:
             writer.write([x for x in range(30)])
-        with Writer("test_dict.msg") as writer:
+        with LazyWriter("test_dict.msg") as writer:
             writer.write(json_example)
 
         combine("combined_a.msg", [FileInfo("first_inner", "test_list.msg"), FileInfo("second_inner", "test_dict.msg")])
         combine("combined.msg", [FileInfo("first_outer", "combined_a.msg"), FileInfo("second_outer", "combined_a.msg")])
 
-        with Reader("combined.msg") as reader:
+        with LazyReader("combined.msg") as reader:
             assert reader.read("first_outer/second_inner/glossary/title") == "example glossary"
             assert reader.read("second_outer/first_inner/2") == 2
 

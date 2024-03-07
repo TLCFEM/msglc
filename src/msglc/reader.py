@@ -15,23 +15,20 @@
 
 from __future__ import annotations
 
-from io import BytesIO, BufferedReader
-from typing import Union
+from io import BytesIO
 
 from bitarray import bitarray
 from msgpack import unpackb, Unpacker
 
-from .config import config, increment_gc_counter, decrement_gc_counter
-from .writer import Writer
-
-Buffer = Union[BytesIO, BufferedReader]
+from .config import config, increment_gc_counter, decrement_gc_counter, Buffer
+from .writer import LazyWriter
 
 
 def to_obj(v):
     return v.to_obj() if isinstance(v, LazyItem) else v
 
 
-class ReaderStats:
+class LazyStats:
     def __init__(self):
         self._read_counter: int = 0
         self._call_counter: int = 0
@@ -53,10 +50,10 @@ class ReaderStats:
 
 
 class LazyItem:
-    def __init__(self, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
+    def __init__(self, buffer: Buffer, offset: int, *, counter: LazyStats = None):
         self._buffer: Buffer = buffer
         self._offset: int = offset  # start of original data
-        self._counter: ReaderStats = counter
+        self._counter: LazyStats = counter
 
         self._accessed_items: int = 0
 
@@ -90,7 +87,7 @@ class LazyItem:
         # this is used in combined archives
         if isinstance(toc, int):
             self._buffer.seek(toc + self._offset)
-            return Reader(self._buffer, counter=self._counter)
+            return LazyReader(self._buffer, counter=self._counter)
 
         if (child_toc := toc.get("t", None)) is None:
             child_pos = toc["p"]
@@ -124,7 +121,7 @@ class LazyItem:
 
 
 class LazyList(LazyItem):
-    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
+    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: list = toc.get("t", [])  # if empty, it's a list of small objects
         self._pos: list = toc["p"]
@@ -210,7 +207,7 @@ class LazyList(LazyItem):
 
 
 class LazyDict(LazyItem):
-    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: ReaderStats = None):
+    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: dict = toc["t"]
         self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
@@ -261,8 +258,8 @@ class LazyDict(LazyItem):
         return self._cache
 
 
-class Reader(LazyItem):
-    def __init__(self, buffer_or_path: str | Buffer, counter: ReaderStats = None):
+class LazyReader(LazyItem):
+    def __init__(self, buffer_or_path: str | Buffer, counter: LazyStats = None):
         self._buffer_or_path: str | Buffer = buffer_or_path
 
         if isinstance(self._buffer_or_path, str):
@@ -272,14 +269,14 @@ class Reader(LazyItem):
         else:
             raise ValueError("Expecting a buffer or path.")
 
-        sep_a, sep_b, sep_c = Writer.magic_len(), Writer.magic_len() + 10, Writer.magic_len() + 20
+        sep_a, sep_b, sep_c = LazyWriter.magic_len(), LazyWriter.magic_len() + 10, LazyWriter.magic_len() + 20
 
         # keep the buffer unchanged in case of failure
         original_pos: int = buffer.tell()
         header: bytes = buffer.read(sep_c)
         buffer.seek(original_pos)
 
-        if header[:sep_a] != Writer.magic:
+        if header[:sep_a] != LazyWriter.magic:
             raise ValueError("Invalid file format.")
 
         super().__init__(buffer, original_pos + sep_c, counter=counter)
@@ -292,7 +289,7 @@ class Reader(LazyItem):
     def __repr__(self):
         file_path: str = f" ({self._buffer_or_path})" if isinstance(self._buffer_or_path, str) else ""
 
-        return f"Reader{file_path}" if config.simple_repr else self.to_obj().__repr__()
+        return f"LazyReader{file_path}" if config.simple_repr else self.to_obj().__repr__()
 
     def __enter__(self):
         increment_gc_counter()

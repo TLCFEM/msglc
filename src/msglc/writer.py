@@ -15,27 +15,26 @@
 
 from __future__ import annotations
 
-from io import BytesIO
 from typing import Generator
 
 from msgpack import Packer, packb
 
-from .config import config
+from .config import config, Buffer
 from .toc import TOC
 
 
-class Writer:
+class LazyWriter:
     magic: bytes = b"msglc-2024"
 
     @classmethod
     def magic_len(cls) -> int:
         return len(cls.magic)
 
-    def __init__(self, buffer_or_path: str | BytesIO, packer: Packer = None):
-        self._buffer_or_path: str | BytesIO = buffer_or_path
+    def __init__(self, buffer_or_path: str | Buffer, packer: Packer = None):
+        self._buffer_or_path: str | Buffer = buffer_or_path
         self._packer = packer if packer else Packer()
 
-        self._buffer: BytesIO = None  # type: ignore
+        self._buffer: Buffer = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
         self._header_start: int = 0
         self._file_start: int = 0
@@ -44,7 +43,7 @@ class Writer:
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
             self._buffer = open(self._buffer_or_path, "wb", buffering=config.write_buffer_size)
-        elif isinstance(self._buffer_or_path, BytesIO):
+        elif isinstance(self._buffer_or_path, Buffer):
             self._buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
@@ -78,11 +77,11 @@ class Writer:
         self._buffer.write(self._packer.pack(len(packed_toc)).rjust(10, b"\0"))
 
 
-class Combiner:
-    def __init__(self, buffer_or_path: str | BytesIO):
-        self._buffer_or_path: str | BytesIO = buffer_or_path
+class LazyCombiner:
+    def __init__(self, buffer_or_path: str | Buffer):
+        self._buffer_or_path: str | Buffer = buffer_or_path
 
-        self._buffer: BytesIO = None  # type: ignore
+        self._buffer: Buffer = None  # type: ignore
 
         self._toc: dict = {}
         self._header_start: int = 0
@@ -91,12 +90,12 @@ class Combiner:
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
             self._buffer = open(self._buffer_or_path, "wb", buffering=config.write_buffer_size)
-        elif isinstance(self._buffer_or_path, BytesIO):
+        elif isinstance(self._buffer_or_path, Buffer):
             self._buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
 
-        self._buffer.write(Writer.magic)
+        self._buffer.write(LazyWriter.magic)
         self._header_start = self._buffer.tell()
         self._buffer.write(b"\0" * 20)
         self._file_start = self._buffer.tell()
