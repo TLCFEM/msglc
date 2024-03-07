@@ -57,6 +57,9 @@ class LazyItem:
 
         self._accessed_items: int = 0
 
+    def __len__(self):
+        raise NotImplementedError
+
     def __eq__(self, other):
         return self.to_obj() == to_obj(other)
 
@@ -93,6 +96,10 @@ class LazyItem:
             return LazyDict(toc, self._buffer, self._offset, counter=self._counter)
 
         raise ValueError(f"Invalid: {toc}.")
+
+    @property
+    def _fast_loading(self):
+        return config.fast_loading and self._accessed_items < config.fast_loading_threshold * len(self)
 
     def to_obj(self):
         raise NotImplementedError
@@ -166,18 +173,17 @@ class LazyList(LazyItem):
     def to_obj(self):
         if not self._full_loaded:
             self._full_loaded = True
-            if config.fast_loading and self._accessed_items < config.fast_loading_threshold * len(self):
-                if self._toc:
-                    self._cache = self._read(*self._pos)
-                else:
-                    num_start, num_end = 0, 0
-                    for size, start, end in self._pos:
-                        num_end += size
-                        if 0 == self._mask[num_start]:
-                            self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
-                        num_start = num_end
-            else:
+            if not self._fast_loading:
                 self._cache = [to_obj(v) for v in self]
+            elif self._toc:
+                self._cache = self._read(*self._pos)
+            else:
+                num_start, num_end = 0, 0
+                for size, start, end in self._pos:
+                    num_end += size
+                    if 0 == self._mask[num_start]:
+                        self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
+                    num_start = num_end
 
             self._mask.setall(1)
 
@@ -227,7 +233,7 @@ class LazyDict(LazyItem):
     def to_obj(self):
         if not self._full_loaded:
             self._full_loaded = True
-            if config.fast_loading and self._accessed_items < config.fast_loading_threshold * len(self):
+            if self._fast_loading:
                 self._cache = self._read(*self._pos)
             else:
                 self._cache = {k: to_obj(v) for k, v in self.items()}
@@ -246,18 +252,19 @@ class Reader(LazyItem):
         else:
             raise ValueError("Expecting a buffer or path.")
 
-        buffer.seek(0)
-
         sep_a, sep_b, sep_c = Writer.magic_len(), Writer.magic_len() + 10, Writer.magic_len() + 20
 
+        # keep the buffer unchanged in case of failure
+        original_pos: int = buffer.tell()
         header: bytes = buffer.read(sep_c)
+        buffer.seek(original_pos)
 
         if header[:sep_a] != Writer.magic:
             raise ValueError("Invalid file format.")
 
-        super().__init__(buffer, sep_c, counter=counter)
+        super().__init__(buffer, original_pos + sep_c, counter=counter)
 
-        toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0")) - sep_c  # trick to reuse utility function
+        toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0")) - self._offset  # trick to reuse utility function
         toc_size: int = unpackb(header[sep_b:sep_c].lstrip(b"\0"))
 
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))

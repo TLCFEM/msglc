@@ -4,5 +4,7 @@
 #
 #    pip-compile pyproject.toml
 #
+bitarray==2.9.2
+    # via msglc (pyproject.toml)
 msgpack==1.0.8
     # via msglc (pyproject.toml)
