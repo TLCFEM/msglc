@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from io import BytesIO
 
+from bitarray import bitarray
 from msgpack import unpackb, Unpacker
 
 from .config import config, increment_gc_counter, decrement_gc_counter
@@ -104,6 +105,7 @@ class LazyList(LazyItem):
         self._pos: list = toc["p"]
         self._index: int = 0
         self._cache: list = [None] * len(self)
+        self._mask: bitarray = bitarray(len(self))
         self._full_loaded: bool = False
 
     def __repr__(self):
@@ -130,14 +132,16 @@ class LazyList(LazyItem):
             while item >= total_size:
                 item -= total_size
 
-            if self._cache[item] is None:
+            if 0 == self._mask[item]:
                 if self._toc:
+                    self._mask[item] = 1
                     self._cache[item] = self._child(self._toc[item])
                 else:
                     num_start, num_end = 0, 0
                     for size, start, end in self._pos:
                         num_end += size
                         if num_start <= item < num_end:
+                            self._mask[num_start:num_end] = 1
                             self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
                             break
                         num_start = num_end
@@ -169,10 +173,13 @@ class LazyList(LazyItem):
                     num_start, num_end = 0, 0
                     for size, start, end in self._pos:
                         num_end += size
-                        self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
+                        if 0 == self._mask[num_start]:
+                            self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
                         num_start = num_end
             else:
                 self._cache = [to_obj(v) for v in self]
+
+            self._mask.setall(1)
 
         return self._cache
 
