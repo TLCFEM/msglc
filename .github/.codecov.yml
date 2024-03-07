@@ -1,0 +1,6 @@
+coverage:
+  range: 80..90
+  round: up
+  precision: 4
+ignore:
+  - "tests/*"
