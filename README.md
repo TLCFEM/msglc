@@ -1,6 +1,7 @@
 # msglc --- (de)serialize json objects with lazy/partial loading containers using msgpack
 
 [![codecov](https://codecov.io/gh/TLCFEM/msglc/graph/badge.svg?token=JDPARZSVDR)](https://codecov.io/gh/TLCFEM/msglc)
+[![PyPI version](https://badge.fury.io/py/msglc.svg)](https://pypi.org/project/msglc/)
 
 ## Quick Start
 
