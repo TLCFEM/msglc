@@ -301,6 +301,20 @@ class LazyReader(LazyItem):
         return self.read(item)
 
     def read(self, path: str | list = None):
+        """
+        Reads the data from the given path.
+
+        This method navigates through the data structure based on the provided path.
+        The path can be a string or a list. If it's a string, it's split into a list
+        using '/' as the separator. Each element of the list is used to navigate
+        through the data structure.
+
+        If the path is None, it returns the root object.
+
+        :param path: the path to the data to read
+        :return: The data at the given path.
+        """
+
         if path is None:
             path_stack = []
         elif isinstance(path, str):

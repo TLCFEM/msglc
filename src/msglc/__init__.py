@@ -23,6 +23,14 @@ from .writer import LazyWriter, LazyCombiner
 
 
 def dump(file: str, obj, **kwargs):
+    """
+    This function is used to write the object to the file.
+
+    :param file: a string representing the file path
+    :param obj: the object to be written to the file
+    :param kwargs: additional keyword arguments to be passed to the LazyWriter
+    :return: None
+    """
     with LazyWriter(file, **kwargs) as msglc_writer:
         msglc_writer.write(obj)
 
@@ -34,6 +42,14 @@ class FileInfo:
 
 
 def combine(archive: str, files: list[FileInfo]):
+    """
+    This function is used to combine the multiple serialized files into a single archive.
+
+    :param archive: a string representing the file path of the archive
+    :param files: a list of FileInfo objects
+    :return: None
+    """
+
     def _iter(path: str):
         with open(path, "rb") as _file:
             while True:

@@ -63,6 +63,14 @@ class LazyWriter:
             self._buffer.close()
 
     def write(self, obj) -> None:
+        """
+        This function is used to write the object to the file.
+
+        Only one write is allowed. The function raises a ValueError if it is called more than once.
+
+        :param obj: the object to be written to the file
+        :return: None
+        """
         if self._no_more_writes:
             raise ValueError("No more writes allowed.")
 
