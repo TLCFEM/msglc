@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build
-        run: pip install --verbose .[test]
+        run: pip install --verbose .[dev]
       - name: Test
         run: pytest --cov=msglc tests/
       - name: Upload
