@@ -51,10 +51,10 @@ class LazyStats:
 
 
 class LazyItem:
-    def __init__(self, buffer: Buffer, offset: int, *, counter: LazyStats = None):
+    def __init__(self, buffer: Buffer, offset: int, *, counter: LazyStats | None = None):
         self._buffer: Buffer = buffer
         self._offset: int = offset  # start of original data
-        self._counter: LazyStats = counter
+        self._counter: LazyStats | None = counter
 
         self._accessed_items: int = 0
 
@@ -122,7 +122,7 @@ class LazyItem:
 
 
 class LazyList(LazyItem):
-    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats = None):
+    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats | None = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: list = toc.get("t", [])  # if empty, it's a list of small objects
         self._pos: list = toc["p"]
@@ -204,7 +204,7 @@ class LazyList(LazyItem):
 
 
 class LazyDict(LazyItem):
-    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats = None):
+    def __init__(self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats | None = None):
         super().__init__(buffer, offset, counter=counter)
         self._toc: dict = toc["t"]
         self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
@@ -256,7 +256,7 @@ class LazyDict(LazyItem):
 
 
 class LazyReader(LazyItem):
-    def __init__(self, buffer_or_path: str | Buffer, counter: LazyStats = None):
+    def __init__(self, buffer_or_path: str | Buffer, counter: LazyStats | None = None):
         self._buffer_or_path: str | Buffer = buffer_or_path
 
         if isinstance(self._buffer_or_path, str):
@@ -300,7 +300,7 @@ class LazyReader(LazyItem):
     def __getitem__(self, item):
         return self.read(item)
 
-    def read(self, path: str | list = None):
+    def read(self, path: str | list | None = None):
         """
         Reads the data from the given path.
 
@@ -324,7 +324,7 @@ class LazyReader(LazyItem):
 
         target = self._obj
         while path_stack:
-            key = path_stack.pop(0)
+            key: int | str | slice = path_stack.pop(0)
             if isinstance(key, str) and isinstance(target, (list, LazyList)):
                 if is_index(key):
                     key = int(key)

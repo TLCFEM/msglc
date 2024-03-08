@@ -124,8 +124,8 @@ Due to the presence of the size threshold, the table of contents only requires a
 
 ### Reading
 
-The table of contents is read first. The actual data is represented by `Dict` and `List` classes, which have similar
-interfaces to the original `dict` and `list` classes in Python.
+The table of contents is read first. The actual data is represented by `LazyDict` and `LazyList` classes, which have
+similar interfaces to the original `dict` and `list` classes in Python.
 
 As long as the table of contents contains the `t` field, no actual data is read.
 Each piece of data is read only when it is accessed, and it is cached for future use.
