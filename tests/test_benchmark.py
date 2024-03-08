@@ -76,7 +76,7 @@ def goto_path(json_obj, path):
 def test_random_benchmark(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 8192)
 
-    archive = {"id": generate_random_json(4, 5)}
+    archive = {"id": generate_random_json(5, 10)}
     path = find_all_paths(archive)
     random.shuffle(path)
 
