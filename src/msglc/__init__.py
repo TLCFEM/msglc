@@ -17,8 +17,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from .config import configure, config
-from .reader import LazyReader, to_obj
+from .config import config
 from .writer import LazyWriter, LazyCombiner
 
 

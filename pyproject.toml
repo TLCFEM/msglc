@@ -31,9 +31,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
+dev = [
     "pytest-cov",
     "black",
+    "ruff",
 ]
 
 [project.urls]

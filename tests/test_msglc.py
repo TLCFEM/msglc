@@ -17,9 +17,9 @@ import random
 
 import pytest
 
-from msglc import LazyReader, LazyWriter, FileInfo, combine
+from msglc import LazyWriter, FileInfo, combine
 from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
-from msglc.reader import LazyStats
+from msglc.reader import LazyStats, LazyReader
 
 
 @pytest.fixture(scope="function")
