@@ -81,6 +81,7 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir, cached):
             for _ in range(2**10):
                 x = random.randint(0, total_size - 1)
                 assert reader.read(f"{x}") == x
+            assert [x for x in range(total_size)] == reader
 
         stats.bytes_per_call()
 
