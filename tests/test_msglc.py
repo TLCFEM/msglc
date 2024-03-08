@@ -49,7 +49,8 @@ def json_example():
 
 
 @pytest.mark.parametrize("size", [0, 8192])
-def test_msglc(monkeypatch, tmpdir, json_example, size):
+@pytest.mark.parametrize("cached", [True, False])
+def test_msglc(monkeypatch, tmpdir, json_example, size, cached):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
     with tmpdir.as_cwd():
@@ -58,14 +59,15 @@ def test_msglc(monkeypatch, tmpdir, json_example, size):
 
         stats = LazyStats()
 
-        with LazyReader("test.msg", stats) as reader:
+        with LazyReader("test.msg", counter=stats, cached=cached) as reader:
             assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
             assert reader == json_example
 
         stats.bytes_per_call()
 
 
-def test_large_list_with_small_elements(monkeypatch, tmpdir):
+@pytest.mark.parametrize("cached", [True, False])
+def test_large_list_with_small_elements(monkeypatch, tmpdir, cached):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 128)
 
     total_size: int = 2**12
@@ -75,7 +77,7 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir):
 
         stats = LazyStats()
 
-        with LazyReader("test.msg", stats) as reader:
+        with LazyReader("test.msg", counter=stats, cached=cached) as reader:
             for _ in range(2**10):
                 x = random.randint(0, total_size - 1)
                 assert reader.read(f"{x}") == x
