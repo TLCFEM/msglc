@@ -66,20 +66,18 @@ class TOC:
             )
 
         obj_toc: dict | list
-        all_small_obj: bool = False
+        all_small_obj: bool
         if isinstance(obj, dict):
             _pack_bin(self._packer.pack_map_header(len(obj)))
             obj_toc = {}
             for k, v in self._transform(obj.items()):
                 _pack_obj(k)
                 obj_toc[k] = self._pack(v)
-            if all(_simple_toc(v) for v in obj_toc.values()):
-                all_small_obj = True
+            all_small_obj = all(_simple_toc(v) for v in obj_toc.values())
         elif isinstance(obj, list):
             _pack_bin(self._packer.pack_array_header(len(obj)))
             obj_toc = [self._pack(v) for v in self._transform(obj)]
-            if all(_simple_toc(v) for v in obj_toc):
-                all_small_obj = True
+            all_small_obj = all(_simple_toc(v) for v in obj_toc)
         else:
             raise ValueError(f"Expecting dict or list, got {obj.__class__}.")
 
