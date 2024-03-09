@@ -3,28 +3,64 @@
 [![codecov](https://codecov.io/gh/TLCFEM/msglc/graph/badge.svg?token=JDPARZSVDR)](https://codecov.io/gh/TLCFEM/msglc)
 [![PyPI version](https://badge.fury.io/py/msglc.svg)](https://pypi.org/project/msglc/)
 
+## What
+
+`msglc` is a Python library that provides a way to serialize and deserialize json objects with lazy/partial loading
+containers using `msgpack` as the serialization format.
+
 ## Quick Start
+
+### Serialization
 
 Use `dump` to serialize a json object to a file.
 
 ```python
 from msglc import dump
 
-data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10000}}
+data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
 dump("data.msg", data)
 ```
+
+Use `combine` to combine several serialized files together.
+The combined files can be further combined.
+
+```python
+from msglc import dump, combine, FileInfo
+
+dump("dict.msg", {str(v): v for v in range(1000)})
+dump("list.msg", [float(v) for v in range(1000)])
+
+combine("combined.msg", [FileInfo("dict", "dict.msg"), FileInfo("list", "list.msg")])
+# support recursively combining files
+# ...
+
+# the combined file use a dict layout
+# { 'dict' : {'1':1,'2':2,...}, 'list' : [1.0,2.0,3.0,...] }
+# so one can read it as
+
+from msglc.reader import LazyReader
+
+with LazyReader("combined.msg") as reader:
+    assert reader['dict/101'] == 101
+    assert reader['list/101'] == 101.0
+```
+
+### Deserialization
 
 Use `LazyReader` to read a file.
 
 ```python
-from msglc import LazyReader, to_obj
+from msglc.reader import LazyReader, to_obj
 
 with LazyReader("data.msg") as reader:
-    data = reader.read("b/c")
+    data = reader.read()  # return a LazyDict, LazyList, dict, list or primitive value
+    data = reader["b/c"]  # subscriptable if the actual data is subscriptable
+    # data = reader[2:]  # also support slicing if its underlying data is list compatible
+    data = reader.read("b/c")  # or provide a path to visit a particular node
     print(data)  # 4
     b_dict = reader.read("b")
     print(b_dict.__class__)  # <class 'msglc.reader.LazyDict'>
-    for k, v in b_dict.items():
+    for k, v in b_dict.items():  # dict compatible
         if k != "e":
             print(k, v)  # c 4, d 5
     b_json = to_obj(b_dict)  # ensure plain dict
@@ -32,10 +68,8 @@ with LazyReader("data.msg") as reader:
 
 Please note all data operations shall be performed inside the `with` block.
 
-## What
-
-`msglc` is a Python library that provides a way to serialize and deserialize json objects with lazy/partial loading
-containers using `msgpack` as the serialization format.
+All data is lazily loaded, use `to_obj()` function to ensure it is properly read, especially when the data goes out of
+the `with` block.
 
 ## Why
 
@@ -71,10 +105,19 @@ This makes the memory footprint small.
 One can configure the buffer size for reading and writing.
 
 ```python
-from msglc import configure
+from msglc.config import configure
 
 configure(write_buffer_size=2 ** 23)
 configure(read_buffer_size=2 ** 16)
+```
+
+Combining multiple files into a single one requires copying data from one file to another.
+Adjust `copy_chunk_size` to control memory footprint.
+
+```python
+from msglc.config import configure
+
+configure(copy_chunk_size=2 ** 24)  # 16 MB
 ```
 
 ### Table of Contents
@@ -84,10 +127,10 @@ They correspond to `list` and `dict` in Python, respectively.
 
 The table of contents mimics the structure of the original json object.
 However, only containers that exceed a certain size are included in the table of contents.
-This size is configurable and can be often set to the block size of the storage system.
+This size is configurable and can be often set to the multiple of the block size of the storage system.
 
 ```python
-from msglc import configure
+from msglc.config import configure
 
 configure(small_obj_optimization_threshold=8192)
 ```
@@ -147,7 +190,7 @@ Fast loading is a feature that allows the entire data to be read into memory at 
 This helps to avoid issuing multiple system calls to read the data, which can be slow if the latency is high.
 
 ```python
-from msglc import configure
+from msglc.config import configure
 
 configure(fast_loading=True)
 ```
@@ -155,10 +198,55 @@ configure(fast_loading=True)
 One shall also configure the threshold for fast loading.
 
 ```python
-from msglc import configure
+from msglc.config import configure
 
 configure(fast_loading_threshold=0.5)
 ```
 
 The threshold is a fraction between 0 and 1. The above 0.5 means if more than half of the children of a container have
 been read already, `to_obj` will use the second way to read the whole container. Otherwise, it will use the first way.
+
+### Detection of Long List with Small Elements
+
+Longs lists with small elements, such as integers and floats, can be further optimized by grouping elements into blocks
+that are of the size of `small_obj_optimization_threshold` so that small reads can be avoided.
+
+Set a `trivial_size` to the desired bytes to identify those long lists.
+For example, the following sets it to 10 bytes, long lists of integers and floats will be grouped into blocks.
+64-bit integers and doubles require 8 bytes (data) + 1 byte (type) = 9 bytes.
+
+```python
+from msglc.config import configure
+
+configure(trivial_size=10)
+```
+
+### Disable GC
+
+To improve performance, `gc` can be disabled during (de)serialization.
+It is controlled by a global counter, as long as there is one active writer/reader, `gc` will stay disabled.
+
+```python
+from msglc.config import configure
+
+configure(disable_gc=True)
+```
+
+### Default Values
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class Config:
+    small_obj_optimization_threshold: int = 2 ** 13  # 8KB
+    write_buffer_size: int = 2 ** 23  # 8MB
+    read_buffer_size: int = 2 ** 16  # 64KB
+    fast_loading: bool = True
+    fast_loading_threshold: float = 0.3
+    trivial_size: int = 20
+    disable_gc: bool = True
+    simple_repr: bool = True
+    copy_chunk_size: int = 2 ** 24  # 16MB
+```

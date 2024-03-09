@@ -14,23 +14,24 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gc
+from dataclasses import dataclass
 from io import BytesIO, BufferedReader
 from typing import Union
 
 Buffer = Union[BytesIO, BufferedReader]
 
 
+@dataclass
 class Config:
-    def __init__(self):
-        self.small_obj_optimization_threshold: int = 2**13  # 8KB
-        self.write_buffer_size: int = 2**23  # 8MB
-        self.read_buffer_size: int = 2**16  # 64KB
-        self.fast_loading: bool = True
-        self.fast_loading_threshold: float = 0.3
-        self.trivial_size: int = 20
-        self.disable_gc: bool = True
-        self.simple_repr: bool = True
-        self.copy_chunk_size: int = 2**24  # 16MB
+    small_obj_optimization_threshold: int = 2**13  # 8KB
+    write_buffer_size: int = 2**23  # 8MB
+    read_buffer_size: int = 2**16  # 64KB
+    fast_loading: bool = True
+    fast_loading_threshold: float = 0.3
+    trivial_size: int = 20
+    disable_gc: bool = True
+    simple_repr: bool = True
+    copy_chunk_size: int = 2**24  # 16MB
 
 
 config = Config()
