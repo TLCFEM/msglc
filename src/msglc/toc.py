@@ -22,11 +22,18 @@ from msgpack import Packer
 
 from .config import config
 
+try:
+    import numpy
+
+    ndarray = numpy.ndarray
+except ImportError:
+    ndarray = list
+
 
 @dataclass()
 class Node:
     t: dict | list | None
-    p: dict | list | None
+    p: dict | list
     s: bool = False
 
 
@@ -56,7 +63,7 @@ class TOC:
             _end = self._pos
             return Node(None, [_start, _end], _end <= _start + config.trivial_size)
 
-        if not isinstance(obj, (dict, list, set, tuple)):
+        if not isinstance(obj, (dict, list, set, tuple, ndarray)):
             start_pos = self._pos
             _pack_obj(obj)
             return _generate(start_pos)
@@ -65,6 +72,8 @@ class TOC:
             obj = list(obj)
         elif isinstance(obj, set):
             obj = sorted(obj)
+        elif ndarray != list and isinstance(obj, ndarray):
+            obj = obj.tolist()
 
         start_pos = self._pos
 

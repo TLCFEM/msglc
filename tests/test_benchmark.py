@@ -94,7 +94,7 @@ def test_random_benchmark(monkeypatch, tmpdir):
         counter.clear()
 
 
-def pack():
+def pack(array):
     dump(
         "large_array.msg",
         {
@@ -109,7 +109,7 @@ def pack():
                 ],
             },
             "repo_entry": {"chemical_formula": "H2"},
-            "large_list": [float(x) for x in range(20000)],
+            "large_list": array,
         },
     )
 
@@ -117,10 +117,28 @@ def pack():
 def test_pack_large_array(tmpdir, benchmark):
     def pack_large_array(_tmpdir):
         with _tmpdir.as_cwd():
-            pack()
+            pack([float(x) for x in range(20000)])
 
     benchmark(pack_large_array, tmpdir)
 
 
+def test_numpy_array(tmpdir):
+    try:
+        with tmpdir.as_cwd():
+            import numpy
+
+            numpy_array = numpy.random.random((10, 11, 12000))
+            pack(numpy_array)
+
+            with LazyReader("large_array.msg") as reader:
+                for _ in range(100000):
+                    x = random.randint(0, numpy_array.shape[0] - 1)
+                    y = random.randint(0, numpy_array.shape[1] - 1)
+                    z = random.randint(0, numpy_array.shape[2] - 1)
+                    assert reader["large_list"][x][y][z] == numpy_array[x][y][z]
+    except ImportError:
+        pass
+
+
 if __name__ == "__main__":
-    pack()
+    pass
