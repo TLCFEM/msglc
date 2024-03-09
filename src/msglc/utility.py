@@ -66,8 +66,7 @@ def is_slice(key: str, total_size: int):
 
         if is_index(parts):
             start, stop = normalise_index(parts[0], total_size), normalise_bound(parts[1], total_size)
-            step = 1 if start < stop else -1
-            return start, stop, step
+            return start, stop, 1
 
         return None
 

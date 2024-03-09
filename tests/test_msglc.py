@@ -92,7 +92,9 @@ def test_list_exception(monkeypatch, tmpdir, cached, threshold, trivial):
                 print(reader["a:2:"])
 
             assert reader[f"{-2-total_size}:"] == [198.0, 199.0]
+            assert reader[f"{2*total_size-2}:"] == [198.0, 199.0]
             assert reader[f":{total_size+2}"] == [0.0, 1.0]
+            assert reader[f":{-2*total_size+2}"] == [0.0, 1.0]
             assert reader[:2] == [0.0, 1.0]
 
             for _ in range(2 * total_size):
