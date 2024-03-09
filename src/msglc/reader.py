@@ -343,7 +343,25 @@ class LazyReader(LazyItem):
     def __getitem__(self, item):
         return self.read(item)
 
-    def read(self, path: str | list | None = None):
+    def __len__(self):
+        return len(self._obj)
+
+    def __contains__(self, item):
+        return item in self._obj
+
+    def get(self, key, default=None):
+        return self._obj.get(key, default)
+
+    def keys(self):
+        return self._obj.keys()
+
+    def values(self):
+        return self._obj.values()
+
+    def items(self):
+        return self._obj.items()
+
+    def read(self, path: str | list | slice | None = None):
         """
         Reads the data from the given path.
 
@@ -362,8 +380,12 @@ class LazyReader(LazyItem):
             path_stack = []
         elif isinstance(path, str):
             path_stack = path.split("/")
-        else:
+        elif isinstance(path, list):
             path_stack = path
+        elif isinstance(path, slice):
+            path_stack = [path]
+        else:
+            path_stack = [path]
 
         target = self._obj
         while path_stack:

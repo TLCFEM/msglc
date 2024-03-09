@@ -81,9 +81,49 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir, cached):
             for _ in range(2**10):
                 x = random.randint(0, total_size - 1)
                 assert reader.read(f"{x}") == float(x)
-            assert [float(x) for x in range(total_size)] == reader
 
         stats.bytes_per_call()
+
+
+@pytest.mark.parametrize("threshold", [256, 8192])
+@pytest.mark.parametrize("cached", [True, False])
+@pytest.mark.parametrize("trivial", [4, 10])
+def test_list_exception(monkeypatch, tmpdir, cached, threshold, trivial):
+    monkeypatch.setattr(config, "small_obj_optimization_threshold", threshold)
+    monkeypatch.setattr(config, "trivial_size", trivial)
+
+    total_size: int = 200
+    with tmpdir.as_cwd():
+        with LazyWriter("test.msg") as writer:
+            writer.write([float(x) for x in range(total_size)])
+
+        with LazyReader("test.msg", cached=cached) as reader:
+            with pytest.raises(TypeError):
+                print(reader["invalid_index"])
+            with pytest.raises(TypeError):
+                print(reader[(1, 2)])
+
+            assert reader[:2] == [0.0, 1.0]
+
+            assert [float(x) for x in range(total_size)] == reader
+
+
+@pytest.mark.parametrize("threshold", [256, 8192])
+@pytest.mark.parametrize("cached", [True, False])
+def test_dict_exception(monkeypatch, tmpdir, cached, threshold):
+    monkeypatch.setattr(config, "small_obj_optimization_threshold", threshold)
+
+    total_size: int = 200
+    with tmpdir.as_cwd():
+        with LazyWriter("test.msg") as writer:
+            writer.write({str(x): float(x) for x in range(total_size)})
+
+        with LazyReader("test.msg", cached=cached) as reader:
+            assert str(2 * total_size) not in reader
+            assert reader.get(str(2 * total_size)) is None
+            assert len(reader.keys()) == total_size
+            assert len(reader.values()) == total_size
+            assert len(reader.items()) == total_size
 
 
 def test_combine_archives(tmpdir, json_example):
