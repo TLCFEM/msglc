@@ -96,7 +96,7 @@ class LazyItem:
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
             if 2 == len(child_pos) and isinstance(child_pos[0], int) and isinstance(child_pos[1], int):
-                return self._read(*toc["p"])
+                return self._read(*child_pos)
 
             # {"p": [[size1, start_pos, end_pos], [size2, start_pos, end_pos], [size3, start_pos, end_pos]]}
             # this is used in arrays of small objects
