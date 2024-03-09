@@ -84,6 +84,8 @@ def test_list_exception(monkeypatch, tmpdir, cached, threshold, trivial):
                 print(reader["invalid_index"])
             with pytest.raises(TypeError):
                 print(reader[(1, 2)])
+            with pytest.raises(TypeError):
+                print(reader["a:2:3:4"])
 
             assert reader[:2] == [0.0, 1.0]
 
@@ -130,6 +132,8 @@ def test_combine_archives(tmpdir, json_example):
             assert reader.read("second_outer/first_inner/:2") == [0, 1]
             assert reader.read("second_outer/first_inner/28:") == [28, 29]
             assert reader.read("second_outer/first_inner/24:2:30") == [24, 26, 28]
+            assert reader.read("second_outer/first_inner/:2:5") == [0, 2, 4]
+            assert reader.read("second_outer/first_inner/24:2:") == [24, 26, 28]
 
 
 def test_configure_with_valid_values():
