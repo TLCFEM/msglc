@@ -73,15 +73,15 @@ def test_large_list_with_small_elements(monkeypatch, tmpdir, cached):
     total_size: int = 2**12
     with tmpdir.as_cwd():
         with LazyWriter("test.msg") as writer:
-            writer.write([x for x in range(total_size)])
+            writer.write([float(x) for x in range(total_size)])
 
         stats = LazyStats()
 
         with LazyReader("test.msg", counter=stats, cached=cached) as reader:
             for _ in range(2**10):
                 x = random.randint(0, total_size - 1)
-                assert reader.read(f"{x}") == x
-            assert [x for x in range(total_size)] == reader
+                assert reader.read(f"{x}") == float(x)
+            assert [float(x) for x in range(total_size)] == reader
 
         stats.bytes_per_call()
 

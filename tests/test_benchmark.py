@@ -111,7 +111,7 @@ def pack():
                 ],
             },
             "repo_entry": {"chemical_formula": "H2"},
-            "large_list": [x for x in range(20000)],
+            "large_list": [float(x) for x in range(20000)],
         },
     )
 

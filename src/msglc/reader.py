@@ -132,6 +132,7 @@ class LazyList(LazyItem):
         self._index: int = 0
         self._cache: list = [None] * len(self)
         self._mask: bitarray = bitarray(len(self))
+        self._mask.setall(0)  # ensure all bits are 0
         self._full_loaded: bool = False
 
     def __repr__(self):
