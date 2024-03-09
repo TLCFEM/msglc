@@ -69,6 +69,15 @@ Please note all data operations shall be performed inside the `with` block.
 All data is lazily loaded, use `to_obj()` function to ensure it is properly read, especially when the data goes out of
 the `with` block.
 
+If there is no need to cache the read data, pass the argument `cached=False` to the initializer.
+
+```python
+from msglc.reader import LazyReader, to_obj
+
+with LazyReader("data.msg", cached=False) as reader:
+    data = to_obj(reader.read('some/path/to/the/target'))
+```
+
 ## Why
 
 The `msgpack` specification and the corresponding Python library `msgpack` provide a tool to serialize json objects into
