@@ -26,6 +26,7 @@ The combined files can be further combined.
 
 ```python
 from msglc import dump, combine, FileInfo
+from msglc.reader import LazyReader
 
 dump("dict.msg", {str(v): v for v in range(1000)})
 dump("list.msg", [float(v) for v in range(1000)])
@@ -34,12 +35,9 @@ combine("combined.msg", [FileInfo("dict", "dict.msg"), FileInfo("list", "list.ms
 # support recursively combining files
 # ...
 
-# the combined file use a dict layout
+# the combined file uses a dict layout
 # { 'dict' : {'1':1,'2':2,...}, 'list' : [1.0,2.0,3.0,...] }
-# so one can read it as
-
-from msglc.reader import LazyReader
-
+# so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
     assert reader['dict/101'] == 101
     assert reader['list/101'] == 101.0
