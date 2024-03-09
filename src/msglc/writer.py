@@ -20,7 +20,7 @@ from typing import Generator
 
 from msgpack import Packer, packb
 
-from .config import config, Buffer
+from .config import config, Buffer, increment_gc_counter, decrement_gc_counter
 from .toc import TOC
 
 
@@ -42,6 +42,8 @@ class LazyWriter:
         self._no_more_writes: bool = False
 
     def __enter__(self):
+        increment_gc_counter()
+
         if isinstance(self._buffer_or_path, str):
             self._buffer = open(self._buffer_or_path, "wb", buffering=config.write_buffer_size)
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
@@ -59,6 +61,8 @@ class LazyWriter:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        decrement_gc_counter()
+
         if isinstance(self._buffer_or_path, str):
             self._buffer.close()
 

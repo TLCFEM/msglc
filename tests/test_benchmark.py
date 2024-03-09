@@ -94,3 +94,35 @@ def test_random_benchmark(monkeypatch, tmpdir):
         counter.bytes_per_call()
 
         counter.clear()
+
+
+def pack():
+    dump(
+        "large_array.msg",
+        {
+            "run": {
+                "program_name": "VASP",
+                "method": {"basis_sets": "plane waves"},
+                "system": [
+                    {
+                        "atom_labels": ["H", "H"],
+                    },
+                    {"atom_labels": ["H", "H"], "symmetry": {"space_group": 4}},
+                ],
+            },
+            "repo_entry": {"chemical_formula": "H2"},
+            "large_list": [x for x in range(20000)],
+        },
+    )
+
+
+def test_pack_large_array(tmpdir, benchmark):
+    def pack_large_array(_tmpdir):
+        with _tmpdir.as_cwd():
+            pack()
+
+    benchmark(pack_large_array, tmpdir)
+
+
+if __name__ == "__main__":
+    pack()

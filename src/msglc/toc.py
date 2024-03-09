@@ -58,7 +58,8 @@ class TOC:
 
         def _simple_toc(_v) -> bool:
             return (
-                2 == len(_v["p"])
+                "t" not in _v
+                and 2 == len(_v["p"])
                 and isinstance(_v["p"][0], int)
                 and isinstance(_v["p"][1], int)
                 and _v["p"][1] < _v["p"][0] + config.trivial_size

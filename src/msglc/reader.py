@@ -330,10 +330,12 @@ class LazyReader(LazyItem):
 
     def __enter__(self):
         increment_gc_counter()
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
+
         if isinstance(self._buffer_or_path, str):
             self._buffer.close()
 
