@@ -92,7 +92,7 @@ class LazyItem:
             return LazyReader(self._buffer, counter=self._counter, cached=self._cached)
 
         if (child_toc := toc.get("t", None)) is None:
-            child_pos = toc["p"]
+            child_pos: list = toc["p"]
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
             if 2 == len(child_pos) and isinstance(child_pos[0], int) and isinstance(child_pos[1], int):
