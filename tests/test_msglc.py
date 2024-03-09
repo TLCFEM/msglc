@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
+from io import BytesIO
 
 import pytest
 
@@ -44,22 +45,33 @@ def json_example():
                     }
                 },
             },
-        }
+        },
+        "some_tuple": (1, 2, 3),
+        "some_set": {1, 2, 3},
     }
 
 
+@pytest.mark.parametrize("target", ["test.msg", BytesIO()])
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
-def test_msglc(monkeypatch, tmpdir, json_example, size, cached):
+def test_msglc(monkeypatch, tmpdir, json_example, target, size, cached):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
     with tmpdir.as_cwd():
-        with LazyWriter("test.msg") as writer:
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with LazyWriter(target) as writer:
             writer.write(json_example)
+            with pytest.raises(ValueError):
+                writer.write(json_example)
 
         stats = LazyStats()
 
-        with LazyReader("test.msg", counter=stats, cached=cached) as reader:
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with LazyReader(target, counter=stats, cached=cached) as reader:
             assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
             assert reader.read() == json_example
             assert reader == json_example
@@ -122,7 +134,8 @@ def test_dict_exception(monkeypatch, tmpdir, cached, threshold):
             assert len(reader.items()) == total_size
 
 
-def test_combine_archives(tmpdir, json_example):
+@pytest.mark.parametrize("target", ["combined.msg", BytesIO()])
+def test_combine_archives(tmpdir, json_example, target):
     with tmpdir.as_cwd():
         with LazyWriter("test_list.msg") as writer:
             writer.write([x for x in range(30)])
@@ -130,9 +143,16 @@ def test_combine_archives(tmpdir, json_example):
             writer.write(json_example)
 
         combine("combined_a.msg", [FileInfo("first_inner", "test_list.msg"), FileInfo("second_inner", "test_dict.msg")])
-        combine("combined.msg", [FileInfo("first_outer", "combined_a.msg"), FileInfo("second_outer", "combined_a.msg")])
 
-        with LazyReader("combined.msg") as reader:
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        combine(target, [FileInfo("first_outer", "combined_a.msg"), FileInfo("second_outer", "combined_a.msg")])
+
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with LazyReader(target) as reader:
             assert reader.read("first_outer/second_inner/glossary/title") == "example glossary"
             assert reader.read("second_outer/first_inner/2") == 2
             assert reader.read("second_outer/first_inner/-1") == 29
