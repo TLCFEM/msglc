@@ -24,37 +24,51 @@ from msglc.reader import LazyStats, LazyReader
 
 
 @pytest.fixture(scope="function")
-def json_example():
+def json_base():
     return {
-        "glossary": {
-            "title": "example glossary",
-            "GlossDiv": {
-                "title": "S",
-                "GlossList": {
-                    "GlossEntry": {
-                        "ID": "SGML",
-                        "SortAs": "SGML",
-                        "GlossTerm": "Standard Generalized Markup Language",
-                        "Acronym": "SGML",
-                        "Abbrev": "ISO 8879:1986",
-                        "GlossDef": {
-                            "para": "A meta-markup language, used to create markup languages such as DocBook.",
-                            "GlossSeeAlso": ["GML", "XML"],
-                        },
-                        "GlossSee": "markup",
-                    }
-                },
+        "title": "example glossary",
+        "GlossDiv": {
+            "title": "S",
+            "GlossList": {
+                "GlossEntry": {
+                    "ID": "SGML",
+                    "SortAs": "SGML",
+                    "GlossTerm": "Standard Generalized Markup Language",
+                    "Acronym": "SGML",
+                    "Abbrev": "ISO 8879:1986",
+                    "GlossDef": {
+                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
+                        "GlossSeeAlso": ["GML", "XML"],
+                    },
+                    "GlossSee": "markup",
+                }
             },
         },
+    }
+
+
+@pytest.fixture(scope="function")
+def json_before(json_base):
+    return {
+        "glossary": json_base,
         "some_tuple": (1, 2, 3),
         "some_set": {1, 2, 3},
+    }
+
+
+@pytest.fixture(scope="function")
+def json_after(json_base):
+    return {
+        "glossary": json_base,
+        "some_tuple": [1, 2, 3],
+        "some_set": [1, 2, 3],
     }
 
 
 @pytest.mark.parametrize("target", ["test.msg", BytesIO()])
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
-def test_msglc(monkeypatch, tmpdir, json_example, target, size, cached):
+def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cached):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
     with tmpdir.as_cwd():
@@ -62,9 +76,9 @@ def test_msglc(monkeypatch, tmpdir, json_example, target, size, cached):
             target.seek(0)
 
         with LazyWriter(target) as writer:
-            writer.write(json_example)
+            writer.write(json_before)
             with pytest.raises(ValueError):
-                writer.write(json_example)
+                writer.write(json_before)
 
         stats = LazyStats()
 
@@ -73,8 +87,8 @@ def test_msglc(monkeypatch, tmpdir, json_example, target, size, cached):
 
         with LazyReader(target, counter=stats, cached=cached) as reader:
             assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
-            assert reader.read() == json_example
-            assert reader == json_example
+            assert reader.read() == json_after
+            assert reader == json_after
 
         stats.bytes_per_call()
 
@@ -135,12 +149,12 @@ def test_dict_exception(monkeypatch, tmpdir, cached, threshold):
 
 
 @pytest.mark.parametrize("target", ["combined.msg", BytesIO()])
-def test_combine_archives(tmpdir, json_example, target):
+def test_combine_archives(tmpdir, json_after, target):
     with tmpdir.as_cwd():
         with LazyWriter("test_list.msg") as writer:
             writer.write([x for x in range(30)])
         with LazyWriter("test_dict.msg") as writer:
-            writer.write(json_example)
+            writer.write(json_after)
 
         combine("combined_a.msg", [FileInfo("first_inner", "test_list.msg"), FileInfo("second_inner", "test_dict.msg")])
 
