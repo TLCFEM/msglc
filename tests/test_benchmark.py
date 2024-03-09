@@ -23,23 +23,21 @@ from msglc.reader import LazyDict, LazyList, LazyStats, LazyReader
 def generate_random_json(depth=10, width=4, simple=False):
     seed = random.random()
 
+    def generate_token():
+        return "".join(random.choices(string.ascii_letters + string.digits, k=random.randint(5, 10)))
+
     if depth == 0 or (simple and seed < 0.3):
         return random.choice(
             [
                 random.randint(-(2**30), 2**30),
                 random.random(),
                 random.choice([True, False]),
-                "".join(random.choices(string.ascii_letters + string.digits, k=random.randint(5, 10))),
+                generate_token(),
             ]
         )
 
     if seed < 0.6:
-        return {
-            "".join(random.choices(string.ascii_lowercase, k=random.randint(5, 10))): generate_random_json(
-                depth - 1, width, True
-            )
-            for _ in range(width)
-        }
+        return {generate_token(): generate_random_json(depth - 1, width, True) for _ in range(width)}
 
     if seed < 0.95 or not simple:
         return [generate_random_json(depth - 1, width, True) for _ in range(width)]
