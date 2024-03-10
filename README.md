@@ -139,8 +139,12 @@ This size is configurable and can be often set to the multiple of the block size
 ```python
 from msglc.config import configure
 
-configure(small_obj_optimization_threshold=8192)
+configure(small_obj_optimization_threshold=2 ** 20)
 ```
+
+The above configuration assigns a threshold of 1 MB, containers larger than 1 MB will be indexed in the table of
+contents.
+To achieve optimal performance, one shall configure this value according to the underlying file system.
 
 The basic structure of the table of contents of any object is a `dict` with two keys: `t` (toc) and `p` (position).
 The `t` field only exists when the object is a **sufficiently large container**.
