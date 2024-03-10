@@ -30,7 +30,7 @@ def generate_random_json(depth=10, width=4, simple=False):
     def generate_token():
         return "".join(random.choices(string.ascii_letters + string.digits, k=random.randint(5, 10)))
 
-    if depth == 0 or (simple and seed < 0.3):
+    if depth == 0 or (simple and seed < 0.1):
         return random.choice(
             [
                 random.randint(-(2**30), 2**30),
@@ -40,7 +40,7 @@ def generate_random_json(depth=10, width=4, simple=False):
             ]
         )
 
-    if seed < 0.6:
+    if seed < 0.7:
         return {generate_token(): generate_random_json(depth - 1, width, True) for _ in range(width)}
 
     if seed < 0.95 or not simple:
@@ -97,15 +97,17 @@ def generate(depth=6, width=11):
 def compare(mode):
     start = monotonic()
 
-    counter = 0
+    accumulator = 0
+
+    total: int = 10000
 
     with open("path.txt", "r") as f:
         if mode > 0:
             counter = LazyStats()
             with LazyReader("archive.msg", counter=counter) as reader:
                 while p := f.readline():
-                    counter += 1
-                    if counter == 1_000_000:
+                    accumulator += 1
+                    if accumulator == total:
                         break
                     _ = reader.read(p.strip())
             print(counter)
@@ -115,8 +117,8 @@ def compare(mode):
                 archive = msgpack.load(fa)
 
             while p := f.readline():
-                counter += 1
-                if counter == 1_000_000:
+                accumulator += 1
+                if accumulator == total:
                     break
                 _ = goto_path(archive, p.strip().split("/"))
 
