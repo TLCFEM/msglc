@@ -381,8 +381,8 @@ class LazyReader(LazyItem):
             path_stack = path.split("/")
         elif isinstance(path, list):
             path_stack = path
-        elif isinstance(path, slice):
-            path_stack = [path]
+        # elif isinstance(path, slice):
+        #     path_stack = [path]
         else:
             path_stack = [path]
 
