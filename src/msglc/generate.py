@@ -77,15 +77,15 @@ def goto_path(json_obj, path):
     return target
 
 
-def generate():
+def generate(depth=6, width=11):
     configure(small_obj_optimization_threshold=2**24)
 
-    archive = {"id": generate_random_json(7, 12)}
+    archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
     random.shuffle(path)
 
     with open("path.txt", "w") as f:
-        for i in path[:1000000]:
+        for i in path[: min(1_000_000, len(path))]:
             f.write("/".join(map(str, i)) + "\n")
 
     with open("archive_msgpack.msg", "wb") as f:
@@ -97,11 +97,16 @@ def generate():
 def compare(mode):
     start = monotonic()
 
+    counter = 0
+
     with open("path.txt", "r") as f:
         if mode > 0:
             counter = LazyStats()
             with LazyReader("archive.msg", counter=counter) as reader:
                 while p := f.readline():
+                    counter += 1
+                    if counter == 1_000_000:
+                        break
                     _ = reader.read(p.strip())
             print(counter)
             counter.clear()
@@ -110,6 +115,9 @@ def compare(mode):
                 archive = msgpack.load(fa)
 
             while p := f.readline():
+                counter += 1
+                if counter == 1_000_000:
+                    break
                 _ = goto_path(archive, p.strip().split("/"))
 
     print(f"takes: {monotonic() - start} s")

@@ -16,8 +16,8 @@
 import random
 
 from msglc import dump, config
+from msglc.generate import generate_random_json, find_all_paths, goto_path
 from msglc.reader import LazyStats, LazyReader
-from utility import generate_random_json, find_all_paths, goto_path
 
 
 def test_random_benchmark(monkeypatch, tmpdir):
