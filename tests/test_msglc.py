@@ -90,7 +90,7 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
             assert reader.read() == json_after
             assert reader == json_after
 
-        stats.bytes_per_call()
+        str(stats)
 
 
 @pytest.mark.parametrize("threshold", [256, 8192])

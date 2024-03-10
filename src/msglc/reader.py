@@ -39,6 +39,9 @@ class LazyStats:
         self._call_counter += 1
         return self
 
+    def __str__(self):
+        return f"{self._call_counter} calls, {self._read_counter} bytes, {self.bytes_per_call()} bytes per call."
+
     def __call__(self, *args, **kwargs):
         return self._read_counter
 
