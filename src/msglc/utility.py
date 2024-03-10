@@ -15,7 +15,10 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 
+
+@lru_cache(maxsize=2**14)
 def is_index(key: int | str | list):
     if isinstance(key, int):
         return True
@@ -32,6 +35,7 @@ def is_index(key: int | str | list):
     return False
 
 
+@lru_cache(maxsize=2**14)
 def normalise_index(index: int | str, total_size: int):
     if isinstance(index, str):
         index = int(index)
@@ -43,6 +47,7 @@ def normalise_index(index: int | str, total_size: int):
     return index
 
 
+@lru_cache(maxsize=2**14)
 def normalise_bound(index: int | str, total_size: int):
     if isinstance(index, str):
         index = int(index)
@@ -54,6 +59,7 @@ def normalise_bound(index: int | str, total_size: int):
     return index
 
 
+@lru_cache(maxsize=2**14)
 def is_slice(key: str, total_size: int):
     parts: list = list(key.split(":"))
 

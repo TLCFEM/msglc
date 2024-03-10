@@ -141,11 +141,10 @@ class LazyList(LazyItem):
     def __getitem__(self, index):
         if isinstance(index, str):
             try:
-                index = int(index)
+                index_range = [int(index)]
             except ValueError:
                 raise TypeError(f"Invalid type: {type(index)} for index {index}.")
-
-        if isinstance(index, slice):
+        elif isinstance(index, slice):
             index_range = range(*index.indices(len(self)))
         elif isinstance(index, int):
             index_range = [index]
@@ -388,8 +387,7 @@ class LazyReader(LazyItem):
             path_stack = [path]
 
         target = self._obj
-        while path_stack:
-            key: int | str | slice = path_stack.pop(0)
+        for key in path_stack:
             if isinstance(key, str) and isinstance(target, (list, LazyList)):
                 if is_index(key):
                     key = int(key)
