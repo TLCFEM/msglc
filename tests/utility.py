@@ -71,7 +71,7 @@ def find_all_paths(json_obj, path=None, path_list=None):
 def goto_path(json_obj, path):
     target = json_obj
     for i in path:
-        if i.isdigit() and isinstance(target, list):
+        if isinstance(i, str) and i.isdigit() and isinstance(target, list):
             i = int(i)
         target = target[i]
     return target
