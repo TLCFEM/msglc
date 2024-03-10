@@ -19,11 +19,11 @@ from functools import lru_cache
 
 
 @lru_cache(maxsize=2**14)
-def is_index(key: int | str | list):
+def is_index(key: int | str | tuple):
     if isinstance(key, int):
         return True
 
-    if isinstance(key, list):
+    if isinstance(key, tuple):
         return all(is_index(k) for k in key)
 
     if key.isdigit():
@@ -70,7 +70,7 @@ def is_slice(key: str, total_size: int):
         if stop == "":
             parts[1] = total_size
 
-        if is_index(parts):
+        if is_index(tuple(parts)):
             start, stop = normalise_index(parts[0], total_size), normalise_bound(parts[1], total_size)
             return start, stop, 1
 
@@ -83,7 +83,7 @@ def is_slice(key: str, total_size: int):
         if stop == "":
             parts[2] = total_size
 
-        if is_index(parts):
+        if is_index(tuple(parts)):
             start, stop = normalise_index(parts[0], total_size), normalise_bound(parts[2], total_size)
             return start, stop, int(step)
 
