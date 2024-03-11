@@ -18,7 +18,7 @@ from __future__ import annotations
 from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
-from msgpack import unpackb, Unpacker
+from msgpack import Unpacker
 
 from .config import config, increment_gc_counter, decrement_gc_counter, Buffer
 from .utility import is_index, is_slice, normalise_index
@@ -54,11 +54,20 @@ class LazyStats:
 
 
 class LazyItem:
-    def __init__(self, buffer: Buffer, offset: int, *, counter: LazyStats | None = None, cached: bool = True):
+    def __init__(
+        self,
+        buffer: Buffer,
+        offset: int,
+        *,
+        counter: LazyStats | None = None,
+        cached: bool = True,
+        unpacker: Unpacker | None = None,
+    ):
         self._buffer: Buffer = buffer
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
+        self._unpacker: Unpacker = unpacker if unpacker else Unpacker()
 
         self._accessed_items: int = 0
 
@@ -82,17 +91,23 @@ class LazyItem:
         self._buffer.seek(start + self._offset)
         return self._buffer.read(size)
 
+    def _unpack(self, data: bytes):
+        self._unpacker.feed(data)
+        return self._unpacker.unpack()
+
     def _read(self, start: int, end: int):
-        return unpackb(self._readb(start, end))
+        return self._unpack(self._readb(start, end))
 
     def _child(self, toc: dict | int):
         self._accessed_items += 1
+
+        params: dict = {"counter": self._counter, "cached": self._cached, "unpacker": self._unpacker}
 
         # {"t": {"name1": start_pos, "name2": start_pos}}
         # this is used in combined archives
         if isinstance(toc, int):
             self._buffer.seek(toc + self._offset)
-            return LazyReader(self._buffer, counter=self._counter, cached=self._cached)
+            return LazyReader(self._buffer, **params)
 
         if (child_toc := toc.get("t", None)) is None:
             child_pos: list = toc["p"]
@@ -103,17 +118,17 @@ class LazyItem:
 
             # {"p": [[size1, start_pos, end_pos], [size2, start_pos, end_pos], [size3, start_pos, end_pos]]}
             # this is used in arrays of small objects
-            return LazyList(toc, self._buffer, self._offset, counter=self._counter, cached=self._cached)
+            return LazyList(toc, self._buffer, self._offset, **params)
 
         # {"t": [...], "p": [start_pos, end_pos]}
         # this is used in lazy lists
         if isinstance(child_toc, list):
-            return LazyList(toc, self._buffer, self._offset, counter=self._counter, cached=self._cached)
+            return LazyList(toc, self._buffer, self._offset, **params)
 
         # {"t": {...}, "p": [start_pos, end_pos]}
         # this is used in lazy dicts
         if isinstance(child_toc, dict):
-            return LazyDict(toc, self._buffer, self._offset, counter=self._counter, cached=self._cached)
+            return LazyDict(toc, self._buffer, self._offset, **params)
 
         raise ValueError(f"Invalid: {toc}.")
 
@@ -127,9 +142,16 @@ class LazyItem:
 
 class LazyList(LazyItem):
     def __init__(
-        self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats | None = None, cached: bool = True
+        self,
+        toc: dict,
+        buffer: Buffer,
+        offset: int,
+        *,
+        counter: LazyStats | None = None,
+        cached: bool = True,
+        unpacker: Unpacker | None = None,
     ):
-        super().__init__(buffer, offset, counter=counter, cached=cached)
+        super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: list = toc.get("t", [])  # if empty, it's a list of small objects
         self._pos: list = toc["p"]
         self._index: int = 0
@@ -240,9 +262,16 @@ class LazyList(LazyItem):
 
 class LazyDict(LazyItem):
     def __init__(
-        self, toc: dict, buffer: Buffer, offset: int, *, counter: LazyStats | None = None, cached: bool = True
+        self,
+        toc: dict,
+        buffer: Buffer,
+        offset: int,
+        *,
+        counter: LazyStats | None = None,
+        cached: bool = True,
+        unpacker: Unpacker | None = None,
     ):
-        super().__init__(buffer, offset, counter=counter, cached=cached)
+        super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: dict = toc["t"]
         self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
         self._cache: dict = {}
@@ -299,7 +328,14 @@ class LazyDict(LazyItem):
 
 
 class LazyReader(LazyItem):
-    def __init__(self, buffer_or_path: str | Buffer, *, counter: LazyStats | None = None, cached: bool = True):
+    def __init__(
+        self,
+        buffer_or_path: str | Buffer,
+        *,
+        counter: LazyStats | None = None,
+        cached: bool = True,
+        unpacker: Unpacker | None = None,
+    ):
         self._buffer_or_path: str | Buffer = buffer_or_path
 
         if isinstance(self._buffer_or_path, str):
@@ -319,10 +355,10 @@ class LazyReader(LazyItem):
         if header[:sep_a] != LazyWriter.magic:
             raise ValueError("Invalid file format.")
 
-        super().__init__(buffer, original_pos + sep_c, counter=counter, cached=cached)
+        super().__init__(buffer, original_pos + sep_c, counter=counter, cached=cached, unpacker=unpacker)
 
-        toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0"))
-        toc_size: int = unpackb(header[sep_b:sep_c].lstrip(b"\0"))
+        toc_start: int = self._unpack(header[sep_a:sep_b].lstrip(b"\0"))
+        toc_size: int = self._unpack(header[sep_b:sep_c].lstrip(b"\0"))
 
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))
 
