@@ -78,8 +78,8 @@ def goto_path(json_obj, path):
     return target
 
 
-def generate(depth=6, width=11):
-    configure(small_obj_optimization_threshold=2**24)
+def generate(*, depth=6, width=11, threshold=2**14):
+    configure(small_obj_optimization_threshold=threshold)
 
     archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
