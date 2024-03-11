@@ -94,12 +94,10 @@ def generate(depth=6, width=11):
     dump("archive.msg", archive)
 
 
-def compare(mode):
+def compare(mode, total: int = 100_000):
     start = monotonic()
 
     accumulator = 0
-
-    total: int = 10000
 
     with open("path.txt", "r") as f:
         if mode > 0:
