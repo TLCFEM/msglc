@@ -61,6 +61,9 @@ def normalise_bound(index: int | str, total_size: int):
 
 @lru_cache(maxsize=2**14)
 def is_slice(key: str, total_size: int):
+    if ":" not in key:
+        return None
+
     parts: list = list(key.split(":"))
 
     if len(parts) == 2:
