@@ -107,7 +107,7 @@ def compare(mode, total: int = 100_000):
                     accumulator += 1
                     if accumulator == total:
                         break
-                    _ = reader.read(p.strip())
+                    _ = reader.visit(p.strip())
             print(counter)
             counter.clear()
         else:

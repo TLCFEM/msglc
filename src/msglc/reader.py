@@ -435,5 +435,29 @@ class LazyReader(LazyItem):
             target = target[key]
         return target
 
+    def visit(self, path: str = ""):
+        """
+        Reads the data from the given path.
+
+        This method navigates through the data structure based on the provided path.
+        The path can be a string of paths separated by '/'.
+
+        If the path is None, it returns the root object.
+
+        :param path: the path to the data to read
+        :return: The data at the given path.
+        """
+        target = self._obj
+        for key in path.split("/"):
+            if not key:
+                continue
+            if isinstance(target, (list, LazyList)):
+                if is_index(key):
+                    key = int(key)
+                elif slicing := is_slice(key, len(target)):
+                    key = slice(*slicing)
+            target = target[key]
+        return target
+
     def to_obj(self):
         return to_obj(self._obj)
