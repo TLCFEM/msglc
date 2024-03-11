@@ -21,6 +21,7 @@ import pytest
 from msglc import LazyWriter, FileInfo, combine
 from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
 from msglc.reader import LazyStats, LazyReader
+from msglc.utility import MockIO
 
 
 @pytest.fixture(scope="function")
@@ -85,10 +86,11 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        with LazyReader(target, counter=stats, cached=cached) as reader:
-            assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
-            assert reader.read() == json_after
-            assert reader == json_after
+        with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
+            with LazyReader(buffer, counter=stats, cached=cached) as reader:
+                assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
+                assert reader.read() == json_after
+                assert reader == json_after
 
         str(stats)
 

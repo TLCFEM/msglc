@@ -16,6 +16,51 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from io import BytesIO
+from time import sleep
+
+
+class MockIO:
+    def __init__(self, path: str | BytesIO, mode: str, seek_delay: float = 0, read_speed: int | list = 1 * 2**20):
+        self._path = path if isinstance(path, str) else None
+        self._io = open(path, mode) if isinstance(path, str) else path
+        self._seek_delay: float = seek_delay
+        self._read_speed: int | list = read_speed
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
+    def _actual_speed(self, size):
+        if isinstance(self._read_speed, int):
+            return self._read_speed
+
+        for min_size, speed in self._read_speed:
+            if size < min_size:
+                return speed
+
+        return self._read_speed[-1][1]
+
+    def tell(self):
+        return self._io.tell()
+
+    def seek(self, offset: int):
+        sleep(self._seek_delay)
+        self._io.seek(offset)
+
+    def read(self, size: int):
+        sleep(size / self._actual_speed(size))
+        return self._io.read(size)
+
+    def close(self):
+        if self._path is not None:
+            self._io.close()
+
+    @property
+    def closed(self):
+        return self._io.closed
 
 
 @lru_cache(maxsize=2**14)

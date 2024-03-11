@@ -21,7 +21,7 @@ from bitarray import bitarray
 from msgpack import Unpacker
 
 from .config import config, increment_gc_counter, decrement_gc_counter, Buffer
-from .utility import is_index, is_slice, normalise_index
+from .utility import is_index, is_slice, normalise_index, MockIO
 from .writer import LazyWriter
 
 
@@ -340,7 +340,7 @@ class LazyReader(LazyItem):
 
         if isinstance(self._buffer_or_path, str):
             buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)
-        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
+        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader, MockIO)):
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")

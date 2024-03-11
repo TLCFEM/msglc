@@ -18,7 +18,9 @@ from dataclasses import dataclass
 from io import BytesIO, BufferedReader
 from typing import Union
 
-Buffer = Union[BytesIO, BufferedReader]
+from msglc.utility import MockIO
+
+Buffer = Union[BytesIO, BufferedReader, MockIO]
 
 
 @dataclass
