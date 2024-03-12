@@ -18,9 +18,9 @@ from __future__ import annotations
 from io import BytesIO, BufferedReader
 from typing import Generator
 
-from msgpack import Packer, packb
+from msgpack import Packer, packb  # type: ignore
 
-from .config import config, Buffer, increment_gc_counter, decrement_gc_counter
+from .config import config, increment_gc_counter, decrement_gc_counter, BufferWriter
 from .toc import TOC
 
 
@@ -31,11 +31,11 @@ class LazyWriter:
     def magic_len(cls) -> int:
         return len(cls.magic)
 
-    def __init__(self, buffer_or_path: str | Buffer, packer: Packer = None):
-        self._buffer_or_path: str | Buffer = buffer_or_path
+    def __init__(self, buffer_or_path: str | BufferWriter, packer: Packer = None):
+        self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
 
-        self._buffer: Buffer = None  # type: ignore
+        self._buffer: BufferWriter = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
         self._header_start: int = 0
         self._file_start: int = 0
@@ -91,10 +91,10 @@ class LazyWriter:
 
 
 class LazyCombiner:
-    def __init__(self, buffer_or_path: str | Buffer):
-        self._buffer_or_path: str | Buffer = buffer_or_path
+    def __init__(self, buffer_or_path: str | BufferWriter):
+        self._buffer_or_path: str | BufferWriter = buffer_or_path
 
-        self._buffer: Buffer = None  # type: ignore
+        self._buffer: BufferWriter = None  # type: ignore
 
         self._toc: dict = {}
         self._header_start: int = 0

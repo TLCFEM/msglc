@@ -18,9 +18,9 @@ from __future__ import annotations
 from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
-from msgpack import Unpacker
+from msgpack import Unpacker  # type: ignore
 
-from .config import config, increment_gc_counter, decrement_gc_counter, Buffer
+from .config import config, increment_gc_counter, decrement_gc_counter, BufferReader
 from .utility import is_index, is_slice, normalise_index, MockIO
 from .writer import LazyWriter
 
@@ -56,14 +56,14 @@ class LazyStats:
 class LazyItem:
     def __init__(
         self,
-        buffer: Buffer,
+        buffer: BufferReader,
         offset: int,
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
         unpacker: Unpacker | None = None,
     ):
-        self._buffer: Buffer = buffer
+        self._buffer: BufferReader = buffer
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
@@ -144,7 +144,7 @@ class LazyList(LazyItem):
     def __init__(
         self,
         toc: dict,
-        buffer: Buffer,
+        buffer: BufferReader,
         offset: int,
         *,
         counter: LazyStats | None = None,
@@ -264,7 +264,7 @@ class LazyDict(LazyItem):
     def __init__(
         self,
         toc: dict,
-        buffer: Buffer,
+        buffer: BufferReader,
         offset: int,
         *,
         counter: LazyStats | None = None,
@@ -330,14 +330,15 @@ class LazyDict(LazyItem):
 class LazyReader(LazyItem):
     def __init__(
         self,
-        buffer_or_path: str | Buffer,
+        buffer_or_path: str | BufferReader,
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
         unpacker: Unpacker | None = None,
     ):
-        self._buffer_or_path: str | Buffer = buffer_or_path
+        self._buffer_or_path: str | BufferReader = buffer_or_path
 
+        buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
             buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader, MockIO)):
@@ -414,14 +415,13 @@ class LazyReader(LazyItem):
         :return: The data at the given path.
         """
 
+        path_stack: list
         if path is None:
             path_stack = []
         elif isinstance(path, str):
             path_stack = path.split("/")
         elif isinstance(path, list):
             path_stack = path
-        # elif isinstance(path, slice):
-        #     path_stack = [path]
         else:
             path_stack = [path]
 
@@ -429,9 +429,9 @@ class LazyReader(LazyItem):
         for key in path_stack:
             if isinstance(key, str) and isinstance(target, (list, LazyList)):
                 if is_index(key):
-                    key = int(key)
+                    key = int(key)  # type: ignore
                 elif slicing := is_slice(key, len(target)):
-                    key = slice(*slicing)
+                    key = slice(*slicing)  # type: ignore
             target = target[key]
         return target
 
@@ -453,9 +453,9 @@ class LazyReader(LazyItem):
                 continue
             if isinstance(target, (list, LazyList)):
                 if is_index(key):
-                    key = int(key)
+                    key = int(key)  # type: ignore
                 elif slicing := is_slice(key, len(target)):
-                    key = slice(*slicing)
+                    key = slice(*slicing)  # type: ignore
             target = target[key]
         return target
 

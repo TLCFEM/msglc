@@ -16,11 +16,12 @@
 import gc
 from dataclasses import dataclass
 from io import BytesIO, BufferedReader
-from typing import Union
+from typing import Union, BinaryIO
 
 from msglc.utility import MockIO
 
-Buffer = Union[BytesIO, BufferedReader, MockIO]
+BufferWriter = Union[BinaryIO, BytesIO, BufferedReader]
+BufferReader = Union[BufferWriter, MockIO]
 
 
 @dataclass

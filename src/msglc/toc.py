@@ -18,16 +18,16 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from io import BytesIO
 
-from msgpack import Packer
+from msgpack import Packer  # type: ignore
 
 from .config import config
 
 try:
     import numpy
 
-    ndarray = numpy.ndarray
+    ndarray = numpy.ndarray  # type: ignore
 except ImportError:
-    ndarray = list
+    ndarray = list  # type: ignore
 
 
 @dataclass()
@@ -38,7 +38,7 @@ class Node:
 
 
 class TOC:
-    def __init__(self, *, packer: Packer, buffer: BytesIO, transform: callable = None):
+    def __init__(self, *, packer: Packer, buffer: BytesIO, transform: callable = None):  # type: ignore
         self._buffer: BytesIO = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
@@ -46,7 +46,7 @@ class TOC:
         def plain_forward(obj):
             return obj
 
-        self._transform: callable = transform if transform else plain_forward
+        self._transform: callable = transform if transform else plain_forward  # type: ignore
 
     @property
     def _pos(self) -> int:
@@ -82,13 +82,13 @@ class TOC:
         if isinstance(obj, dict):
             _pack_bin(self._packer.pack_map_header(len(obj)))
             obj_toc = {}
-            for k, v in self._transform(obj.items()):
+            for k, v in self._transform(obj.items()):  # type: ignore
                 _pack_obj(k)
                 obj_toc[k] = self._pack(v)
             all_small_obj = all(v.s for v in obj_toc.values())
         elif isinstance(obj, list):
             _pack_bin(self._packer.pack_array_header(len(obj)))
-            obj_toc = [self._pack(v) for v in self._transform(obj)]
+            obj_toc = [self._pack(v) for v in self._transform(obj)]  # type: ignore
             all_small_obj = all(v.s for v in obj_toc)
         else:
             raise ValueError(f"Expecting dict or list, got {obj.__class__}.")

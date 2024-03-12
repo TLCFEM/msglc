@@ -18,7 +18,7 @@ import random
 import string
 from time import monotonic
 
-import msgpack
+import msgpack  # type: ignore
 
 from msglc import dump
 from msglc.config import configure
