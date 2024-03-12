@@ -200,6 +200,7 @@ def test_configure_with_valid_values():
         disable_gc=True,
         simple_repr=True,
         copy_chunk_size=2**24,
+        magic=b"new_version_coming",
     )
     assert config.small_obj_optimization_threshold == 2**14
     assert config.write_buffer_size == 2**24
@@ -207,6 +208,7 @@ def test_configure_with_valid_values():
     assert config.fast_loading is False
     assert config.fast_loading_threshold == 0.5
     assert config.trivial_size == 30
+    assert LazyWriter.magic.strip(b"\0") == b"new_version_coming"
 
 
 def test_gc_counter_increment():

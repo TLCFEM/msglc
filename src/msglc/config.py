@@ -40,6 +40,9 @@ class Config:
 config = Config()
 
 
+max_magic_len: int = 30
+
+
 def configure(**kwargs):
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.
@@ -84,6 +87,12 @@ def configure(**kwargs):
     if copy_chunk_size := kwargs.get("copy_chunk_size", None):
         if isinstance(copy_chunk_size, int) and copy_chunk_size > 0:
             config.copy_chunk_size = copy_chunk_size
+
+    if magic := kwargs.get("magic", None):
+        if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
+            from msglc import LazyWriter
+
+            LazyWriter.set_magic(magic)
 
 
 __gc_counter: int = 0

@@ -20,16 +20,20 @@ from typing import Generator
 
 from msgpack import Packer, packb  # type: ignore
 
-from .config import config, increment_gc_counter, decrement_gc_counter, BufferWriter
+from .config import config, increment_gc_counter, decrement_gc_counter, BufferWriter, max_magic_len
 from .toc import TOC
 
 
 class LazyWriter:
-    magic: bytes = b"msglc-2024"
+    magic: bytes = b"msglc-2024".rjust(max_magic_len, b"\0")
 
     @classmethod
     def magic_len(cls) -> int:
         return len(cls.magic)
+
+    @classmethod
+    def set_magic(cls, magic: bytes):
+        cls.magic = magic.rjust(max_magic_len, b"\0")
 
     def __init__(self, buffer_or_path: str | BufferWriter, packer: Packer = None):
         self._buffer_or_path: str | BufferWriter = buffer_or_path
