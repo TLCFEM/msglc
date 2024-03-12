@@ -16,7 +16,7 @@
 import random
 
 from msglc import dump, config
-from msglc.generate import generate_random_json, find_all_paths, goto_path
+from msglc.generate import generate_random_json, find_all_paths, goto_path, generate, compare
 from msglc.reader import LazyStats, LazyReader
 
 
@@ -87,6 +87,13 @@ def test_numpy_array(tmpdir):
                     assert reader["large_list"][x][y][z] == numpy_array[x][y][z]
     except ImportError:
         pass
+
+
+def test_compare_to_plain(tmpdir):
+    with tmpdir.as_cwd():
+        generate(depth=4, width=10)
+        compare(2)
+        compare(-2)
 
 
 if __name__ == "__main__":
