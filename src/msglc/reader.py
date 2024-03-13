@@ -21,7 +21,7 @@ from bitarray import bitarray
 from msgpack import Unpacker  # type: ignore
 
 from .config import config, increment_gc_counter, decrement_gc_counter, BufferReader
-from .utility import is_index, is_slice, normalise_index, MockIO
+from .utility import normalise_index, MockIO, to_index
 from .writer import LazyWriter
 
 
@@ -428,10 +428,7 @@ class LazyReader(LazyItem):
         target = self._obj
         for key in path_stack:
             if isinstance(key, str) and isinstance(target, (list, LazyList)):
-                if is_index(key):
-                    key = int(key)  # type: ignore
-                elif slicing := is_slice(key, len(target)):
-                    key = slice(*slicing)  # type: ignore
+                key = to_index(key, len(target))
             target = target[key]
         return target
 
@@ -452,10 +449,7 @@ class LazyReader(LazyItem):
             if not key:
                 continue
             if isinstance(target, (list, LazyList)):
-                if is_index(key):
-                    key = int(key)  # type: ignore
-                elif slicing := is_slice(key, len(target)):
-                    key = slice(*slicing)  # type: ignore
+                key = to_index(key, len(target))
             target = target[key]
         return target
 

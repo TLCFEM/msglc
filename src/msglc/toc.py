@@ -23,7 +23,7 @@ from msgpack import Packer  # type: ignore
 from .config import config
 
 try:
-    import numpy
+    import numpy  # type: ignore
 
     ndarray = numpy.ndarray  # type: ignore
 except ImportError:
