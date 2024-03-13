@@ -159,9 +159,30 @@ class LazyList(LazyItem):
         self._mask: bitarray = bitarray(len(self))
         self._mask.setall(0)  # ensure all bits are 0
         self._full_loaded: bool = False
+        self._size_list: list = [0]
+        if not self._toc:
+            total_size: int = 0
+            for size, _, _ in self._pos:
+                total_size += size
+                self._size_list.append(total_size)
 
     def __repr__(self):
         return f"LazyList[{len(self)}]" if config.simple_repr or not self._cached else self.to_obj().__repr__()
+
+    def _lookup_index(self, index: int) -> int:
+        low: int = 0
+        high: int = len(self._size_list) - 1
+
+        while True:
+            mid: int = (low + high) // 2
+
+            if self._size_list[mid] <= index < self._size_list[mid + 1]:
+                return mid
+
+            if index < self._size_list[mid]:
+                high = mid
+            else:
+                low = mid
 
     def __getitem__(self, index):
         if isinstance(index, str):
@@ -185,14 +206,12 @@ class LazyList(LazyItem):
                         self._mask[item] = 1
                         self._cache[item] = self._child(self._toc[item])
                     else:
-                        num_start, num_end = 0, 0
-                        for size, start, end in self._pos:
-                            num_end += size
-                            if num_start <= item < num_end:
-                                self._mask[num_start:num_end] = 1
-                                self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
-                                break
-                            num_start = num_end
+                        lookup_index: int = self._lookup_index(item)
+                        num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
+                        self._mask[num_start:num_end] = 1
+                        self._cache[num_start:num_end] = list(
+                            Unpacker(BytesIO(self._readb(*self._pos[lookup_index][1:])))
+                        )
 
             return self._cache[index]
 
@@ -202,13 +221,9 @@ class LazyList(LazyItem):
             if self._toc:
                 self._cache[item] = self._child(self._toc[item])
             else:
-                num_start, num_end = 0, 0
-                for size, start, end in self._pos:
-                    num_end += size
-                    if num_start <= item < num_end:
-                        self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
-                        break
-                    num_start = num_end
+                lookup_index: int = self._lookup_index(item)
+                num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
+                self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(*self._pos[lookup_index][1:]))))
 
         result = self._cache[index]
         self._cache = [None] * len(self)
