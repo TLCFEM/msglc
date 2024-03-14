@@ -184,6 +184,9 @@ class LazyList(LazyItem):
             else:
                 low = mid
 
+    def _all(self, start: int, end: int) -> list:
+        return list(Unpacker(BytesIO(self._readb(start, end))))
+
     def __getitem__(self, index):
         if isinstance(index, str):
             try:
@@ -209,9 +212,7 @@ class LazyList(LazyItem):
                         lookup_index: int = self._lookup_index(item)
                         num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
                         self._mask[num_start:num_end] = 1
-                        self._cache[num_start:num_end] = list(
-                            Unpacker(BytesIO(self._readb(*self._pos[lookup_index][1:])))
-                        )
+                        self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
 
             return self._cache[index]
 
@@ -223,7 +224,7 @@ class LazyList(LazyItem):
             else:
                 lookup_index: int = self._lookup_index(item)
                 num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
-                self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(*self._pos[lookup_index][1:]))))
+                self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
 
         result = self._cache[index]
         self._cache = [None] * len(self)
@@ -251,7 +252,7 @@ class LazyList(LazyItem):
 
             result: list = []
             for _, start, end in self._pos:
-                result.extend(list(Unpacker(BytesIO(self._readb(start, end)))))
+                result.extend(self._all(start, end))
 
             return result
 
@@ -267,7 +268,7 @@ class LazyList(LazyItem):
                 for size, start, end in self._pos:
                     num_end += size
                     if 0 == self._mask[num_start]:
-                        self._cache[num_start:num_end] = list(Unpacker(BytesIO(self._readb(start, end))))
+                        self._cache[num_start:num_end] = self._all(start, end)
                     num_start = num_end
 
             self._mask.setall(1)
