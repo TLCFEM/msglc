@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import dataclasses
+import os.path
 
 from .config import config
 from .writer import LazyWriter, LazyCombiner
@@ -48,6 +49,15 @@ def combine(archive: str, files: list[FileInfo]):
     :param files: a list of FileInfo objects
     :return: None
     """
+
+    all_names: set = {file.name for file in files}
+
+    if len(all_names) != len(files):
+        raise ValueError("Files must have unique names.")
+
+    for file in files:
+        if not os.path.exists(file.path):
+            raise ValueError(f"File {file.path} does not exist.")
 
     def _iter(path: str):
         with open(path, "rb") as _file:

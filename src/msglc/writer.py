@@ -131,6 +131,9 @@ class LazyCombiner:
         self._buffer.write(packb(len(packed_toc)).rjust(10, b"\0"))
 
     def write(self, name: str, obj: Generator):
+        if name in self._toc:
+            raise ValueError(f"File {name} already exists.")
+
         start: int = self._buffer.tell() - self._file_start
         for chunk in obj:
             self._buffer.write(chunk)
