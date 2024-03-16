@@ -50,10 +50,11 @@ def combine(archive: str, files: list[FileInfo]):
     :return: None
     """
 
-    all_names: set = {file.name for file in files}
-
-    if len(all_names) != len(files):
+    if len({file.name for file in files}) != len(files):
         raise ValueError("Files must have unique names.")
+
+    if 0 < sum(1 for file in files if file.name is not None) < len(files):
+        raise ValueError("Files must either all have names or all not have names.")
 
     for file in files:
         if not os.path.exists(file.path):
@@ -62,8 +63,7 @@ def combine(archive: str, files: list[FileInfo]):
     def _iter(path: str):
         with open(path, "rb") as _file:
             while True:
-                _data = _file.read(config.copy_chunk_size)
-                if not _data:
+                if not (_data := _file.read(config.copy_chunk_size)):
                     break
                 yield _data
 
