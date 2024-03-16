@@ -13,6 +13,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import gc
 from dataclasses import dataclass
 from io import BytesIO, BufferedReader
@@ -49,7 +51,7 @@ def configure(
     write_buffer_size: int = None,
     read_buffer_size: int = None,
     fast_loading: bool = None,
-    fast_loading_threshold: float = None,
+    fast_loading_threshold: int | float = None,
     trivial_size: int = None,
     disable_gc: bool = None,
     simple_repr: bool = None,
