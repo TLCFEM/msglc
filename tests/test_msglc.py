@@ -220,6 +220,10 @@ def test_combine_archives(tmpdir, json_after, target):
             with LazyReader("test_dict.msg") as inner_reader:
                 assert reader[1]["second_inner"] == inner_reader
 
+        with pytest.raises(ValueError):
+            combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg")])
+            combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg", "some_name")])
+
 
 def test_configure_with_valid_values():
     configure(
