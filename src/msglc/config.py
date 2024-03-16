@@ -43,56 +43,58 @@ config = Config()
 max_magic_len: int = 30
 
 
-def configure(**kwargs):
+def configure(
+    *,
+    small_obj_optimization_threshold: int = None,
+    write_buffer_size: int = None,
+    read_buffer_size: int = None,
+    fast_loading: bool = None,
+    fast_loading_threshold: float = None,
+    trivial_size: int = None,
+    disable_gc: bool = None,
+    simple_repr: bool = None,
+    copy_chunk_size: int = None,
+    magic: bytes = None,
+):
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.
     The function updates the values of the configuration parameters if they are provided in the arguments.
     """
-    if small_obj_optimization_threshold := kwargs.get("small_obj_optimization_threshold", None):
-        if isinstance(small_obj_optimization_threshold, int) and small_obj_optimization_threshold > 0:
-            config.small_obj_optimization_threshold = small_obj_optimization_threshold
-            if config.trivial_size > config.small_obj_optimization_threshold:
-                config.trivial_size = config.small_obj_optimization_threshold
+    if isinstance(small_obj_optimization_threshold, int) and small_obj_optimization_threshold > 0:
+        config.small_obj_optimization_threshold = small_obj_optimization_threshold
+        if config.trivial_size > config.small_obj_optimization_threshold:
+            config.trivial_size = config.small_obj_optimization_threshold
 
-    if write_buffer_size := kwargs.get("write_buffer_size", None):
-        if isinstance(write_buffer_size, int) and write_buffer_size > 0:
-            config.write_buffer_size = write_buffer_size
+    if isinstance(write_buffer_size, int) and write_buffer_size > 0:
+        config.write_buffer_size = write_buffer_size
 
-    if read_buffer_size := kwargs.get("read_buffer_size", None):
-        if isinstance(read_buffer_size, int) and read_buffer_size > 0:
-            config.read_buffer_size = read_buffer_size
+    if isinstance(read_buffer_size, int) and read_buffer_size > 0:
+        config.read_buffer_size = read_buffer_size
 
-    if (fast_loading := kwargs.get("fast_loading", None)) is not None:
-        if isinstance(fast_loading, bool):
-            config.fast_loading = fast_loading
+    if isinstance(fast_loading, bool):
+        config.fast_loading = fast_loading
 
-    if fast_loading_threshold := kwargs.get("fast_loading_threshold", None):
-        if isinstance(fast_loading_threshold, (int, float)) and 0 <= fast_loading_threshold <= 1:
-            config.fast_loading_threshold = fast_loading_threshold
+    if isinstance(fast_loading_threshold, (int, float)) and 0 <= fast_loading_threshold <= 1:
+        config.fast_loading_threshold = fast_loading_threshold
 
-    if trivial_size := kwargs.get("trivial_size", None):
-        if isinstance(trivial_size, int) and trivial_size > 0:
-            config.trivial_size = trivial_size
-            if config.trivial_size > config.small_obj_optimization_threshold:
-                config.small_obj_optimization_threshold = config.trivial_size
+    if isinstance(trivial_size, int) and trivial_size > 0:
+        config.trivial_size = trivial_size
+        if config.trivial_size > config.small_obj_optimization_threshold:
+            config.small_obj_optimization_threshold = config.trivial_size
 
-    if (disable_gc := kwargs.get("disable_gc", None)) is not None:
-        if isinstance(disable_gc, bool):
-            config.disable_gc = disable_gc
+    if isinstance(disable_gc, bool):
+        config.disable_gc = disable_gc
 
-    if (simple_repr := kwargs.get("simple_repr", None)) is not None:
-        if isinstance(simple_repr, bool):
-            config.simple_repr = simple_repr
+    if isinstance(simple_repr, bool):
+        config.simple_repr = simple_repr
 
-    if copy_chunk_size := kwargs.get("copy_chunk_size", None):
-        if isinstance(copy_chunk_size, int) and copy_chunk_size > 0:
-            config.copy_chunk_size = copy_chunk_size
+    if isinstance(copy_chunk_size, int) and copy_chunk_size > 0:
+        config.copy_chunk_size = copy_chunk_size
 
-    if magic := kwargs.get("magic", None):
-        if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
-            from msglc import LazyWriter
+    if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
+        from msglc import LazyWriter
 
-            LazyWriter.set_magic(magic)
+        LazyWriter.set_magic(magic)
 
 
 __gc_counter: int = 0
