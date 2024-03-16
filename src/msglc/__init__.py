@@ -17,12 +17,13 @@ from __future__ import annotations
 
 import dataclasses
 import os.path
+from io import BytesIO
 
 from .config import config
 from .writer import LazyWriter, LazyCombiner
 
 
-def dump(file: str, obj, **kwargs):
+def dump(file: str | BytesIO, obj, **kwargs):
     """
     This function is used to write the object to the file.
 
@@ -41,7 +42,7 @@ class FileInfo:
     name: str | None = None
 
 
-def combine(archive: str, files: list[FileInfo]):
+def combine(archive: str | BytesIO, files: list[FileInfo]):
     """
     This function is used to combine the multiple serialized files into a single archive.
 

@@ -128,6 +128,9 @@ class LazyCombiner:
         self._buffer.write(packb(toc_start).rjust(10, b"\0"))
         self._buffer.write(packb(len(packed_toc)).rjust(10, b"\0"))
 
+        if isinstance(self._buffer_or_path, str):
+            self._buffer.close()
+
     def write(self, obj: Generator, name: str | None = None) -> None:
         if self._toc is None:
             self._toc = [] if name is None else {}
