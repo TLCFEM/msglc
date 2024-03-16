@@ -153,7 +153,7 @@ class LazyList(LazyItem):
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: list = toc.get("t", [])  # if empty, it's a list of small objects
-        self._pos: list = toc["p"]
+        self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
         self._index: int = 0
         self._cache: list = [None] * len(self)
         self._mask: bitarray = bitarray(len(self))

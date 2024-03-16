@@ -37,8 +37,8 @@ def dump(file: str, obj, **kwargs):
 
 @dataclasses.dataclass
 class FileInfo:
-    name: str
     path: str
+    name: str | None = None
 
 
 def combine(archive: str, files: list[FileInfo]):
@@ -49,12 +49,13 @@ def combine(archive: str, files: list[FileInfo]):
     :param files: a list of FileInfo objects
     :return: None
     """
-
-    if len({file.name for file in files}) != len(files):
-        raise ValueError("Files must have unique names.")
-
     if 0 < sum(1 for file in files if file.name is not None) < len(files):
         raise ValueError("Files must either all have names or all not have names.")
+
+    if len(all_names := {file.name for file in files}) != len(files) and (
+        len(all_names) != 1 or all_names.pop() is not None
+    ):
+        raise ValueError("Files must have unique names.")
 
     for file in files:
         if not os.path.exists(file.path):
@@ -69,4 +70,4 @@ def combine(archive: str, files: list[FileInfo]):
 
     with LazyCombiner(archive) as combiner:
         for file in files:
-            combiner.write(file.name, _iter(file.path))
+            combiner.write(_iter(file.path), file.name)

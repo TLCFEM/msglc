@@ -158,12 +158,12 @@ def test_combine_archives(tmpdir, json_after, target):
         with LazyWriter("test_dict.msg") as writer:
             writer.write(json_after)
 
-        combine("combined_a.msg", [FileInfo("first_inner", "test_list.msg"), FileInfo("second_inner", "test_dict.msg")])
+        combine("combined_a.msg", [FileInfo("test_list.msg", "first_inner"), FileInfo("test_dict.msg", "second_inner")])
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        combine(target, [FileInfo("first_outer", "combined_a.msg"), FileInfo("second_outer", "combined_a.msg")])
+        combine(target, [FileInfo("combined_a.msg", "first_outer"), FileInfo("combined_a.msg", "second_outer")])
 
         if isinstance(target, BytesIO):
             target.seek(0)
@@ -187,6 +187,38 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.visit("second_outer/first_inner/24:2:30") == [24, 26, 28]
             assert reader.visit("second_outer/first_inner/:2:5") == [0, 2, 4]
             assert reader.visit("second_outer/first_inner/24:2:") == [24, 26, 28]
+
+        if isinstance(target, BytesIO):
+            target = BytesIO()
+
+        combine(target, [FileInfo("combined_a.msg"), FileInfo("combined_a.msg")])
+
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with LazyReader(target) as reader:
+            assert reader.read("0/second_inner/glossary/title") == "example glossary"
+            assert reader.read("1/first_inner/2") == 2
+            assert reader.read("1/first_inner/-1") == 29
+            assert reader.read("1/first_inner/0:2") == [0, 1]
+            assert reader.read("1/first_inner/:2") == [0, 1]
+            assert reader.read("1/first_inner/28:") == [28, 29]
+            assert reader.read("1/first_inner/24:2:30") == [24, 26, 28]
+            assert reader.read("1/first_inner/:2:5") == [0, 2, 4]
+            assert reader.read("1/first_inner/24:2:") == [24, 26, 28]
+            assert reader.visit("0/second_inner/glossary/title") == "example glossary"
+            assert reader.visit("1/first_inner/2") == 2
+            assert reader.visit("1/first_inner/-1") == 29
+            assert reader.visit("1/first_inner/0:2") == [0, 1]
+            assert reader.visit("1/first_inner/:2") == [0, 1]
+            assert reader.visit("1/first_inner/28:") == [28, 29]
+            assert reader.visit("1/first_inner/24:2:30") == [24, 26, 28]
+            assert reader.visit("1/first_inner/:2:5") == [0, 2, 4]
+            assert reader.visit("1/first_inner/24:2:") == [24, 26, 28]
+            with LazyReader("test_list.msg") as inner_reader:
+                assert reader[0]["first_inner"] == inner_reader
+            with LazyReader("test_dict.msg") as inner_reader:
+                assert reader[1]["second_inner"] == inner_reader
 
 
 def test_configure_with_valid_values():

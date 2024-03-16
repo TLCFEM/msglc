@@ -24,6 +24,8 @@ dump("data.msg", data)
 Use `combine` to combine several serialized files together.
 The combined files can be further combined.
 
+#### Combine as `dict`
+
 ```python
 from msglc import dump, combine, FileInfo
 from msglc.reader import LazyReader
@@ -31,7 +33,7 @@ from msglc.reader import LazyReader
 dump("dict.msg", {str(v): v for v in range(1000)})
 dump("list.msg", [float(v) for v in range(1000)])
 
-combine("combined.msg", [FileInfo("dict", "dict.msg"), FileInfo("list", "list.msg")])
+combine("combined.msg", [FileInfo("dict.msg", "dict"), FileInfo("list.msg", "list")])
 # support recursively combining files
 # ...
 
@@ -39,8 +41,29 @@ combine("combined.msg", [FileInfo("dict", "dict.msg"), FileInfo("list", "list.ms
 # { 'dict' : {'1':1,'2':2,...}, 'list' : [1.0,2.0,3.0,...] }
 # so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
-    assert reader['dict/101'] == 101
-    assert reader['list/101'] == 101.0
+    assert reader['dict/101'] == 101  # also reader['dict'][101]
+    assert reader['list/101'] == 101.0  # also reader['list'][101]
+```
+
+#### Combine as `list`
+
+```python
+from msglc import dump, combine, FileInfo
+from msglc.reader import LazyReader
+
+dump("dict.msg", {str(v): v for v in range(1000)})
+dump("list.msg", [float(v) for v in range(1000)])
+
+combine("combined.msg", [FileInfo("dict.msg"), FileInfo("list.msg")])
+# support recursively combining files
+# ...
+
+# the combined file uses a list layout
+# [ {'1':1,'2':2,...}, [1.0,2.0,3.0,...] ]
+# so one can read it as follows, details in coming section
+with LazyReader("combined.msg") as reader:
+    assert reader['0/101'] == 101  # also reader[0][101]
+    assert reader['1/101'] == 101.0  # also reader[1][101]
 ```
 
 ### Deserialization

@@ -100,7 +100,7 @@ class LazyCombiner:
 
         self._buffer: BufferWriter = None  # type: ignore
 
-        self._toc: dict = {}
+        self._toc: dict | list = None  # type: ignore
         self._header_start: int = 0
         self._file_start: int = 0
 
@@ -117,8 +117,6 @@ class LazyCombiner:
         self._buffer.write(b"\0" * 20)
         self._file_start = self._buffer.tell()
 
-        self._toc = {}
-
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -130,12 +128,18 @@ class LazyCombiner:
         self._buffer.write(packb(toc_start).rjust(10, b"\0"))
         self._buffer.write(packb(len(packed_toc)).rjust(10, b"\0"))
 
-    def write(self, name: str, obj: Generator):
-        if name in self._toc:
+    def write(self, obj: Generator, name: str | None = None) -> None:
+        if self._toc is None:
+            self._toc = [] if name is None else {}
+
+        if name is not None and name in self._toc:
             raise ValueError(f"File {name} already exists.")
 
         start: int = self._buffer.tell() - self._file_start
         for chunk in obj:
             self._buffer.write(chunk)
 
-        self._toc[name] = start
+        if name is None:
+            self._toc.append(start)
+        else:
+            self._toc[name] = start
