@@ -18,6 +18,7 @@ from __future__ import annotations
 import dataclasses
 import os.path
 from io import BytesIO
+from typing import BinaryIO
 
 from .config import config
 from .writer import LazyWriter, LazyCombiner
@@ -62,10 +63,16 @@ def combine(archive: str | BytesIO, files: list[FileInfo]):
         if not os.path.exists(file.path):
             raise ValueError(f"File {file.path} does not exist.")
 
-    def _iter(path: str):
-        with open(path, "rb") as _file:
+    def _iter(path: str | BinaryIO):
+        if isinstance(path, str):
+            with open(path, "rb") as _file:
+                while True:
+                    if not (_data := _file.read(config.copy_chunk_size)):
+                        break
+                    yield _data
+        else:
             while True:
-                if not (_data := _file.read(config.copy_chunk_size)):
+                if not (_data := path.read(config.copy_chunk_size)):
                     break
                 yield _data
 
