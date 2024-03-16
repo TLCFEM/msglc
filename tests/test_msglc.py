@@ -222,7 +222,10 @@ def test_combine_archives(tmpdir, json_after, target):
 
         with pytest.raises(ValueError):
             combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg")])
+        with pytest.raises(ValueError):
             combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg", "some_name")])
+        with pytest.raises(ValueError):
+            combine(target, [FileInfo("combined_aa.msg"), FileInfo("combined_a.msg")])
 
 
 def test_configure_with_valid_values():
