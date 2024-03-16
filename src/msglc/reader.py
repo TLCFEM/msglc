@@ -445,9 +445,9 @@ class LazyReader(LazyItem):
         for key in path_stack:
             if "" == key:
                 continue
-            if isinstance(key, str) and isinstance(target, (list, LazyList)):
-                key = to_index(key, len(target))
-            target = target[key]
+            target = target[
+                to_index(key, len(target)) if isinstance(key, str) and isinstance(target, (list, LazyList)) else key
+            ]
         return target
 
     def visit(self, path: str = ""):
@@ -466,9 +466,7 @@ class LazyReader(LazyItem):
         for key in path.split("/"):
             if "" == key:
                 continue
-            if isinstance(target, (list, LazyList)):
-                key = to_index(key, len(target))
-            target = target[key]
+            target = target[to_index(key, len(target)) if isinstance(target, (list, LazyList)) else key]
         return target
 
     def to_obj(self):

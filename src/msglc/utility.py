@@ -143,8 +143,9 @@ def is_slice(key: str, total_size: int):
 @lru_cache(maxsize=2**14)
 def to_index(key: str, total_size: int):
     if is_index(key):
-        key = int(key)  # type: ignore
-    elif slicing := is_slice(key, total_size):
-        key = slice(*slicing)  # type: ignore
+        return int(key)
+
+    if slicing := is_slice(key, total_size):
+        return slice(*slicing)
 
     return key
