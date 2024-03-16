@@ -443,6 +443,8 @@ class LazyReader(LazyItem):
 
         target = self._obj
         for key in path_stack:
+            if "" == key:
+                continue
             if isinstance(key, str) and isinstance(target, (list, LazyList)):
                 key = to_index(key, len(target))
             target = target[key]
@@ -462,7 +464,7 @@ class LazyReader(LazyItem):
         """
         target = self._obj
         for key in path.split("/"):
-            if not key:
+            if "" == key:
                 continue
             if isinstance(target, (list, LazyList)):
                 key = to_index(key, len(target))
