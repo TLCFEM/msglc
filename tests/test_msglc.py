@@ -96,6 +96,20 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
                 assert reader.read() == json_after
                 assert reader == json_after
 
+                dict_container = reader.read("glossary/GlossDiv")
+                assert len(dict_container) == 2
+                assert dict_container.get("invalid_key") is None
+                assert "invalid_key" not in dict_container
+                assert set(dict_container.keys()) == {"title", "GlossList"}
+                for x, _ in dict_container.items():
+                    assert x in ["title", "GlossList"]
+
+                list_container = reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso")
+                assert len(list_container) == 2
+                for x in list_container:
+                    assert x in ["GML", "XML"]
+                assert set(list_container) == {"GML", "XML"}
+
         str(stats)
 
 
