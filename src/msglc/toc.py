@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 from io import BytesIO
+from typing import BinaryIO
 
 from msgpack import Packer  # type: ignore
 
@@ -38,8 +39,8 @@ class Node:
 
 
 class TOC:
-    def __init__(self, *, packer: Packer, buffer: BytesIO, transform: callable = None):  # type: ignore
-        self._buffer: BytesIO = buffer
+    def __init__(self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None):  # type: ignore
+        self._buffer: BytesIO | BinaryIO = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
 

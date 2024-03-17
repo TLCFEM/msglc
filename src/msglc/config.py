@@ -47,16 +47,16 @@ max_magic_len: int = 30
 
 def configure(
     *,
-    small_obj_optimization_threshold: int = None,
-    write_buffer_size: int = None,
-    read_buffer_size: int = None,
-    fast_loading: bool = None,
-    fast_loading_threshold: int | float = None,
-    trivial_size: int = None,
-    disable_gc: bool = None,
-    simple_repr: bool = None,
-    copy_chunk_size: int = None,
-    magic: bytes = None,
+    small_obj_optimization_threshold: int | None = None,
+    write_buffer_size: int | None = None,
+    read_buffer_size: int | None = None,
+    fast_loading: bool | None = None,
+    fast_loading_threshold: int | float | None = None,
+    trivial_size: int | None = None,
+    disable_gc: bool | None = None,
+    simple_repr: bool | None = None,
+    copy_chunk_size: int | None = None,
+    magic: bytes | None = None,
 ):
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.

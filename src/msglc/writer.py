@@ -143,6 +143,8 @@ class LazyCombiner:
             self._buffer.write(chunk)
 
         if name is None:
+            assert isinstance(self._toc, list)
             self._toc.append(start)
         else:
+            assert isinstance(self._toc, dict)
             self._toc[name] = start

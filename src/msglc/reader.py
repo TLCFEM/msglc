@@ -152,7 +152,7 @@ class LazyList(LazyItem):
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: list | None = toc.get("t", None)  # if None, it's a list of small objects
-        self._pos: list | None = toc.get("p", None)  # if None, it comes from a combined archive
+        self._pos: list = toc.get("p", None)  # noqa # if None, it comes from a combined archive
         self._index: int = 0
         self._cache: list = [None] * len(self)
         self._mask: bitarray = bitarray(len(self))
@@ -187,6 +187,7 @@ class LazyList(LazyItem):
         return list(Unpacker(BytesIO(self._readb(start, end))))
 
     def __getitem__(self, index):
+        index_range: list | range
         if isinstance(index, str):
             try:
                 index_range = [int(index)]
@@ -221,7 +222,7 @@ class LazyList(LazyItem):
             if self._toc is not None:
                 self._cache[item] = self._child(self._toc[item])
             else:
-                lookup_index: int = self._lookup_index(item)
+                lookup_index = self._lookup_index(item)
                 num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
                 self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
 
@@ -288,7 +289,7 @@ class LazyDict(LazyItem):
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: dict = toc["t"]
-        self._pos: list | None = toc.get("p", None)  # if empty, it comes from a combined archive
+        self._pos: list = toc.get("p", None)  # noqa # if empty, it comes from a combined archive
         self._cache: dict = {}
         self._full_loaded: bool = False
 
