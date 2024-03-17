@@ -110,10 +110,9 @@ class LazyItem:
             return LazyReader(self._buffer, **params)
 
         if (child_toc := toc.get("t", None)) is None:
-            child_pos: list = toc["p"]
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
-            if 2 == len(child_pos) and isinstance(child_pos[0], int) and isinstance(child_pos[1], int):
+            if 2 == len(child_pos := toc["p"]) and all(isinstance(x, int) for x in child_pos):
                 return self._read(*child_pos)
 
             # {"p": [[size1, start_pos, end_pos], [size2, start_pos, end_pos], [size3, start_pos, end_pos]]}
@@ -152,15 +151,15 @@ class LazyList(LazyItem):
         unpacker: Unpacker | None = None,
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
-        self._toc: list = toc.get("t", [])  # if empty, it's a list of small objects
-        self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
+        self._toc: list | None = toc.get("t", None)  # if None, it's a list of small objects
+        self._pos: list | None = toc.get("p", None)  # if None, it comes from a combined archive
         self._index: int = 0
         self._cache: list = [None] * len(self)
         self._mask: bitarray = bitarray(len(self))
         self._mask.setall(0)  # ensure all bits are 0
         self._full_loaded: bool = False
         self._size_list: list = [0]
-        if not self._toc:
+        if self._toc is None:
             total_size: int = 0
             for size, _, _ in self._pos:
                 total_size += size
@@ -205,7 +204,7 @@ class LazyList(LazyItem):
                 item = normalise_index(item, len(self))
 
                 if 0 == self._mask[item]:
-                    if self._toc:
+                    if self._toc is not None:
                         self._mask[item] = 1
                         self._cache[item] = self._child(self._toc[item])
                     else:
@@ -219,7 +218,7 @@ class LazyList(LazyItem):
         for item in index_range:
             item = normalise_index(item, len(self))
 
-            if self._toc:
+            if self._toc is not None:
                 self._cache[item] = self._child(self._toc[item])
             else:
                 lookup_index: int = self._lookup_index(item)
@@ -243,11 +242,11 @@ class LazyList(LazyItem):
         return item
 
     def __len__(self):
-        return self._toc.__len__() if self._toc else sum(x[0] for x in self._pos)
+        return self._toc.__len__() if self._toc is not None else sum(x[0] for x in self._pos)
 
     def to_obj(self):
         if not self._cached:
-            if self._toc:
+            if self._toc is not None:
                 return self._read(*self._pos)
 
             result: list = []
@@ -261,7 +260,7 @@ class LazyList(LazyItem):
             if not self._fast_loading:
                 for index in range(len(self)):
                     self._cache[index] = to_obj(self[index])
-            elif self._toc:
+            elif self._toc is not None:
                 self._cache = self._read(*self._pos)
             else:
                 num_start, num_end = 0, 0
@@ -289,7 +288,7 @@ class LazyDict(LazyItem):
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: dict = toc["t"]
-        self._pos: list = toc.get("p", [])  # if empty, it comes from a combined archive
+        self._pos: list | None = toc.get("p", None)  # if empty, it comes from a combined archive
         self._cache: dict = {}
         self._full_loaded: bool = False
 
@@ -334,7 +333,7 @@ class LazyDict(LazyItem):
 
         if not self._full_loaded:
             self._full_loaded = True
-            if self._fast_loading and self._pos:
+            if self._fast_loading and self._pos is not None:
                 self._cache = self._read(*self._pos)
             else:
                 for k in self:

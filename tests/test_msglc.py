@@ -45,6 +45,8 @@ def json_base():
                 }
             },
         },
+        "empty_list": [],
+        "none_list": [None],
     }
 
 
@@ -89,6 +91,8 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
         with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
             with LazyReader(buffer, counter=stats, cached=cached) as reader:
                 assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
+                assert reader.read("glossary/empty_list") == []
+                assert reader.read("glossary/none_list/0") is None
                 assert reader.read() == json_after
                 assert reader == json_after
 
