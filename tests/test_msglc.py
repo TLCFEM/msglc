@@ -12,9 +12,9 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import random
 from io import BytesIO
+from itertools import cycle
 
 import pytest
 
@@ -244,6 +244,32 @@ def test_combine_archives(tmpdir, json_after, target):
             combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg", "some_name")])
         with pytest.raises(ValueError):
             combine(target, [FileInfo("combined_aa.msg"), FileInfo("combined_a.msg")])
+
+
+def test_recursive_combine(tmpdir):
+    alternate = cycle(["combined.msg", "core.msg", "core.msg", "combined.msg"])
+
+    def token():
+        return random.choice(["a", "b", "c", None])
+
+    core = [x for x in range(10)]
+
+    with tmpdir.as_cwd():
+        with LazyWriter("core.msg") as writer:
+            writer.write(core)
+
+        path: list = []
+
+        for _ in range(10):
+            segment = token()
+            target = next(alternate)
+            combine(target, [FileInfo(next(alternate), segment)])
+            if segment is None:
+                segment = 0
+            path.append(segment)
+
+        with LazyReader(target) as reader:
+            assert reader.read(list(reversed(path))) == core
 
 
 def test_configure_with_valid_values():
