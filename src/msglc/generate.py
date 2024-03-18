@@ -14,8 +14,11 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import annotations
 
+import functools
+import os
 import random
 import string
+from multiprocessing import Pool
 from time import monotonic
 
 import msgpack  # type: ignore
@@ -78,6 +81,11 @@ def goto_path(json_obj, path):
     return target
 
 
+def configure_and_dump(archive, block):
+    configure(small_obj_optimization_threshold=2**block)
+    dump(f"archive_{block}.msg", archive)
+
+
 def generate(*, depth=6, width=11, threshold=23):
     archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
@@ -90,16 +98,15 @@ def generate(*, depth=6, width=11, threshold=23):
     with open("archive_msgpack.msg", "wb") as f:
         msgpack.dump(archive, f)
 
-    block_size: int = 13
-    while True:
-        if block_size > threshold:
-            break
-        configure(small_obj_optimization_threshold=2**block_size)
-        dump(f"archive_{block_size}.msg", archive)
-        block_size += 2
+    _dump = functools.partial(configure_and_dump, archive)
+
+    step = range(13, threshold + 1, 2)
+
+    with Pool(min(os.cpu_count(), len(step))) as p:
+        p.map(_dump, step)
 
 
-def compare(mode, size: int = 10, total: int = 100_000):
+def compare(mode, size: int = 13, total: int = 100_000):
     start = monotonic()
 
     accumulator = 0
