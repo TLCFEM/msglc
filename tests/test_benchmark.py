@@ -91,7 +91,7 @@ def test_numpy_array(tmpdir):
 
 def test_compare_to_plain(tmpdir):
     with tmpdir.as_cwd():
-        generate(depth=4, width=10)
+        generate(depth=4, width=6)
         compare(2)
         compare(-2)
 

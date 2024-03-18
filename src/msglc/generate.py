@@ -78,9 +78,7 @@ def goto_path(json_obj, path):
     return target
 
 
-def generate(*, depth=6, width=11, threshold=2**14):
-    configure(small_obj_optimization_threshold=threshold)
-
+def generate(*, depth=6, width=11, threshold=23):
     archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
     random.shuffle(path)
@@ -92,10 +90,16 @@ def generate(*, depth=6, width=11, threshold=2**14):
     with open("archive_msgpack.msg", "wb") as f:
         msgpack.dump(archive, f)
 
-    dump("archive.msg", archive)
+    block_size: int = 13
+    while True:
+        if block_size > threshold:
+            break
+        configure(small_obj_optimization_threshold=2**block_size)
+        dump(f"archive_{block_size}.msg", archive)
+        block_size += 2
 
 
-def compare(mode, total: int = 100_000):
+def compare(mode, size: int = 10, total: int = 100_000):
     start = monotonic()
 
     accumulator = 0
@@ -103,7 +107,7 @@ def compare(mode, total: int = 100_000):
     with open("path.txt", "r") as f:
         if mode > 0:
             counter = LazyStats()
-            with LazyReader("archive.msg", counter=counter) as reader:
+            with LazyReader(f"archive_{size}.msg", counter=counter) as reader:
                 while p := f.readline():
                     accumulator += 1
                     if accumulator == total:
