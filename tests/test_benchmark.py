@@ -15,6 +15,8 @@
 
 import random
 
+import pytest
+
 from msglc import dump, config
 from msglc.generate import generate_random_json, find_all_paths, goto_path, generate, compare
 from msglc.reader import LazyStats, LazyReader
@@ -94,6 +96,21 @@ def test_compare_to_plain(tmpdir):
         generate(depth=4, width=6)
         compare(2)
         compare(-2)
+
+
+@pytest.fixture(scope="module")
+def prepare(tmpdir_factory):
+    tmp_prepare = tmpdir_factory.mktemp("prepare")
+    with tmp_prepare.as_cwd():
+        generate(depth=5, width=6, threshold=25)
+    return tmp_prepare
+
+
+@pytest.mark.parametrize("size", [x for x in range(13, 25)])
+@pytest.mark.parametrize("total", [0, 1, 2, 3, 4])
+def test_matrix(prepare, benchmark, size, total):
+    with prepare.as_cwd():
+        benchmark(compare, 1, size, total)
 
 
 if __name__ == "__main__":

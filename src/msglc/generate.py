@@ -19,7 +19,6 @@ import os
 import random
 import string
 from multiprocessing import Pool
-from time import monotonic
 
 import msgpack  # type: ignore
 
@@ -89,27 +88,26 @@ def configure_and_dump(archive, block):
 def generate(*, depth=6, width=11, threshold=23):
     archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
-    random.shuffle(path)
+    indices = list(range(0, min(1_000_000, len(path))))
+    random.shuffle(indices)
 
     with open("path.txt", "w") as f:
-        for i in path[: min(1_000_000, len(path))]:
-            f.write("/".join(map(str, i)) + "\n")
+        for i in indices:
+            f.write("/".join(map(str, path[i])) + "\n")
 
     with open("archive_msgpack.msg", "wb") as f:
         msgpack.dump(archive, f)
 
     _dump = functools.partial(configure_and_dump, archive)
 
-    step = range(13, threshold + 1, 2)
+    step = range(13, threshold + 1)
 
     with Pool(min(os.cpu_count(), len(step))) as p:
         p.map(_dump, step)
 
 
-def compare(mode, size: int = 13, total: int = 100_000):
-    start = monotonic()
-
-    accumulator = 0
+def compare(mode, size: int = 13, total: int = 5):
+    accumulator: int = 0
 
     with open("path.txt", "r") as f:
         if mode > 0:
@@ -117,10 +115,9 @@ def compare(mode, size: int = 13, total: int = 100_000):
             with LazyReader(f"archive_{size}.msg", counter=counter) as reader:
                 while p := f.readline():
                     accumulator += 1
-                    if accumulator == total:
+                    if accumulator == 10**total:
                         break
                     _ = reader.visit(p.strip())
-            print(counter)
             counter.clear()
         else:
             with open("archive_msgpack.msg", "rb") as fa:
@@ -128,11 +125,9 @@ def compare(mode, size: int = 13, total: int = 100_000):
 
             while p := f.readline():
                 accumulator += 1
-                if accumulator == total:
+                if accumulator == 10**total:
                     break
                 _ = goto_path(archive, p.strip().split("/"))
-
-    print(f"takes: {monotonic() - start} s")
 
 
 if __name__ == "__main__":
