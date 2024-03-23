@@ -21,7 +21,8 @@ from bitarray import bitarray
 from msgpack import Unpacker  # type: ignore
 
 from .config import config, increment_gc_counter, decrement_gc_counter, BufferReader
-from .utility import normalise_index, MockIO, to_index
+from .index import normalise_index, to_index
+from .utility import MockIO
 from .writer import LazyWriter
 
 
