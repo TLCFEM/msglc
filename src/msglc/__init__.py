@@ -66,14 +66,10 @@ def combine(archive: str | BytesIO, files: list[FileInfo]):
     def _iter(path: str | BinaryIO):
         if isinstance(path, str):
             with open(path, "rb") as _file:
-                while True:
-                    if not (_data := _file.read(config.copy_chunk_size)):
-                        break
+                while _data := _file.read(config.copy_chunk_size):
                     yield _data
         else:
-            while True:
-                if not (_data := path.read(config.copy_chunk_size)):
-                    break
+            while _data := path.read(config.copy_chunk_size):
                 yield _data
 
     with LazyCombiner(archive) as combiner:
