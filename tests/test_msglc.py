@@ -246,6 +246,45 @@ def test_combine_archives(tmpdir, json_after, target):
             combine(target, [FileInfo("combined_aa.msg"), FileInfo("combined_a.msg")])
 
 
+@pytest.mark.parametrize("target", ["combined.msg", BytesIO()])
+def test_combine_archives_append(tmpdir, json_after, target):
+    with tmpdir.as_cwd():
+        with LazyWriter("test_list.msg") as writer:
+            writer.write([x for x in range(30)])
+        with LazyWriter("test_dict.msg") as writer:
+            writer.write(json_after)
+
+        combine(target, [FileInfo("test_dict.msg")])
+        combine(target, [FileInfo("test_list.msg")], "a")
+
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with LazyReader(target) as reader:
+            assert reader.read("0/glossary/title") == "example glossary"
+            assert reader.read("1/2") == 2
+            assert reader.read("1/-1") == 29
+            assert reader.read("1/0:2") == [0, 1]
+            assert reader.read("1/:2") == [0, 1]
+            assert reader.read("1/28:") == [28, 29]
+            assert reader.read("1/24:2:30") == [24, 26, 28]
+            assert reader.read("1/:2:5") == [0, 2, 4]
+            assert reader.read("1/24:2:") == [24, 26, 28]
+            assert reader.visit("0/glossary/title") == "example glossary"
+            assert reader.visit("1/2") == 2
+            assert reader.visit("1/-1") == 29
+            assert reader.visit("1/0:2") == [0, 1]
+            assert reader.visit("1/:2") == [0, 1]
+            assert reader.visit("1/28:") == [28, 29]
+            assert reader.visit("1/24:2:30") == [24, 26, 28]
+            assert reader.visit("1/:2:5") == [0, 2, 4]
+            assert reader.visit("1/24:2:") == [24, 26, 28]
+            with LazyReader("test_dict.msg") as inner_reader:
+                assert reader[0] == inner_reader
+            with LazyReader("test_list.msg") as inner_reader:
+                assert reader[1] == inner_reader
+
+
 def test_recursive_combine(tmpdir):
     alternate = cycle(["combined.msg", "core.msg", "core.msg", "combined.msg"])
 

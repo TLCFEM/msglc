@@ -18,7 +18,7 @@ from __future__ import annotations
 import dataclasses
 import os.path
 from io import BytesIO
-from typing import BinaryIO
+from typing import BinaryIO, Literal
 
 from .config import config
 from .writer import LazyWriter, LazyCombiner
@@ -43,7 +43,7 @@ class FileInfo:
     name: str | None = None
 
 
-def combine(archive: str | BytesIO, files: list[FileInfo]):
+def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w"] = "w"):
     """
     This function is used to combine the multiple serialized files into a single archive.
 
@@ -72,6 +72,6 @@ def combine(archive: str | BytesIO, files: list[FileInfo]):
             while _data := path.read(config.copy_chunk_size):
                 yield _data
 
-    with LazyCombiner(archive) as combiner:
+    with LazyCombiner(archive, mode) as combiner:
         for file in files:
             combiner.write(_iter(file.path), file.name)

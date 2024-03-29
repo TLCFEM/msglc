@@ -15,10 +15,11 @@
 
 from __future__ import annotations
 
+import os.path
 from io import BytesIO, BufferedReader
-from typing import Generator
+from typing import Generator, Literal
 
-from msgpack import Packer, packb  # type: ignore
+from msgpack import Packer, packb, unpackb  # type: ignore
 
 from .config import config, increment_gc_counter, decrement_gc_counter, BufferWriter, max_magic_len
 from .toc import TOC
@@ -95,8 +96,9 @@ class LazyWriter:
 
 
 class LazyCombiner:
-    def __init__(self, buffer_or_path: str | BufferWriter):
+    def __init__(self, buffer_or_path: str | BufferWriter, mode: Literal["a", "w"] = "w"):
         self._buffer_or_path: str | BufferWriter = buffer_or_path
+        self._mode: str = mode
 
         self._buffer: BufferWriter = None  # type: ignore
 
@@ -106,16 +108,53 @@ class LazyCombiner:
 
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
-            self._buffer = open(self._buffer_or_path, "wb", buffering=config.write_buffer_size)
+            mode: str = "wb" if not os.path.exists(self._buffer_or_path) or self._mode == "w" else "r+b"
+            self._buffer = open(self._buffer_or_path, mode, buffering=config.write_buffer_size)
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
+            if self._mode == "a":
+                self._buffer.seek(0)
         else:
             raise ValueError("Expecting a buffer or path.")
 
-        self._buffer.write(LazyWriter.magic)
-        self._header_start = self._buffer.tell()
-        self._buffer.write(b"\0" * 20)
-        self._file_start = self._buffer.tell()
+        if self._mode == "w":
+            self._buffer.write(LazyWriter.magic)
+            self._header_start = self._buffer.tell()
+            self._buffer.write(b"\0" * 20)
+            self._file_start = self._buffer.tell()
+        else:
+            sep_a, sep_b, sep_c = LazyWriter.magic_len(), LazyWriter.magic_len() + 10, LazyWriter.magic_len() + 20
+
+            ini_position: int = self._buffer.tell()
+            header: bytes = self._buffer.read(sep_c)
+
+            def _raise_invalid(msg: str):
+                self._buffer.seek(ini_position)
+                raise ValueError(msg)
+
+            if header[:sep_a] != LazyWriter.magic:
+                _raise_invalid("Invalid file format, cannot append to the current file.")
+
+            toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0"))
+            toc_size: int = unpackb(header[sep_b:sep_c].lstrip(b"\0"))
+
+            self._buffer.seek(ini_position + sep_c + toc_start)
+            self._toc = unpackb(self._buffer.read(toc_size)).get("t", None)
+
+            if self._toc is None:
+                _raise_invalid("The given file is not a valid combined file.")
+            elif isinstance(self._toc, list):
+                if any(not isinstance(i, int) for i in self._toc):
+                    _raise_invalid("The given file is not a valid combined file.")
+            elif isinstance(self._toc, dict):
+                if any(not isinstance(i, int) for i in self._toc.values()):
+                    _raise_invalid("The given file is not a valid combined file.")
+            else:
+                _raise_invalid("The given file is not a valid combined file.")
+
+            self._header_start = ini_position + sep_a
+            self._file_start = ini_position + sep_c
+            self._buffer.seek(ini_position + sep_c + toc_start)
 
         return self
 
@@ -135,16 +174,20 @@ class LazyCombiner:
         if self._toc is None:
             self._toc = [] if name is None else {}
 
-        if name is not None and name in self._toc:
-            raise ValueError(f"File {name} already exists.")
+        if name is None:
+            if not isinstance(self._toc, list):
+                raise ValueError("Cannot assign a name when combining in list mode.")
+        else:
+            if not isinstance(self._toc, dict):
+                raise ValueError("Need a name when combining in dict mode.")
+            if name in self._toc:
+                raise ValueError(f"File {name} already exists.")
 
         start: int = self._buffer.tell() - self._file_start
         for chunk in obj:
             self._buffer.write(chunk)
 
         if name is None:
-            assert isinstance(self._toc, list)
             self._toc.append(start)
         else:
-            assert isinstance(self._toc, dict)
             self._toc[name] = start
