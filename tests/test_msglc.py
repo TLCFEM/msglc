@@ -284,6 +284,9 @@ def test_combine_archives_append(tmpdir, json_after, target):
             with LazyReader("test_list.msg") as inner_reader:
                 assert reader[1] == inner_reader
 
+        with pytest.raises(ValueError):
+            combine(target, [FileInfo("test_list.msg", "no_name")], "a")
+
 
 def test_recursive_combine(tmpdir):
     alternate = cycle(["combined.msg", "core.msg", "core.msg", "combined.msg"])
