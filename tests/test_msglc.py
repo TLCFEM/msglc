@@ -18,7 +18,7 @@ from itertools import cycle
 
 import pytest
 
-from msglc import LazyWriter, FileInfo, combine
+from msglc import LazyWriter, FileInfo, combine, append
 from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
 from msglc.reader import LazyStats, LazyReader
 from msglc.utility import MockIO
@@ -288,29 +288,29 @@ def test_combine_archives_append(tmpdir, json_after, target):
             target.seek(0)
 
         with pytest.raises(ValueError):
-            combine(target, [FileInfo("test_list.msg", "no_name")], mode="a")
+            append(target, FileInfo("test_list.msg", "no_name"))
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
         with pytest.raises(ValueError):
-            combine(target, [FileInfo("test_list.msg", "no_name")])
-            combine(target, [FileInfo("test_list.msg", "no_name")], mode="a")
+            combine(target, FileInfo("test_list.msg", "no_name"))
+            append(target, FileInfo("test_list.msg", "no_name"))
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
         with pytest.raises(ValueError):
-            combine(target, [FileInfo("test_list.msg", "no_name")])
-            combine(target, [FileInfo("test_list.msg")], mode="a")
+            combine(target, FileInfo("test_list.msg", "no_name"))
+            append(target, FileInfo("test_list.msg"))
 
         with pytest.raises(ValueError):
-            combine(target, [FileInfo(BytesIO(b"0" * 100), "no_name")])
+            combine(target, FileInfo(BytesIO(b"0" * 100), "no_name"))
 
         with pytest.raises(ValueError):
             with open("trivial.msg", "wb") as trivial:
                 trivial.write(b"0" * 300)
-            combine(target, [FileInfo("trivial.msg", "no_name")])
+            combine(target, FileInfo("trivial.msg", "no_name"))
 
 
 def test_recursive_combine(tmpdir):

@@ -43,7 +43,9 @@ class FileInfo:
     name: str | None = None
 
 
-def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w"] = "w", validate: bool = True):
+def combine(
+    archive: str | BytesIO, files: FileInfo | list[FileInfo], *, mode: Literal["a", "w"] = "w", validate: bool = True
+):
     """
     This function is used to combine the multiple serialized files into a single archive.
 
@@ -53,6 +55,9 @@ def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w
     :param validate: switch on to validate the files before combining
     :return: None
     """
+    if isinstance(files, FileInfo):
+        files = [files]
+
     if 0 < sum(1 for file in files if file.name is not None) < len(files):
         raise ValueError("Files must either all have names or all not have names.")
 
@@ -91,3 +96,15 @@ def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w
     with LazyCombiner(archive, mode=mode) as combiner:
         for file in files:
             combiner.write(_iter(file.path), file.name)
+
+
+def append(archive: str | BytesIO, files: FileInfo | list[FileInfo], *, validate: bool = True):
+    """
+    This function is used to append the multiple serialized files to an existing single archive.
+
+    :param archive: a string representing the file path of the archive
+    :param files: a list of FileInfo objects
+    :param validate: switch on to validate the files before combining
+    :return: None
+    """
+    combine(archive, files, mode="a", validate=validate)
