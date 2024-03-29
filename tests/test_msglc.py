@@ -284,13 +284,21 @@ def test_combine_archives_append(tmpdir, json_after, target):
             with LazyReader("test_list.msg") as inner_reader:
                 assert reader[1] == inner_reader
 
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
         with pytest.raises(ValueError):
             combine(target, [FileInfo("test_list.msg", "no_name")], "a")
+
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
         with pytest.raises(ValueError):
-            combine(
-                target,
-                [FileInfo("test_list.msg", "no_name"), FileInfo("test_list.msg", "no_name")],
-            )
+            combine(target, [FileInfo("test_list.msg", "no_name"), FileInfo("test_list.msg", "no_name")])
+
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
         with pytest.raises(ValueError):
             combine(target, [FileInfo("test_list.msg", "no_name")])
             combine(target, [FileInfo("test_list.msg")], "a")

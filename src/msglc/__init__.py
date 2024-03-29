@@ -49,6 +49,7 @@ def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w
 
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
+    :param mode: a string representing the combination mode, 'w' for write and 'a' for append
     :return: None
     """
     if 0 < sum(1 for file in files if file.name is not None) < len(files):

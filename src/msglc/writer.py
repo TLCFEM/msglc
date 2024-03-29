@@ -141,9 +141,7 @@ class LazyCombiner:
             self._buffer.seek(ini_position + sep_c + toc_start)
             self._toc = unpackb(self._buffer.read(toc_size)).get("t", None)
 
-            if self._toc is None:
-                _raise_invalid("The given file is not a valid combined file.")
-            elif isinstance(self._toc, list):
+            if isinstance(self._toc, list):
                 if any(not isinstance(i, int) for i in self._toc):
                     _raise_invalid("The given file is not a valid combined file.")
             elif isinstance(self._toc, dict):
@@ -176,10 +174,10 @@ class LazyCombiner:
 
         if name is None:
             if not isinstance(self._toc, list):
-                raise ValueError("Cannot assign a name when combining in list mode.")
+                raise ValueError("Need a name when combining in dict mode.")
         else:
             if not isinstance(self._toc, dict):
-                raise ValueError("Need a name when combining in dict mode.")
+                raise ValueError("Cannot assign a name when combining in list mode.")
             if name in self._toc:
                 raise ValueError(f"File {name} already exists.")
 
