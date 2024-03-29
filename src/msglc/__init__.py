@@ -39,17 +39,18 @@ def dump(file: str | BytesIO, obj, **kwargs):
 
 @dataclasses.dataclass
 class FileInfo:
-    path: str
+    path: str | BinaryIO
     name: str | None = None
 
 
-def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w"] = "w"):
+def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w"] = "w", validate: bool = True):
     """
     This function is used to combine the multiple serialized files into a single archive.
 
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
     :param mode: a string representing the combination mode, 'w' for write and 'a' for append
+    :param validate: switch on to validate the files before combining
     :return: None
     """
     if 0 < sum(1 for file in files if file.name is not None) < len(files):
@@ -60,9 +61,23 @@ def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w
     ):
         raise ValueError("Files must have unique names.")
 
-    for file in files:
-        if not os.path.exists(file.path):
-            raise ValueError(f"File {file.path} does not exist.")
+    def _validate(_fp):
+        if isinstance(_fp, str):
+            if not os.path.exists(_fp):
+                raise ValueError(f"File {_fp} does not exist.")
+            with open(_fp, "rb") as _file:
+                if _file.read(LazyWriter.magic_len()) != LazyWriter.magic:
+                    raise ValueError(f"Invalid file format: {_fp}.")
+        else:
+            ini_pos = _fp.tell()
+            magic = _fp.read(LazyWriter.magic_len())
+            _fp.seek(ini_pos)
+            if magic != LazyWriter.magic:
+                raise ValueError("Invalid file format.")
+
+    if validate:
+        for file in files:
+            _validate(file.path)
 
     def _iter(path: str | BinaryIO):
         if isinstance(path, str):
@@ -73,6 +88,6 @@ def combine(archive: str | BytesIO, files: list[FileInfo], mode: Literal["a", "w
             while _data := path.read(config.copy_chunk_size):
                 yield _data
 
-    with LazyCombiner(archive, mode) as combiner:
+    with LazyCombiner(archive, mode=mode) as combiner:
         for file in files:
             combiner.write(_iter(file.path), file.name)

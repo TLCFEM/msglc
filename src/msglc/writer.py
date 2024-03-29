@@ -96,7 +96,7 @@ class LazyWriter:
 
 
 class LazyCombiner:
-    def __init__(self, buffer_or_path: str | BufferWriter, mode: Literal["a", "w"] = "w"):
+    def __init__(self, buffer_or_path: str | BufferWriter, *, mode: Literal["a", "w"] = "w"):
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
 

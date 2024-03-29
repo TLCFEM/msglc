@@ -255,7 +255,7 @@ def test_combine_archives_append(tmpdir, json_after, target):
             writer.write(json_after)
 
         combine(target, [FileInfo("test_dict.msg")])
-        combine(target, [FileInfo("test_list.msg")], "a")
+        combine(target, [FileInfo("test_list.msg")], mode="a")
 
         if isinstance(target, BytesIO):
             target.seek(0)
@@ -288,21 +288,29 @@ def test_combine_archives_append(tmpdir, json_after, target):
             target.seek(0)
 
         with pytest.raises(ValueError):
-            combine(target, [FileInfo("test_list.msg", "no_name")], "a")
+            combine(target, [FileInfo("test_list.msg", "no_name")], mode="a")
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
         with pytest.raises(ValueError):
             combine(target, [FileInfo("test_list.msg", "no_name")])
-            combine(target, [FileInfo("test_list.msg", "no_name")], "a")
+            combine(target, [FileInfo("test_list.msg", "no_name")], mode="a")
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
         with pytest.raises(ValueError):
             combine(target, [FileInfo("test_list.msg", "no_name")])
-            combine(target, [FileInfo("test_list.msg")], "a")
+            combine(target, [FileInfo("test_list.msg")], mode="a")
+
+        with pytest.raises(ValueError):
+            combine(target, [FileInfo(BytesIO(b"0" * 100), "no_name")])
+
+        with pytest.raises(ValueError):
+            with open("trivial.msg", "wb") as trivial:
+                trivial.write(b"0" * 300)
+            combine(target, [FileInfo("trivial.msg", "no_name")])
 
 
 def test_recursive_combine(tmpdir):
