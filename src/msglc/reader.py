@@ -27,6 +27,9 @@ from .writer import LazyWriter
 
 
 def to_obj(v):
+    """
+    Ensure the given value is JSON serializable.
+    """
     return v.to_obj() if isinstance(v, LazyItem) else v
 
 
@@ -353,6 +356,12 @@ class LazyReader(LazyItem):
         cached: bool = True,
         unpacker: Unpacker | None = None,
     ):
+        """
+        :param buffer_or_path: the buffer or path to the file
+        :param counter: the counter object for tracking the number of bytes read
+        :param cached: whether to cache the data
+        :param unpacker: the unpacker object for reading the data
+        """
         self._buffer_or_path: str | BufferReader = buffer_or_path
 
         buffer: BufferReader

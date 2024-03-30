@@ -37,6 +37,10 @@ class LazyWriter:
         cls.magic = magic.rjust(max_magic_len, b"\0")
 
     def __init__(self, buffer_or_path: str | BufferWriter, packer: Packer = None):
+        """
+        :param buffer_or_path: target buffer or file path
+        :param packer: packer object to be used for packing the object
+        """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
 
@@ -97,6 +101,10 @@ class LazyWriter:
 
 class LazyCombiner:
     def __init__(self, buffer_or_path: str | BufferWriter, *, mode: Literal["a", "w"] = "w"):
+        """
+        :param buffer_or_path: target buffer or file path
+        :param mode: mode of operation, 'w' for write and 'a' for append
+        """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
 
