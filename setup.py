@@ -17,6 +17,16 @@ from datetime import datetime
 
 from setuptools import setup
 
+try:
+    from Cython.Build import cythonize
+
+except ImportError:
+
+    def cythonize(*args, **kwargs):  # noqa
+        return []
+
+
 setup(
     version=datetime.now().strftime("%y%m%d"),
+    ext_modules=cythonize("src/msglc/*.py"),
 )

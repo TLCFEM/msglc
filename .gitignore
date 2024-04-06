@@ -2,3 +2,5 @@
 .idea
 *.pyc
 **/*.egg-info
+src/msglc/*.so
+src/msglc/*.c

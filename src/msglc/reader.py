@@ -390,7 +390,9 @@ class LazyReader(LazyItem):
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))
 
     def __repr__(self):
-        file_path: str = f" ({self._buffer_or_path})" if isinstance(self._buffer_or_path, str) else ""
+        file_path: str = ""
+        if isinstance(self._buffer_or_path, str):
+            file_path = " (" + self._buffer_or_path + ")"
 
         return f"LazyReader{file_path}" if config.simple_repr or not self._cached else self.to_obj().__repr__()
 
