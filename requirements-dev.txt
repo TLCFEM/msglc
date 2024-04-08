@@ -19,4 +19,4 @@ py-cpuinfo==9.0.0         # via pytest-benchmark
 pytest==8.1.1             # via pytest-benchmark, pytest-cov
 pytest-benchmark==4.0.0   # via msglc (pyproject.toml)
 pytest-cov==5.0.0         # via msglc (pyproject.toml)
-ruff==0.3.4               # via msglc (pyproject.toml)
+ruff==0.3.5               # via msglc (pyproject.toml)
