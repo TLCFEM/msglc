@@ -134,11 +134,10 @@ async def test_async_msglc(monkeypatch, tmpdir, json_before, json_after, target,
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        with MockIO(target, "rb", 0, 500 * 2 ** 20) as buffer:
+        with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
             with LazyReader(buffer, counter=stats, cached=cached) as reader:
                 assert (
-                        await reader.async_read(
-                            "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
+                    await reader.async_read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
                 )
                 assert await reader.async_read("glossary/empty_list") == []
                 assert await reader.async_read("glossary/none_list/0") is None
