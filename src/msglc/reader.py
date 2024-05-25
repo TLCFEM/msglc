@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
@@ -31,6 +32,12 @@ def to_obj(v):
     Ensure the given value is JSON serializable.
     """
     return v.to_obj() if isinstance(v, LazyItem) else v
+
+
+async def async_get(v, key):
+    if isinstance(v, LazyItem):
+        return await v.async_get(key)
+    return v[key]
 
 
 class LazyStats:
@@ -141,6 +148,12 @@ class LazyItem:
 
     def to_obj(self):
         raise NotImplementedError
+
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    async def async_get(self, key):
+        return await asyncio.to_thread(self.__getitem__, key)
 
 
 class LazyList(LazyItem):
@@ -454,9 +467,7 @@ class LazyReader(LazyItem):
             path_stack = [path]
 
         target = self._obj
-        for key in path_stack:
-            if "" == key:
-                continue
+        for key in (v for v in path_stack if v != ""):
             target = target[
                 to_index(key, len(target)) if isinstance(key, str) and isinstance(target, (list, LazyList)) else key
             ]
@@ -475,10 +486,60 @@ class LazyReader(LazyItem):
         :return: The data at the given path.
         """
         target = self._obj
-        for key in path.split("/"):
-            if "" == key:
-                continue
+        for key in (v for v in path.split("/") if v != ""):
             target = target[to_index(key, len(target)) if isinstance(target, (list, LazyList)) else key]
+        return target
+
+    async def async_read(self, path: str | list | slice | None = None):
+        """
+        Reads the data from the given path.
+
+        This method navigates through the data structure based on the provided path.
+        The path can be a string or a list. If it's a string, it's split into a list
+        using '/' as the separator. Each element of the list is used to navigate
+        through the data structure.
+
+        If the path is None, it returns the root object.
+
+        :param path: the path to the data to read
+        :return: The data at the given path.
+        """
+
+        path_stack: list
+        if path is None:
+            path_stack = []
+        elif isinstance(path, str):
+            path_stack = path.split("/")
+        elif isinstance(path, list):
+            path_stack = path
+        else:
+            path_stack = [path]
+
+        target = self._obj
+        for key in (v for v in path_stack if v != ""):
+            target = await async_get(
+                target,
+                to_index(key, len(target)) if isinstance(key, str) and isinstance(target, (list, LazyList)) else key,
+            )
+        return target
+
+    async def async_visit(self, path: str = ""):
+        """
+        Reads the data from the given path.
+
+        This method navigates through the data structure based on the provided path.
+        The path can be a string of paths separated by '/'.
+
+        If the path is None, it returns the root object.
+
+        :param path: the path to the data to read
+        :return: The data at the given path.
+        """
+        target = self._obj
+        for key in (v for v in path.split("/") if v != ""):
+            target = await async_get(
+                target, to_index(key, len(target)) if isinstance(target, (list, LazyList)) else key
+            )
         return target
 
     def to_obj(self):

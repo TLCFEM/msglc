@@ -113,6 +113,55 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
         str(stats)
 
 
+@pytest.mark.parametrize("target", ["test.msg", BytesIO()])
+@pytest.mark.parametrize("size", [0, 8192])
+@pytest.mark.parametrize("cached", [True, False])
+@pytest.mark.asyncio
+async def test_async_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cached):
+    monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
+
+    with tmpdir.as_cwd():
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with LazyWriter(target) as writer:
+            writer.write(json_before)
+            with pytest.raises(ValueError):
+                writer.write(json_before)
+
+        stats = LazyStats()
+
+        if isinstance(target, BytesIO):
+            target.seek(0)
+
+        with MockIO(target, "rb", 0, 500 * 2 ** 20) as buffer:
+            with LazyReader(buffer, counter=stats, cached=cached) as reader:
+                assert (
+                        await reader.async_read(
+                            "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
+                )
+                assert await reader.async_read("glossary/empty_list") == []
+                assert await reader.async_read("glossary/none_list/0") is None
+                assert await reader.async_read() == json_after
+                assert reader == json_after
+
+                dict_container = await reader.async_read("glossary/GlossDiv")
+                assert len(dict_container) == 2
+                assert dict_container.get("invalid_key") is None
+                assert "invalid_key" not in dict_container
+                assert set(dict_container.keys()) == {"title", "GlossList"}
+                for x, _ in dict_container.items():
+                    assert x in ["title", "GlossList"]
+
+                list_container = await reader.async_read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso")
+                assert len(list_container) == 2
+                for x in list_container:
+                    assert x in ["GML", "XML"]
+                assert set(list_container) == {"GML", "XML"}
+
+        str(stats)
+
+
 @pytest.mark.parametrize("threshold", [256, 8192])
 @pytest.mark.parametrize("cached", [True, False])
 @pytest.mark.parametrize("trivial", [4, 10])
