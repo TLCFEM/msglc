@@ -73,7 +73,10 @@ def test_pack_large_array(tmpdir, benchmark):
     benchmark(pack_large_array, tmpdir)
 
 
-def test_numpy_array(tmpdir):
+@pytest.mark.parametrize("encoder", [True, False])
+def test_numpy_array(monkeypatch, tmpdir, encoder):
+    monkeypatch.setattr(config, "numpy_encoder", encoder)
+
     try:
         with tmpdir.as_cwd():
             import numpy

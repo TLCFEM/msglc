@@ -37,6 +37,7 @@ class Config:
     disable_gc: bool = True
     simple_repr: bool = True
     copy_chunk_size: int = 2**24  # 16MB
+    numpy_encoder: bool = False
 
 
 config = Config()

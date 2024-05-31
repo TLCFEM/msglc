@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import asyncio
+import pickle
 from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
@@ -124,7 +125,11 @@ class LazyItem:
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
             if 2 == len(child_pos := toc["p"]) and all(isinstance(x, int) for x in child_pos):
-                return self._read(*child_pos)
+                if isinstance(data := self._read(*child_pos), bytes) and data.startswith(
+                    b"\x80\x02cnumpy.core.multiarray"
+                ):
+                    return pickle.loads(data)
+                return data
 
             # {"p": [[size1, start_pos, end_pos], [size2, start_pos, end_pos], [size3, start_pos, end_pos]]}
             # this is used in arrays of small objects
