@@ -20,7 +20,7 @@ import pytest
 
 from msglc import LazyWriter, FileInfo, combine, append
 from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
-from msglc.reader import LazyStats, LazyReader
+from msglc.reader import LazyStats, LazyReader, async_to_obj
 from msglc.utility import MockIO
 
 
@@ -142,6 +142,7 @@ async def test_async_msglc(monkeypatch, tmpdir, json_before, json_after, target,
                 assert await reader.async_read("glossary/empty_list") == []
                 assert await reader.async_read("glossary/none_list/0") is None
                 assert await reader.async_read() == json_after
+                assert await async_to_obj(reader) == json_after
                 assert reader == json_after
 
                 dict_container = await reader.async_read("glossary/GlossDiv")

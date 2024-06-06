@@ -35,6 +35,16 @@ def to_obj(v):
     return v.to_obj() if isinstance(v, LazyItem) else v
 
 
+async def async_to_obj(v):
+    """
+    Ensure the given value is JSON serializable.
+    """
+    if isinstance(v, LazyItem):
+        return await asyncio.to_thread(v.to_obj)
+
+    return v
+
+
 async def async_get(v, key):
     if isinstance(v, LazyItem):
         return await v.async_get(key)
