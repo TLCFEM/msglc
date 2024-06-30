@@ -37,6 +37,9 @@ dev = [
     "black",
     "ruff",
 ]
+numpy = [
+    "numpy",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/TLCFEM/msglc"
