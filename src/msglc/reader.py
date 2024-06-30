@@ -135,7 +135,7 @@ class LazyItem:
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
             if 2 == len(child_pos := toc["p"]) and all(isinstance(x, int) for x in child_pos):
-                if isinstance(data := self._read(*child_pos), bytes) and b"numpy.core.multiarray" in data[:40]:
+                if isinstance(data := self._read(*child_pos), bytes) and b"multiarray" in data[:40]:
                     return pickle.loads(data)
                 return data
 
