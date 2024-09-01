@@ -106,13 +106,13 @@ def generate(*, depth=6, width=11, threshold=23):
         p.map(_dump, step)
 
 
-def compare(mode, size: int = 13, total: int = 5):
+def compare(mode, size: int = 13, total: int = 5, unpacker=None):
     accumulator: int = 0
 
     with open("path.txt", "r") as f:
         if mode > 0:
             counter = LazyStats()
-            with LazyReader(f"archive_{size}.msg", counter=counter) as reader:
+            with LazyReader(f"archive_{size}.msg", counter=counter, unpacker=unpacker) as reader:
                 while p := f.readline():
                     accumulator += 1
                     if accumulator == 10**total:

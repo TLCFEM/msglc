@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
     "msgpack>=1",
     "bitarray",
+    "msgspec",
 ]
 
 [project.optional-dependencies]

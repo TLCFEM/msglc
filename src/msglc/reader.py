@@ -21,6 +21,7 @@ from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
 from msgpack import Unpacker  # type: ignore
+from msgspec.msgpack import Decoder
 
 from .config import config, increment_gc_counter, decrement_gc_counter, BufferReader
 from .index import normalise_index, to_index
@@ -83,13 +84,19 @@ class LazyItem:
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: Unpacker | Decoder | None = None,
     ):
         self._buffer: BufferReader = buffer
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
-        self._unpacker: Unpacker = unpacker if unpacker else Unpacker()
+        self._unpacker: Unpacker | Decoder
+        if isinstance(unpacker, (Unpacker, Decoder)):
+            self._unpacker = unpacker
+        elif unpacker is None:
+            self._unpacker = Unpacker()
+        else:
+            raise TypeError("Need a valid unpacker.")
 
         self._accessed_items: int = 0
 
@@ -114,6 +121,9 @@ class LazyItem:
         return self._buffer.read(size)
 
     def _unpack(self, data: bytes):
+        if isinstance(self._unpacker, Decoder):
+            return self._unpacker.decode(data)
+
         self._unpacker.feed(data)
         return self._unpacker.unpack()
 
@@ -178,7 +188,7 @@ class LazyList(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: Unpacker | Decoder | None = None,
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: list | None = toc.get("t", None)  # if None, it's a list of small objects
@@ -315,7 +325,7 @@ class LazyDict(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: Unpacker | Decoder | None = None,
     ):
         super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
         self._toc: dict = toc["t"]
@@ -380,7 +390,7 @@ class LazyReader(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: Unpacker | Decoder | None = None,
     ):
         """
         :param buffer_or_path: the buffer or path to the file
