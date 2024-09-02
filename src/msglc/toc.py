@@ -73,7 +73,7 @@ class TOC:
             obj = list(obj)
         elif isinstance(obj, set):
             obj = sorted(obj)
-        elif (ndarray is list) and isinstance(obj, ndarray):
+        elif ndarray is not list and isinstance(obj, ndarray):
             if config.numpy_encoder:
                 start_pos = self._pos
                 _pack_obj(obj.dumps())
