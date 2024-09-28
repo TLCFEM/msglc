@@ -1,0 +1,5 @@
+prune .github
+prune scripts
+prune tests
+exclude .gitignore
+exclude pytest.ini
