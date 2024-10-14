@@ -20,7 +20,13 @@ from time import sleep
 
 
 class MockIO:
-    def __init__(self, path: str | BytesIO, mode: str, seek_delay: float = 0, read_speed: int | list = 1 * 2**20):
+    def __init__(
+        self,
+        path: str | BytesIO,
+        mode: str,
+        seek_delay: float = 0,
+        read_speed: int | list = 1 * 2**20,
+    ):
         self._path = path if isinstance(path, str) else None
         self._io = open(path, mode) if isinstance(path, str) else path
         self._seek_delay: float = seek_delay

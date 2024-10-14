@@ -39,7 +39,9 @@ class Node:
 
 
 class TOC:
-    def __init__(self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None):  # type: ignore
+    def __init__(
+        self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None
+    ):  # type: ignore
         self._buffer: BytesIO | BinaryIO = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
@@ -113,7 +115,9 @@ class TOC:
                 accu_list.append(v)
                 accu_size += v.p[1] - v.p[0]
                 if accu_size > config.small_obj_optimization_threshold:
-                    groups.append((len(accu_list), accu_list[0].p[0], accu_list[-1].p[1]))
+                    groups.append(
+                        (len(accu_list), accu_list[0].p[0], accu_list[-1].p[1])
+                    )
                     accu_list = []
                     accu_size = 0
 

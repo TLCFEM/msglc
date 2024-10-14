@@ -44,7 +44,11 @@ class FileInfo:
 
 
 def combine(
-    archive: str | BytesIO, files: FileInfo | list[FileInfo], *, mode: Literal["a", "w"] = "w", validate: bool = True
+    archive: str | BytesIO,
+    files: FileInfo | list[FileInfo],
+    *,
+    mode: Literal["a", "w"] = "w",
+    validate: bool = True,
 ):
     """
     This function is used to combine the multiple serialized files into a single archive.
@@ -98,7 +102,9 @@ def combine(
             combiner.write(_iter(file.path), file.name)
 
 
-def append(archive: str | BytesIO, files: FileInfo | list[FileInfo], *, validate: bool = True):
+def append(
+    archive: str | BytesIO, files: FileInfo | list[FileInfo], *, validate: bool = True
+):
     """
     This function is used to append the multiple serialized files to an existing single archive.
 

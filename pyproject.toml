@@ -35,7 +35,6 @@ dev = [
     "pytest-cov",
     "pytest-benchmark",
     "pytest-asyncio",
-    "black",
     "ruff",
 ]
 numpy = [
@@ -46,7 +45,3 @@ numpy = [
 "Homepage" = "https://github.com/TLCFEM/msglc"
 "Bug Reports" = "https://github.com/TLCFEM/msglc/issuess"
 "Source" = "https://github.com/TLCFEM/msglc"
-
-[tool.black]
-line-length = 120
-fast = true

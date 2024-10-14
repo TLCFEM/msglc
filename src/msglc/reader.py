@@ -20,13 +20,13 @@ import pickle
 from io import BytesIO, BufferedReader
 
 from bitarray import bitarray
-from msgpack import Unpacker  # type: ignore
-from msgspec.msgpack import Decoder
+import msgpack
 
 from .config import config, increment_gc_counter, decrement_gc_counter, BufferReader
 from .index import normalise_index, to_index
 from .utility import MockIO
 from .writer import LazyWriter
+from .unpacker import Unpacker, MsgpackUnpacker
 
 
 def to_obj(v):
@@ -84,17 +84,17 @@ class LazyItem:
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | Decoder | None = None,
+        unpacker: Unpacker | None = None,
     ):
         self._buffer: BufferReader = buffer
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
-        self._unpacker: Unpacker | Decoder
-        if isinstance(unpacker, (Unpacker, Decoder)):
+        self._unpacker: Unpacker
+        if isinstance(unpacker, Unpacker):
             self._unpacker = unpacker
         elif unpacker is None:
-            self._unpacker = Unpacker()
+            self._unpacker = MsgpackUnpacker()
         else:
             raise TypeError("Need a valid unpacker.")
 
@@ -121,11 +121,7 @@ class LazyItem:
         return self._buffer.read(size)
 
     def _unpack(self, data: bytes):
-        if isinstance(self._unpacker, Decoder):
-            return self._unpacker.decode(data)
-
-        self._unpacker.feed(data)
-        return self._unpacker.unpack()
+        return self._unpacker.decode(data)
 
     def _read(self, start: int, end: int):
         return self._unpack(self._readb(start, end))
@@ -133,7 +129,11 @@ class LazyItem:
     def _child(self, toc: dict | int):
         self._accessed_items += 1
 
-        params: dict = {"counter": self._counter, "cached": self._cached, "unpacker": self._unpacker}
+        params: dict = {
+            "counter": self._counter,
+            "cached": self._cached,
+            "unpacker": self._unpacker,
+        }
 
         # {"t": {"name1": start_pos, "name2": start_pos}}
         # this is used in combined archives
@@ -144,8 +144,13 @@ class LazyItem:
         if (child_toc := toc.get("t", None)) is None:
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
-            if 2 == len(child_pos := toc["p"]) and all(isinstance(x, int) for x in child_pos):
-                if isinstance(data := self._read(*child_pos), bytes) and b"multiarray" in data[:40]:
+            if 2 == len(child_pos := toc["p"]) and all(
+                isinstance(x, int) for x in child_pos
+            ):
+                if (
+                    isinstance(data := self._read(*child_pos), bytes)
+                    and b"multiarray" in data[:40]
+                ):
                     return pickle.loads(data)
                 return data
 
@@ -167,7 +172,10 @@ class LazyItem:
 
     @property
     def _fast_loading(self):
-        return config.fast_loading and self._accessed_items < config.fast_loading_threshold * len(self)
+        return (
+            config.fast_loading
+            and self._accessed_items < config.fast_loading_threshold * len(self)
+        )
 
     def to_obj(self):
         raise NotImplementedError
@@ -188,10 +196,14 @@ class LazyList(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | Decoder | None = None,
+        unpacker: Unpacker | None = None,
     ):
-        super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
-        self._toc: list | None = toc.get("t", None)  # if None, it's a list of small objects
+        super().__init__(
+            buffer, offset, counter=counter, cached=cached, unpacker=unpacker
+        )
+        self._toc: list | None = toc.get(
+            "t", None
+        )  # if None, it's a list of small objects
         self._pos: list = toc.get("p", None)  # noqa # if None, it comes from a combined archive
         self._index: int = 0
         self._cache: list = [None] * len(self)
@@ -206,7 +218,11 @@ class LazyList(LazyItem):
                 self._size_list.append(total_size)
 
     def __repr__(self):
-        return f"LazyList[{len(self)}]" if config.simple_repr or not self._cached else self.to_obj().__repr__()
+        return (
+            f"LazyList[{len(self)}]"
+            if config.simple_repr or not self._cached
+            else self.to_obj().__repr__()
+        )
 
     def _lookup_index(self, index: int) -> int:
         low: int = 0
@@ -224,7 +240,7 @@ class LazyList(LazyItem):
                 low = mid
 
     def _all(self, start: int, end: int) -> list:
-        return list(Unpacker(BytesIO(self._readb(start, end))))
+        return list(msgpack.Unpacker(BytesIO(self._readb(start, end))))
 
     def __getitem__(self, index):
         index_range: list | range
@@ -250,9 +266,14 @@ class LazyList(LazyItem):
                         self._cache[item] = self._child(self._toc[item])
                     else:
                         lookup_index: int = self._lookup_index(item)
-                        num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
+                        num_start, num_end = (
+                            self._size_list[lookup_index],
+                            self._size_list[lookup_index + 1],
+                        )
                         self._mask[num_start:num_end] = 1
-                        self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
+                        self._cache[num_start:num_end] = self._all(
+                            *self._pos[lookup_index][1:]
+                        )
 
             return self._cache[index]
 
@@ -263,7 +284,10 @@ class LazyList(LazyItem):
                 self._cache[item] = self._child(self._toc[item])
             else:
                 lookup_index = self._lookup_index(item)
-                num_start, num_end = self._size_list[lookup_index], self._size_list[lookup_index + 1]
+                num_start, num_end = (
+                    self._size_list[lookup_index],
+                    self._size_list[lookup_index + 1],
+                )
                 self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
 
         result = self._cache[index]
@@ -283,7 +307,11 @@ class LazyList(LazyItem):
         return item
 
     def __len__(self):
-        return self._toc.__len__() if self._toc is not None else sum(x[0] for x in self._pos)
+        return (
+            self._toc.__len__()
+            if self._toc is not None
+            else sum(x[0] for x in self._pos)
+        )
 
     def to_obj(self):
         if not self._cached:
@@ -325,16 +353,22 @@ class LazyDict(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | Decoder | None = None,
+        unpacker: Unpacker | None = None,
     ):
-        super().__init__(buffer, offset, counter=counter, cached=cached, unpacker=unpacker)
+        super().__init__(
+            buffer, offset, counter=counter, cached=cached, unpacker=unpacker
+        )
         self._toc: dict = toc["t"]
         self._pos: list = toc.get("p", None)  # noqa # if empty, it comes from a combined archive
         self._cache: dict = {}
         self._full_loaded: bool = False
 
     def __repr__(self):
-        return f"LazyDict[{len(self)}]" if config.simple_repr or not self._cached else self.to_obj().__repr__()
+        return (
+            f"LazyDict[{len(self)}]"
+            if config.simple_repr or not self._cached
+            else self.to_obj().__repr__()
+        )
 
     def __getitem__(self, key):
         if not self._cached:
@@ -390,7 +424,7 @@ class LazyReader(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | Decoder | None = None,
+        unpacker: Unpacker | None = None,
     ):
         """
         :param buffer_or_path: the buffer or path to the file
@@ -408,7 +442,11 @@ class LazyReader(LazyItem):
         else:
             raise ValueError("Expecting a buffer or path.")
 
-        sep_a, sep_b, sep_c = LazyWriter.magic_len(), LazyWriter.magic_len() + 10, LazyWriter.magic_len() + 20
+        sep_a, sep_b, sep_c = (
+            LazyWriter.magic_len(),
+            LazyWriter.magic_len() + 10,
+            LazyWriter.magic_len() + 20,
+        )
 
         # keep the buffer unchanged in case of failure
         original_pos: int = buffer.tell()
@@ -418,7 +456,13 @@ class LazyReader(LazyItem):
         if header[:sep_a] != LazyWriter.magic:
             raise ValueError("Invalid file format.")
 
-        super().__init__(buffer, original_pos + sep_c, counter=counter, cached=cached, unpacker=unpacker)
+        super().__init__(
+            buffer,
+            original_pos + sep_c,
+            counter=counter,
+            cached=cached,
+            unpacker=unpacker,
+        )
 
         toc_start: int = self._unpack(header[sep_a:sep_b].lstrip(b"\0"))
         toc_size: int = self._unpack(header[sep_b:sep_c].lstrip(b"\0"))
@@ -430,7 +474,11 @@ class LazyReader(LazyItem):
         if isinstance(self._buffer_or_path, str):
             file_path = " (" + self._buffer_or_path + ")"
 
-        return f"LazyReader{file_path}" if config.simple_repr or not self._cached else self.to_obj().__repr__()
+        return (
+            f"LazyReader{file_path}"
+            if config.simple_repr or not self._cached
+            else self.to_obj().__repr__()
+        )
 
     def __enter__(self):
         increment_gc_counter()
@@ -492,7 +540,9 @@ class LazyReader(LazyItem):
         target = self._obj
         for key in (v for v in path_stack if v != ""):
             target = target[
-                to_index(key, len(target)) if isinstance(key, str) and isinstance(target, (list, LazyList)) else key
+                to_index(key, len(target))
+                if isinstance(key, str) and isinstance(target, (list, LazyList))
+                else key
             ]
         return target
 
@@ -510,7 +560,11 @@ class LazyReader(LazyItem):
         """
         target = self._obj
         for key in (v for v in path.split("/") if v != ""):
-            target = target[to_index(key, len(target)) if isinstance(target, (list, LazyList)) else key]
+            target = target[
+                to_index(key, len(target))
+                if isinstance(target, (list, LazyList))
+                else key
+            ]
         return target
 
     async def async_read(self, path: str | list | slice | None = None):
@@ -542,7 +596,9 @@ class LazyReader(LazyItem):
         for key in (v for v in path_stack if v != ""):
             target = await async_get(
                 target,
-                to_index(key, len(target)) if isinstance(key, str) and isinstance(target, (list, LazyList)) else key,
+                to_index(key, len(target))
+                if isinstance(key, str) and isinstance(target, (list, LazyList))
+                else key,
             )
         return target
 
@@ -561,7 +617,10 @@ class LazyReader(LazyItem):
         target = self._obj
         for key in (v for v in path.split("/") if v != ""):
             target = await async_get(
-                target, to_index(key, len(target)) if isinstance(target, (list, LazyList)) else key
+                target,
+                to_index(key, len(target))
+                if isinstance(target, (list, LazyList))
+                else key,
             )
         return target
 

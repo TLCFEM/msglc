@@ -16,11 +16,11 @@
 import random
 
 import pytest
-from msgspec.msgpack import Decoder
 
 from msglc import dump, config
 from msglc.generate import generate_random_json, find_all_paths, goto_path, generate, compare
 from msglc.reader import LazyStats, LazyReader
+from msglc.unpacker import MsgpackUnpacker, MsgspecUnpacker
 
 
 def test_random_benchmark(monkeypatch, tmpdir):
@@ -112,7 +112,7 @@ def prepare(tmpdir_factory):
 
 @pytest.mark.parametrize("size", [x for x in range(13, 25)])
 @pytest.mark.parametrize("total", [0, 1, 2, 3, 4])
-@pytest.mark.parametrize("unpacker", [None, Decoder()])
+@pytest.mark.parametrize("unpacker", [MsgpackUnpacker(), MsgspecUnpacker()])
 def test_matrix(prepare, benchmark, size, total, unpacker):
     with prepare.as_cwd():
         benchmark(compare, 1, size, total, unpacker)

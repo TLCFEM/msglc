@@ -21,7 +21,13 @@ from typing import Generator, Literal
 
 from msgpack import Packer, packb, unpackb  # type: ignore
 
-from .config import config, increment_gc_counter, decrement_gc_counter, BufferWriter, max_magic_len
+from .config import (
+    config,
+    increment_gc_counter,
+    decrement_gc_counter,
+    BufferWriter,
+    max_magic_len,
+)
 from .toc import TOC
 
 
@@ -54,7 +60,9 @@ class LazyWriter:
         increment_gc_counter()
 
         if isinstance(self._buffer_or_path, str):
-            self._buffer = open(self._buffer_or_path, "wb", buffering=config.write_buffer_size)
+            self._buffer = open(
+                self._buffer_or_path, "wb", buffering=config.write_buffer_size
+            )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
         else:
@@ -100,7 +108,9 @@ class LazyWriter:
 
 
 class LazyCombiner:
-    def __init__(self, buffer_or_path: str | BufferWriter, *, mode: Literal["a", "w"] = "w"):
+    def __init__(
+        self, buffer_or_path: str | BufferWriter, *, mode: Literal["a", "w"] = "w"
+    ):
         """
         :param buffer_or_path: target buffer or file path
         :param mode: mode of operation, 'w' for write and 'a' for append
@@ -116,8 +126,14 @@ class LazyCombiner:
 
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
-            mode: str = "wb" if not os.path.exists(self._buffer_or_path) or self._mode == "w" else "r+b"
-            self._buffer = open(self._buffer_or_path, mode, buffering=config.write_buffer_size)
+            mode: str = (
+                "wb"
+                if not os.path.exists(self._buffer_or_path) or self._mode == "w"
+                else "r+b"
+            )
+            self._buffer = open(
+                self._buffer_or_path, mode, buffering=config.write_buffer_size
+            )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
@@ -131,7 +147,11 @@ class LazyCombiner:
             self._buffer.write(b"\0" * 20)
             self._file_start = self._buffer.tell()
         else:
-            sep_a, sep_b, sep_c = LazyWriter.magic_len(), LazyWriter.magic_len() + 10, LazyWriter.magic_len() + 20
+            sep_a, sep_b, sep_c = (
+                LazyWriter.magic_len(),
+                LazyWriter.magic_len() + 10,
+                LazyWriter.magic_len() + 20,
+            )
 
             ini_position: int = self._buffer.tell()
             header: bytes = self._buffer.read(sep_c)
@@ -141,7 +161,9 @@ class LazyCombiner:
                 raise ValueError(msg)
 
             if header[:sep_a] != LazyWriter.magic:
-                _raise_invalid("Invalid file format, cannot append to the current file.")
+                _raise_invalid(
+                    "Invalid file format, cannot append to the current file."
+                )
 
             toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0"))
             toc_size: int = unpackb(header[sep_b:sep_c].lstrip(b"\0"))

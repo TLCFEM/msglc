@@ -25,13 +25,18 @@ import msgpack  # type: ignore
 from msglc import dump
 from msglc.config import configure
 from msglc.reader import LazyDict, LazyList, LazyStats, LazyReader
+from msglc.unpacker import Unpacker
 
 
 def generate_random_json(depth=10, width=4, simple=False):
     seed = random.random()
 
     def generate_token():
-        return "".join(random.choices(string.ascii_letters + string.digits, k=random.randint(5, 10)))
+        return "".join(
+            random.choices(
+                string.ascii_letters + string.digits, k=random.randint(5, 10)
+            )
+        )
 
     if depth == 0 or (simple and seed < 0.1):
         return random.choice(
@@ -44,7 +49,10 @@ def generate_random_json(depth=10, width=4, simple=False):
         )
 
     if seed < 0.7:
-        return {generate_token(): generate_random_json(depth - 1, width, True) for _ in range(width)}
+        return {
+            generate_token(): generate_random_json(depth - 1, width, True)
+            for _ in range(width)
+        }
 
     if seed < 0.95 or not simple:
         return [generate_random_json(depth - 1, width, True) for _ in range(width)]
@@ -106,13 +114,15 @@ def generate(*, depth=6, width=11, threshold=23):
         p.map(_dump, step)
 
 
-def compare(mode, size: int = 13, total: int = 5, unpacker=None):
+def compare(mode, size: int = 13, total: int = 5, unpacker: Unpacker = None):
     accumulator: int = 0
 
     with open("path.txt", "r") as f:
         if mode > 0:
             counter = LazyStats()
-            with LazyReader(f"archive_{size}.msg", counter=counter, unpacker=unpacker) as reader:
+            with LazyReader(
+                f"archive_{size}.msg", counter=counter, unpacker=unpacker
+            ) as reader:
                 while p := f.readline():
                     accumulator += 1
                     if accumulator == 10**total:

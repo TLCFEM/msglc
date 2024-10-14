@@ -63,7 +63,10 @@ def configure(
     This function is used to configure the settings. It accepts any number of keyword arguments.
     The function updates the values of the configuration parameters if they are provided in the arguments.
     """
-    if isinstance(small_obj_optimization_threshold, int) and small_obj_optimization_threshold > 0:
+    if (
+        isinstance(small_obj_optimization_threshold, int)
+        and small_obj_optimization_threshold > 0
+    ):
         config.small_obj_optimization_threshold = small_obj_optimization_threshold
         if config.trivial_size > config.small_obj_optimization_threshold:
             config.trivial_size = config.small_obj_optimization_threshold
@@ -77,7 +80,10 @@ def configure(
     if isinstance(fast_loading, bool):
         config.fast_loading = fast_loading
 
-    if isinstance(fast_loading_threshold, (int, float)) and 0 <= fast_loading_threshold <= 1:
+    if (
+        isinstance(fast_loading_threshold, (int, float))
+        and 0 <= fast_loading_threshold <= 1
+    ):
         config.fast_loading_threshold = fast_loading_threshold
 
     if isinstance(trivial_size, int) and trivial_size > 0:
