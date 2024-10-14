@@ -52,4 +52,4 @@ try:
             return ormsgpack.unpackb(data)
 
 except ImportError:
-    pass
+    OrmsgpackUnpacker = MsgpackUnpacker

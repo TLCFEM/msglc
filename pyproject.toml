@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
     "msgpack>=1",
     "bitarray",
-    "msgspec",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +38,12 @@ dev = [
 ]
 numpy = [
     "numpy",
+]
+msgspec = [
+    "msgspec",
+]
+ormsgpack = [
+    "ormsgpack",
 ]
 
 [project.urls]
