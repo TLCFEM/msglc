@@ -90,7 +90,12 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
 
         with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
             with LazyReader(buffer, counter=stats, cached=cached) as reader:
-                assert reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
+                assert (
+                    reader.read(
+                        "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
+                    )
+                    == "XML"
+                )
                 assert reader.read("glossary/empty_list") == []
                 assert reader.read("glossary/none_list/0") is None
                 assert reader.read() == json_after
@@ -104,7 +109,9 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
                 for x, _ in dict_container.items():
                     assert x in ["title", "GlossList"]
 
-                list_container = reader.read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso")
+                list_container = reader.read(
+                    "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso"
+                )
                 assert len(list_container) == 2
                 for x in list_container:
                     assert x in ["GML", "XML"]
@@ -117,7 +124,9 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
 @pytest.mark.asyncio
-async def test_async_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cached):
+async def test_async_msglc(
+    monkeypatch, tmpdir, json_before, json_after, target, size, cached
+):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
     with tmpdir.as_cwd():
@@ -137,7 +146,10 @@ async def test_async_msglc(monkeypatch, tmpdir, json_before, json_after, target,
         with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
             with LazyReader(buffer, counter=stats, cached=cached) as reader:
                 assert (
-                    await reader.async_read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1") == "XML"
+                    await reader.async_read(
+                        "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
+                    )
+                    == "XML"
                 )
                 assert await reader.async_read("glossary/empty_list") == []
                 assert await reader.async_read("glossary/none_list/0") is None
@@ -153,7 +165,9 @@ async def test_async_msglc(monkeypatch, tmpdir, json_before, json_after, target,
                 for x, _ in dict_container.items():
                     assert x in ["title", "GlossList"]
 
-                list_container = await reader.async_read("glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso")
+                list_container = await reader.async_read(
+                    "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso"
+                )
                 assert len(list_container) == 2
                 for x in list_container:
                     assert x in ["GML", "XML"]
@@ -225,18 +239,33 @@ def test_combine_archives(tmpdir, json_after, target):
         with LazyWriter("test_dict.msg") as writer:
             writer.write(json_after)
 
-        combine("combined_a.msg", [FileInfo("test_list.msg", "first_inner"), FileInfo("test_dict.msg", "second_inner")])
+        combine(
+            "combined_a.msg",
+            [
+                FileInfo("test_list.msg", "first_inner"),
+                FileInfo("test_dict.msg", "second_inner"),
+            ],
+        )
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        combine(target, [FileInfo("combined_a.msg", "first_outer"), FileInfo("combined_a.msg", "second_outer")])
+        combine(
+            target,
+            [
+                FileInfo("combined_a.msg", "first_outer"),
+                FileInfo("combined_a.msg", "second_outer"),
+            ],
+        )
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
         with LazyReader(target) as reader:
-            assert reader.read("first_outer//second_inner/glossary/title") == "example glossary"
+            assert (
+                reader.read("first_outer//second_inner/glossary/title")
+                == "example glossary"
+            )
             assert reader.read("second_outer/first_inner/2") == 2
             assert reader.read("second_outer/first_inner/-1") == 29
             assert reader.read("second_outer/first_inner/0:2") == [0, 1]
@@ -245,7 +274,10 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.read("second_outer/first_inner/24:2:30") == [24, 26, 28]
             assert reader.read("second_outer/first_inner/:2:5") == [0, 2, 4]
             assert reader.read("second_outer/first_inner/24:2:") == [24, 26, 28]
-            assert reader.visit("first_outer//second_inner/glossary/title") == "example glossary"
+            assert (
+                reader.visit("first_outer//second_inner/glossary/title")
+                == "example glossary"
+            )
             assert reader.visit("second_outer/first_inner/2") == 2
             assert reader.visit("second_outer/first_inner/-1") == 29
             assert reader.visit("second_outer/first_inner/0:2") == [0, 1]
@@ -288,9 +320,18 @@ def test_combine_archives(tmpdir, json_after, target):
                 assert reader[1]["second_inner"] == inner_reader
 
         with pytest.raises(ValueError):
-            combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg")])
+            combine(
+                target,
+                [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg")],
+            )
         with pytest.raises(ValueError):
-            combine(target, [FileInfo("combined_a.msg", "some_name"), FileInfo("combined_a.msg", "some_name")])
+            combine(
+                target,
+                [
+                    FileInfo("combined_a.msg", "some_name"),
+                    FileInfo("combined_a.msg", "some_name"),
+                ],
+            )
         with pytest.raises(ValueError):
             combine(target, [FileInfo("combined_aa.msg"), FileInfo("combined_a.msg")])
 

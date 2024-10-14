@@ -18,7 +18,13 @@ import random
 import pytest
 
 from msglc import dump, config
-from msglc.generate import generate_random_json, find_all_paths, goto_path, generate, compare
+from msglc.generate import (
+    generate_random_json,
+    find_all_paths,
+    goto_path,
+    generate,
+    compare,
+)
 from msglc.reader import LazyStats, LazyReader
 from msglc.unpacker import MsgpackUnpacker, MsgspecUnpacker
 

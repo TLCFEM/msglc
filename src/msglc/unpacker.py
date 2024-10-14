@@ -15,7 +15,6 @@
 
 from abc import abstractmethod
 import msgpack
-import msgspec
 
 
 class Unpacker:
@@ -33,9 +32,24 @@ class MsgpackUnpacker(Unpacker):
         return self._unpacker.unpack()
 
 
-class MsgspecUnpacker(Unpacker):
-    def __init__(self):
-        self._unpacker = msgspec.msgpack.Decoder()
+try:
+    import msgspec
 
-    def decode(self, data):
-        return self._unpacker.decode(data)
+    class MsgspecUnpacker(Unpacker):
+        def __init__(self):
+            self._unpacker = msgspec.msgpack.Decoder()
+
+        def decode(self, data):
+            return self._unpacker.decode(data)
+except ImportError:
+    MsgspecUnpacker = MsgpackUnpacker
+
+try:
+    import ormsgpack
+
+    class OrmsgpackUnpacker(Unpacker):
+        def decode(self, data):
+            return ormsgpack.unpackb(data)
+
+except ImportError:
+    pass
