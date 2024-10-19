@@ -4,22 +4,18 @@
 #
 #    pip-compile --all-extras --annotation-style=line --output-file=requirements-dev.txt pyproject.toml
 #
-bitarray==2.9.2           # via msglc (pyproject.toml)
-black==24.10.0            # via msglc (pyproject.toml)
-click==8.1.7              # via black
-coverage[toml]==7.6.2     # via pytest-cov
+bitarray==3.0.0           # via msglc (pyproject.toml)
+coverage[toml]==7.6.3     # via pytest-cov
 iniconfig==2.0.0          # via pytest
 msgpack==1.1.0            # via msglc (pyproject.toml)
 msgspec==0.18.6           # via msglc (pyproject.toml)
-mypy-extensions==1.0.0    # via black
 numpy==2.1.2              # via msglc (pyproject.toml)
-packaging==24.1           # via black, pytest
-pathspec==0.12.1          # via black
-platformdirs==4.3.6       # via black
+ormsgpack==1.6.0          # via msglc (pyproject.toml)
+packaging==24.1           # via pytest
 pluggy==1.5.0             # via pytest
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pytest==8.3.3             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==0.24.0    # via msglc (pyproject.toml)
 pytest-benchmark==4.0.0   # via msglc (pyproject.toml)
 pytest-cov==5.0.0         # via msglc (pyproject.toml)
-ruff==0.6.9               # via msglc (pyproject.toml)
+ruff==0.7.0               # via msglc (pyproject.toml)
