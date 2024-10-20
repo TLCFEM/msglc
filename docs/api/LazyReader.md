@@ -1,0 +1,3 @@
+# LazyReader
+
+::: msglc.reader.LazyReader

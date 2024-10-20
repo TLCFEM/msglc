@@ -36,6 +36,9 @@ dev = [
     "pytest-benchmark",
     "pytest-asyncio",
     "ruff",
+    "mkdocs-material",
+    "mkdocs-awesome-pages-plugin",
+    "mkdocstrings[python]",
 ]
 numpy = [
     "numpy",

@@ -1,0 +1,57 @@
+site_name: msglc
+site_author: Theodore Chang
+copyright: Copyright © 2024 Theodore Chang
+repo_url: "https://github.com/TLCFEM/msglc"
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.footer
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: pink
+      toggle:
+        icon: material/lightbulb-outline
+        name: Turn off the lights
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/lightbulb
+        name: Turn on the lights
+extra_css:
+  - color_scheme.css
+markdown_extensions:
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      linenums: true
+      anchor_linenums: true
+      use_pygments: true
+      auto_title: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tilde
+plugins:
+  - search
+  - awesome-pages
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: true
+            docstring_style: sphinx
