@@ -427,6 +427,21 @@ class LazyReader(LazyItem):
         unpacker: Unpacker | None = None,
     ):
         """
+        It is possible to use a customized unpacker.
+        Please inherit the `Unpacker` class from the `unpacker.py`.
+        There are already several unpackers available using different libraries.
+
+        .. highlight:: python
+        .. code-block:: python
+            class CustomUnpacker(Unpacker):
+                def decode(self, data: bytes):
+                    # provide the decoding logic
+                    ...
+
+            with LazyReader("file.msg", unpacker=CustomUnpacker()) as reader:
+                # read the data
+                ...
+
         :param buffer_or_path: the buffer or path to the file
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data

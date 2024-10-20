@@ -62,6 +62,34 @@ def configure(
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.
     The function updates the values of the configuration parameters if they are provided in the arguments.
+
+    :param small_obj_optimization_threshold:
+            The threshold (in bytes) for small object optimization.
+            Objects smaller than this threshold are not indexed.
+    :param write_buffer_size:
+            The size (in bytes) for the write buffer.
+    :param read_buffer_size:
+            The size (in bytes) for the read buffer.
+    :param fast_loading:
+            Flag to enable or disable fast loading.
+            If enabled, the container will be read in one go, instead of reading each child separately.
+    :param fast_loading_threshold:
+            The threshold (0 to 1) for fast loading.
+            With the fast loading flag turned on, fast loading will be performed if the number of
+            already read children over the total number of children is smaller than this threshold.
+    :param trivial_size:
+            The size (in bytes) considered trivial, around a dozen bytes.
+            Objects smaller than this size are considered trivial.
+            For a list of trivial objects, the container will be indexed in a blocked fashion.
+    :param disable_gc:
+            Flag to enable or disable garbage collection.
+    :param simple_repr:
+            Flag to enable or disable simple representation used in the __repr__ method.
+            If turned on, __repr__ will not incur any disk I/O.
+    :param copy_chunk_size:
+            The size (in bytes) for the copy chunk.
+    :param magic:
+            Magic bytes (max length: 30) to set, used to identify the file format version.
     """
     if (
         isinstance(small_obj_optimization_threshold, int)

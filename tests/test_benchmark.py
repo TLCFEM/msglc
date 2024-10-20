@@ -18,7 +18,7 @@ import random
 import pytest
 
 from msglc import dump, config
-from msglc.generate import (
+from generate import (
     generate_random_json,
     find_all_paths,
     goto_path,
