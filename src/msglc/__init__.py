@@ -39,6 +39,10 @@ def dump(file: str | BytesIO, obj, **kwargs):
 
 @dataclasses.dataclass
 class FileInfo:
+    """
+    Wrap the file path or in memory buffer and name into a FileInfo object.
+    The name is optional and is only used when the file is combined in the dictionary (key-value) mode.
+    """
     path: str | BinaryIO
     name: str | None = None
 

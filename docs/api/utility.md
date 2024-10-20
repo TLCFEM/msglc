@@ -13,3 +13,7 @@ The following are main utility functions to create archive.
 ## append
 
 ::: msglc.append
+
+## configure
+
+::: msglc.config.configure

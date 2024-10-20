@@ -57,6 +57,7 @@ def configure(
     disable_gc: bool | None = None,
     simple_repr: bool | None = None,
     copy_chunk_size: int | None = None,
+    numpy_encoder: bool | None = None,
     magic: bytes | None = None,
 ):
     """
@@ -88,6 +89,11 @@ def configure(
             If turned on, __repr__ will not incur any disk I/O.
     :param copy_chunk_size:
             The size (in bytes) for the copy chunk.
+    :param numpy_encoder:
+            Flag to enable or disable the `numpy` support.
+            If enabled, the `numpy` arrays will be encoded using the `dumps` method provided by `numpy`.
+            The arrays are stored as binary data directly.
+            If disabled, the `numpy` arrays will be converted to lists before encoding.
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
     """
@@ -127,6 +133,9 @@ def configure(
 
     if isinstance(copy_chunk_size, int) and copy_chunk_size > 0:
         config.copy_chunk_size = copy_chunk_size
+
+    if isinstance(numpy_encoder, bool):
+        config.numpy_encoder = numpy_encoder
 
     if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
         from msglc import LazyWriter
