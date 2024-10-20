@@ -47,6 +47,9 @@ async def async_to_obj(v):
 
 
 async def async_get(v, key):
+    """
+    Get the value at the given key.
+    """
     if isinstance(v, LazyItem):
         return await v.async_get(key)
     return v[key]
@@ -314,6 +317,11 @@ class LazyList(LazyItem):
         )
 
     def to_obj(self):
+        """
+        Converts the data structure to a JSON serializable object.
+        This method will read the entire data structure into memory.
+        Data returned by this method can leave the `LazyReader` context.
+        """
         if not self._cached:
             if self._toc is not None:
                 return self._read(*self._pos)
@@ -389,20 +397,37 @@ class LazyDict(LazyItem):
         return self._toc.__len__()
 
     def get(self, key, default=None):
+        """
+        Mimics the `get` method for dictionaries.
+        """
         return self[key] if key in self._toc else default
 
     def items(self):
+        """
+        Mimics the `items` method for dictionaries.
+        """
         for k in self._toc:
             yield k, self[k]
 
     def keys(self):
+        """
+        Mimics the `keys` method for dictionaries.
+        """
         return self._toc.keys()
 
     def values(self):
+        """
+        Mimics the `values` method for dictionaries.
+        """
         for k in self._toc:
             yield self[k]
 
     def to_obj(self):
+        """
+        Converts the data structure to a JSON serializable object.
+        This method will read the entire data structure into memory.
+        Data returned by this method can leave the `LazyReader` context.
+        """
         if not self._cached:
             return self._read(*self._pos)
 
@@ -516,15 +541,27 @@ class LazyReader(LazyItem):
         return item in self._obj
 
     def get(self, key, default=None):
+        """
+        Mimics the `get` method for dictionaries.
+        """
         return self._obj.get(key, default)
 
     def keys(self):
+        """
+        Mimics the `keys` method for dictionaries.
+        """
         return self._obj.keys()
 
     def values(self):
+        """
+        Mimics the `values` method for dictionaries.
+        """
         return self._obj.values()
 
     def items(self):
+        """
+        Mimics the `items` method for dictionaries.
+        """
         return self._obj.items()
 
     def read(self, path: str | list | slice | None = None):
@@ -640,4 +677,9 @@ class LazyReader(LazyItem):
         return target
 
     def to_obj(self):
+        """
+        Converts the data structure to a JSON serializable object.
+        This method will read the entire data structure into memory.
+        Data returned by this method can leave the `LazyReader` context.
+        """
         return to_obj(self._obj)

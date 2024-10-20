@@ -1,0 +1,3 @@
+# LazyWriter
+
+::: msglc.writer.LazyWriter

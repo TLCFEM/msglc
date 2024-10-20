@@ -44,6 +44,9 @@ class LazyWriter:
 
     def __init__(self, buffer_or_path: str | BufferWriter, packer: Packer = None):
         """
+        It is possible to provide a custom packer object to be used for packing the object.
+        However, this packer must be compatible with the `msgpack` packer.
+
         :param buffer_or_path: target buffer or file path
         :param packer: packer object to be used for packing the object
         """
@@ -87,9 +90,10 @@ class LazyWriter:
         """
         This function is used to write the object to the file.
 
-        Only one write is allowed. The function raises a ValueError if it is called more than once.
+        Only one write is allowed. The function raises a `ValueError` if it is called more than once.
 
         :param obj: the object to be written to the file
+        :raise ValueError: if the function is called more than once
         :return: None
         """
         if self._no_more_writes:
@@ -112,6 +116,10 @@ class LazyCombiner:
         self, buffer_or_path: str | BufferWriter, *, mode: Literal["a", "w"] = "w"
     ):
         """
+        The mode resembles typical mode designations and implies the same meaning.
+        If the mode is 'w', the file is overwritten.
+        If the mode is 'a', the file is appended.
+
         :param buffer_or_path: target buffer or file path
         :param mode: mode of operation, 'w' for write and 'a' for append
         """
@@ -199,6 +207,12 @@ class LazyCombiner:
             self._buffer.close()
 
     def write(self, obj: Generator, name: str | None = None) -> None:
+        """
+        Write a number of objects to the file.
+
+        :param obj: a generator of objects to be written to the file
+        :param name: a name to be assigned to the object, only required when combining in dict mode
+        """
         if self._toc is None:
             self._toc = [] if name is None else {}
 

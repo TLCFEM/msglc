@@ -30,7 +30,7 @@ def dump(file: str | BytesIO, obj, **kwargs):
 
     :param file: a string representing the file path
     :param obj: the object to be written to the file
-    :param kwargs: additional keyword arguments to be passed to the LazyWriter
+    :param kwargs: additional keyword arguments to be passed to the `LazyWriter`
     :return: None
     """
     with LazyWriter(file, **kwargs) as msglc_writer:
