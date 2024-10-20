@@ -1,6 +1,7 @@
-.venv
-.idea
-*.pyc
 **/*.egg-info
-src/msglc/*.so
+*.pyc
+.idea
+.venv
+site
 src/msglc/*.c
+src/msglc/*.so
