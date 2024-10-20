@@ -1,3 +1,5 @@
 nav:
     - msglc.md
+    - Motivation: motivation.md
+    - Examples: tutorial.md
     - API: api
