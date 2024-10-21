@@ -71,7 +71,7 @@ def generate_random_json(depth=10, width=4, simple=False):
     if seed < 0.95 or not simple:
         return [generate_random_json(depth - 1, width, True) for _ in range(width)]
 
-    return [random.randint(2**10, 2**30)] * random.randint(2**14, 2**18)
+    return [random.randint(2**10, 2**30)] * random.randint(2**10, 2**14)
 
 
 def find_all_paths(json_obj, path=None, path_list=None):
