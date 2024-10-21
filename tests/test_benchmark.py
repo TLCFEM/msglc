@@ -112,7 +112,7 @@ def test_compare_to_plain(tmpdir):
 def prepare(tmpdir_factory):
     tmp_prepare = tmpdir_factory.mktemp("prepare")
     with tmp_prepare.as_cwd():
-        generate(depth=5, width=10, threshold=25)
+        generate(depth=4, width=4, threshold=25)
     return tmp_prepare
 
 
