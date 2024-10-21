@@ -28,15 +28,29 @@ from msglc.reader import LazyDict, LazyList, LazyStats, LazyReader
 from msglc.unpacker import Unpacker
 
 
-def generate_random_json(depth=10, width=4, simple=False):
+def generate_token():
+    return "".join(
+        random.choices(string.ascii_letters + string.digits, k=random.randint(5, 10))
+    )
+
+
+def generate_deterministic_json(depth=10, width=4):
+    if depth == 0:
+        return random.randint(-(2**30), 2**30) * random.randint(2**10, 2**14)
+
     seed = random.random()
 
-    def generate_token():
-        return "".join(
-            random.choices(
-                string.ascii_letters + string.digits, k=random.randint(5, 10)
-            )
-        )
+    if seed < 0.5:
+        return {
+            generate_token(): generate_deterministic_json(depth - 1, width)
+            for _ in range(width)
+        }
+
+    return [generate_deterministic_json(depth - 1, width) for _ in range(width)]
+
+
+def generate_random_json(depth=10, width=4, simple=False):
+    seed = random.random()
 
     if depth == 0 or (simple and seed < 0.1):
         return random.choice(
@@ -57,7 +71,7 @@ def generate_random_json(depth=10, width=4, simple=False):
     if seed < 0.95 or not simple:
         return [generate_random_json(depth - 1, width, True) for _ in range(width)]
 
-    return [random.randint(2**10, 2**30)] * random.randint(2**10, 2**14)
+    return [random.randint(2**10, 2**30)] * random.randint(2**14, 2**18)
 
 
 def find_all_paths(json_obj, path=None, path_list=None):
@@ -68,10 +82,13 @@ def find_all_paths(json_obj, path=None, path_list=None):
         for key, value in json_obj.items():
             new_path = [key] if not path else path + [key]
             find_all_paths(value, new_path, path_list)
-    elif isinstance(json_obj, (list, LazyList)):
+        return path_list
+
+    if isinstance(json_obj, (list, LazyList)):
         for index, value in enumerate(json_obj):
             new_path = [index] if not path else path + [index]
             find_all_paths(value, new_path, path_list)
+        return path_list
 
     if path:
         path_list.append(path)
@@ -94,7 +111,7 @@ def configure_and_dump(archive, block):
 
 
 def generate(*, depth=6, width=11, threshold=23):
-    archive = {"id": generate_random_json(depth, width)}
+    archive = {"id": generate_deterministic_json(depth, width)}
     path = find_all_paths(archive)
     indices = list(range(0, min(1_000_000, len(path))))
     random.shuffle(indices)
