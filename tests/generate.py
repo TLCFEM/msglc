@@ -14,11 +14,8 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import annotations
 
-import functools
-import os
 import random
 import string
-from multiprocessing import Pool
 
 import msgpack  # type: ignore
 
@@ -111,7 +108,7 @@ def configure_and_dump(archive, block):
 
 
 def generate(*, depth=6, width=11, threshold=23):
-    archive = {"id": generate_deterministic_json(depth, width)}
+    archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
     indices = list(range(0, min(1_000_000, len(path))))
     random.shuffle(indices)
@@ -123,12 +120,8 @@ def generate(*, depth=6, width=11, threshold=23):
     with open("archive_msgpack.msg", "wb") as f:
         msgpack.dump(archive, f)
 
-    _dump = functools.partial(configure_and_dump, archive)
-
-    step = range(13, threshold + 1)
-
-    with Pool(min(os.cpu_count(), len(step))) as p:
-        p.map(_dump, step)
+    for step in range(13, threshold + 1):
+        configure_and_dump(archive, step)
 
 
 def compare(mode, size: int = 13, total: int = 5, unpacker: Unpacker = None):
