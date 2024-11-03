@@ -4,18 +4,60 @@
 #
 #    pip-compile --all-extras --annotation-style=line --output-file=requirements-dev.txt pyproject.toml
 #
+babel==2.16.0             # via mkdocs-material
 bitarray==3.0.0           # via msglc (pyproject.toml)
-coverage[toml]==7.6.3     # via pytest-cov
+bracex==2.5.post1         # via wcmatch
+certifi==2024.8.30        # via requests
+charset-normalizer==3.4.0  # via requests
+click==8.1.7              # via mkdocs, mkdocstrings
+colorama==0.4.6           # via griffe, mkdocs-material
+coverage[toml]==7.6.4     # via pytest-cov
+ghp-import==2.1.0         # via mkdocs
+griffe==1.5.1             # via mkdocstrings-python
+idna==3.10                # via requests
+importlib-metadata==8.5.0  # via mike
+importlib-resources==6.4.5  # via mike
 iniconfig==2.0.0          # via pytest
+jinja2==3.1.4             # via mike, mkdocs, mkdocs-material, mkdocstrings
+markdown==3.7             # via mkdocs, mkdocs-autorefs, mkdocs-material, mkdocstrings, pymdown-extensions
+markupsafe==3.0.2         # via jinja2, mkdocs, mkdocs-autorefs, mkdocstrings
+mergedeep==1.3.4          # via mkdocs, mkdocs-get-deps
+mike==2.1.3               # via msglc (pyproject.toml)
+mkdocs==1.6.1             # via mike, mkdocs-autorefs, mkdocs-awesome-pages-plugin, mkdocs-material, mkdocstrings
+mkdocs-autorefs==1.2.0    # via mkdocstrings, mkdocstrings-python
+mkdocs-awesome-pages-plugin==2.9.3  # via msglc (pyproject.toml)
+mkdocs-get-deps==0.2.0    # via mkdocs
+mkdocs-material==9.5.43   # via msglc (pyproject.toml)
+mkdocs-material-extensions==1.3.1  # via mkdocs-material
+mkdocstrings[python]==0.26.2  # via mkdocstrings-python, msglc (pyproject.toml)
+mkdocstrings-python==1.12.2  # via mkdocstrings
 msgpack==1.1.0            # via msglc (pyproject.toml)
 msgspec==0.18.6           # via msglc (pyproject.toml)
-numpy==2.1.2              # via msglc (pyproject.toml)
+natsort==8.4.0            # via mkdocs-awesome-pages-plugin
+numpy==2.1.3              # via msglc (pyproject.toml)
 ormsgpack==1.6.0          # via msglc (pyproject.toml)
-packaging==24.1           # via pytest
+packaging==24.1           # via mkdocs, pytest
+paginate==0.5.7           # via mkdocs-material
+pathspec==0.12.1          # via mkdocs
+platformdirs==4.3.6       # via mkdocs-get-deps, mkdocstrings
 pluggy==1.5.0             # via pytest
 py-cpuinfo==9.0.0         # via pytest-benchmark
+pygments==2.18.0          # via mkdocs-material
+pymdown-extensions==10.12  # via mkdocs-material, mkdocstrings
+pyparsing==3.2.0          # via mike
 pytest==8.3.3             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==0.24.0    # via msglc (pyproject.toml)
-pytest-benchmark==4.0.0   # via msglc (pyproject.toml)
-pytest-cov==5.0.0         # via msglc (pyproject.toml)
-ruff==0.7.0               # via msglc (pyproject.toml)
+pytest-benchmark==5.1.0   # via msglc (pyproject.toml)
+pytest-cov==6.0.0         # via msglc (pyproject.toml)
+python-dateutil==2.9.0.post0  # via ghp-import
+pyyaml==6.0.2             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
+pyyaml-env-tag==0.1       # via mike, mkdocs
+regex==2024.9.11          # via mkdocs-material
+requests==2.32.3          # via mkdocs-material
+ruff==0.7.2               # via msglc (pyproject.toml)
+six==1.16.0               # via python-dateutil
+urllib3==2.2.3            # via requests
+verspec==0.1.0            # via mike
+watchdog==6.0.0           # via mkdocs
+wcmatch==10.0             # via mkdocs-awesome-pages-plugin
+zipp==3.20.2              # via importlib-metadata
