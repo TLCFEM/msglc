@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import asyncio
+from inspect import isclass
 import pickle
 from io import BytesIO, BufferedReader
 
@@ -96,7 +97,7 @@ class LazyItem:
         self._unpacker: Unpacker
         if isinstance(unpacker, Unpacker):
             self._unpacker = unpacker
-        elif issubclass(unpacker, Unpacker):
+        elif isclass(unpacker) and issubclass(unpacker, Unpacker):
             self._unpacker = unpacker()
         elif unpacker is None:
             self._unpacker = MsgpackUnpacker()
