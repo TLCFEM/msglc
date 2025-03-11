@@ -96,6 +96,8 @@ class LazyItem:
         self._unpacker: Unpacker
         if isinstance(unpacker, Unpacker):
             self._unpacker = unpacker
+        elif issubclass(unpacker, Unpacker):
+            self._unpacker = unpacker()
         elif unpacker is None:
             self._unpacker = MsgpackUnpacker()
         else:
