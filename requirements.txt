@@ -4,5 +4,5 @@
 #
 #    pip-compile --annotation-style=line pyproject.toml
 #
-bitarray==3.0.0           # via msglc (pyproject.toml)
+bitarray==3.1.1           # via msglc (pyproject.toml)
 msgpack==1.1.0            # via msglc (pyproject.toml)
