@@ -40,11 +40,12 @@ class Node:
 
 class TOC:
     def __init__(
-        self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None
+            self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None
     ):  # type: ignore
         self._buffer: BytesIO | BinaryIO = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
+        self._in_numpy_array: bool = False
 
         def plain_forward(obj):
             return obj
@@ -71,6 +72,13 @@ class TOC:
             _pack_obj(obj)
             return _generate(start_pos)
 
+        current_level_is_numpy_array: bool = False
+
+        def _resume_flag(output):
+            if current_level_is_numpy_array:
+                self._in_numpy_array = False
+            return output
+
         if isinstance(obj, tuple):
             obj = list(obj)
         elif isinstance(obj, set):
@@ -82,6 +90,9 @@ class TOC:
                 return _generate(start_pos)
 
             obj = obj.tolist()
+
+            current_level_is_numpy_array = True
+            self._in_numpy_array = True
 
         start_pos = self._pos
 
@@ -96,17 +107,53 @@ class TOC:
             all_small_obj = all(v.s for v in obj_toc.values())
         elif isinstance(obj, list):
             _pack_bin(self._packer.pack_array_header(len(obj)))
+
+            if self._in_numpy_array and len(obj) > 0 and not isinstance(obj[0], list):
+                list_start: int = self._pos
+
+                for v in obj:
+                    _pack_obj(v)
+
+                if self._pos < start_pos + config.small_obj_optimization_threshold:
+                    return _resume_flag(_generate(start_pos))
+
+                # assuming homogeneous list
+                # compute the groups using a cheaper method
+                total_items: int = len(obj)
+                item_size: int = (self._pos - list_start) // total_items
+                group_size: int = min(
+                    total_items,
+                    config.small_obj_optimization_threshold // item_size + 1,
+                )
+                numpy_groups: list = []
+                current_pos: int = list_start
+                while total_items != 0:
+                    current_block: int = min(group_size, total_items)
+                    numpy_groups.append(
+                        (
+                            current_block,
+                            current_pos,
+                            current_pos + current_block * item_size,
+                        )
+                    )
+                    current_pos += current_block * item_size
+                    total_items -= current_block
+
+                assert current_pos == self._pos
+
+                return _resume_flag(Node(None, numpy_groups))
+
             obj_toc = [self._pack(v) for v in self._transform(obj)]  # type: ignore
             all_small_obj = all(v.s for v in obj_toc)
         else:
             raise ValueError(f"Expecting dict or list, got {obj.__class__}.")
 
         if self._pos < start_pos + config.small_obj_optimization_threshold:
-            return _generate(start_pos)
+            return _resume_flag(_generate(start_pos))
 
         if all_small_obj:
             if isinstance(obj, dict) or 0 == len(obj):
-                return _generate(start_pos)
+                return _resume_flag(_generate(start_pos))
 
             groups: list = []
             accu_list: list = []
@@ -124,9 +171,11 @@ class TOC:
             if accu_list:
                 groups.append((len(accu_list), accu_list[0].p[0], accu_list[-1].p[1]))
 
-            return Node(None, groups) if len(groups) > 1 else _generate(start_pos)
+            return _resume_flag(
+                Node(None, groups) if len(groups) > 1 else _generate(start_pos)
+            )
 
-        return Node(obj_toc, [start_pos, self._pos])
+        return _resume_flag(Node(obj_toc, [start_pos, self._pos]))
 
     def pack(self, obj) -> dict:
         def _factory(_obj) -> dict:
