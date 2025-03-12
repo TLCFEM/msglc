@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../motivation/">
+        <link rel="prev" href="../tutorial/">
       
       
-        <link rel="next" href="../benchmark/">
+        <link rel="next" href="../api/utility/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Examples - msglc</title>
+        <title>Benchmark - msglc</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#examples" class="md-skip">
+        <a href="#benchmark" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Examples
+              Benchmark
             
           </span>
         </div>
@@ -251,11 +251,9 @@
         
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../tutorial/" class="md-tabs__link">
         
   
     
@@ -270,9 +268,11 @@
         
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../benchmark/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
     
@@ -393,6 +393,27 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -409,7 +430,7 @@
           
   
   <span class="md-ellipsis">
-    Examples
+    Benchmark
     
   </span>
   
@@ -421,7 +442,7 @@
         
   
   <span class="md-ellipsis">
-    Examples
+    Benchmark
     
   </span>
   
@@ -444,66 +465,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#serialization" class="md-nav__link">
+  <a href="#data-generation" class="md-nav__link">
     <span class="md-ellipsis">
-      Serialization
+      Data Generation
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Serialization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#dumping-one-object-to-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dumping one object to a file
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#combining-several-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combining several files
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Combining several files">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#combine-as-dict" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combine as dict
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#combine-as-list" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combine as list
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#deserialization" class="md-nav__link">
+  <a href="#read-test" class="md-nav__link">
     <span class="md-ellipsis">
-      Deserialization
+      Read Test
     </span>
   </a>
   
@@ -513,27 +486,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../benchmark/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Benchmark
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -699,66 +651,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#serialization" class="md-nav__link">
+  <a href="#data-generation" class="md-nav__link">
     <span class="md-ellipsis">
-      Serialization
+      Data Generation
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Serialization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#dumping-one-object-to-a-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dumping one object to a file
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#combining-several-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combining several files
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Combining several files">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#combine-as-dict" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combine as dict
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#combine-as-list" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combine as list
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#deserialization" class="md-nav__link">
+  <a href="#read-test" class="md-nav__link">
     <span class="md-ellipsis">
-      Deserialization
+      Read Test
     </span>
   </a>
   
@@ -783,22 +687,45 @@
   
 
 
-<h1 id="examples">Examples</h1>
-<h2 id="serialization">Serialization</h2>
-<h3 id="dumping-one-object-to-a-file">Dumping one object to a file</h3>
-<p>Use <code>dump</code> to serialize a json object to a file.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span>
-<span class="normal"><a href="#__codelineno-0-3">3</a></span>
-<span class="normal"><a href="#__codelineno-0-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mh">0x221548313</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">}}</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<h1 id="benchmark">Benchmark</h1>
+<p>The embedded structure allows fast read without loading the whole archive, which is the main advantage of this package.
+In the following, we benchmark the random read performance and compare with the <code>HDF5</code> format.</p>
+<h2 id="data-generation">Data Generation</h2>
+<p>A square matrix of size 5000 with random floating-point numbers is used.
+The matrix is dumped onto the disk with different configurations.</p>
+<ol>
+<li>For <code>msglc</code>, <code>small_obj_optimization_threshold</code> varies from 4KB to 4MB, <code>numpy_encoder</code> is switched off so the matrix is stored as plain json instead binary blob.</li>
+<li>For <code>h5py</code>, the chunk size is computed so that each block has a size similar to <code>small_obj_optimization_threshold</code>. Compression is optionally switched on.</li>
+</ol>
+<p>The following code snippets show the relevant functions.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_msg</span><span class="p">(</span><span class="n">mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>    <span class="n">configure</span><span class="p">(</span><span class="n">small_obj_optimization_threshold</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">block</span><span class="p">,</span> <span class="n">numpy_encoder</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># 16KB</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    <span class="n">dump</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;data-</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">.msg&quot;</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_h5</span><span class="p">(</span><span class="n">mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_name</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>        <span class="k">if</span> <span class="n">block</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a>            <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">block</span> <span class="o">/</span> <span class="mi">128</span><span class="p">))</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a>            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a>        <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">mat</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-<h3 id="combining-several-files">Combining several files</h3>
-<p>Use <code>combine</code> to combine several serialized files together.
-The combined files can be further combined.</p>
-<h4 id="combine-as-dict">Combine as <code>dict</code></h4>
+<p>The write time of <code>msglc</code> is in general constant, because the packer needs to traverse the whole json object.
+Depending on different configurations, <code>h5py</code> requires different amounts of time to dump the matrix.</p>
+<p><img alt="write time" src="../write_time.pdf" /></p>
+<p><code>msglc</code> shall be used for data that is written to disk for cold storage and does not require frequent changes.
+When compression is on, <code>h5py</code> needs to traverse the object just like <code>msglc</code>, thus requires a similar amount of time.</p>
+<h2 id="read-test">Read Test</h2>
+<p>We mainly test the random read.
+To this end, we repeatedly read random locations in the matrix and measure the time required.</p>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
@@ -811,89 +738,22 @@ The combined files can be further combined.</p>
 <span class="normal"><a href="#__codelineno-1-10">10</a></span>
 <span class="normal"><a href="#__codelineno-1-11">11</a></span>
 <span class="normal"><a href="#__codelineno-1-12">12</a></span>
-<span class="normal"><a href="#__codelineno-1-13">13</a></span>
-<span class="normal"><a href="#__codelineno-1-14">14</a></span>
-<span class="normal"><a href="#__codelineno-1-15">15</a></span>
-<span class="normal"><a href="#__codelineno-1-16">16</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">FileInfo</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)})</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span>
+<span class="normal"><a href="#__codelineno-1-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="nd">@timeit</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">read_msg</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a>    <span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">unpacker</span><span class="o">=</span><span class="n">MsgspecUnpacker</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5"></a>            <span class="n">reader</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)][</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)]</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="n">combine</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;dict&quot;</span><span class="p">),</span> <span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">)])</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="c1"># support recursively combining files</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="c1"># ...</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="c1"># the combined file uses a dict layout</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12"></a><span class="c1"># { &#39;dict&#39; : {&#39;1&#39;:1,&#39;2&#39;:2,...}, &#39;list&#39; : [1.0,2.0,3.0,...] }</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="c1"># so one can read it as follows, details in coming section</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;dict/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">101</span>  <span class="c1"># also reader[&#39;dict&#39;][101]</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;list/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">101.0</span>  <span class="c1"># also reader[&#39;list&#39;][101]</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="nd">@timeit</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">read_h5</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10"></a>    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11"></a>        <span class="n">dataset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12"></a>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13"></a>            <span class="n">dataset</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)][</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)]</span><span class="err">`</span>
 </code></pre></div></td></tr></table></div>
-<h4 id="combine-as-list">Combine as <code>list</code></h4>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-2-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-2-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-2-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-2-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-2-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-2-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-2-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-2-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-2-10">10</a></span>
-<span class="normal"><a href="#__codelineno-2-11">11</a></span>
-<span class="normal"><a href="#__codelineno-2-12">12</a></span>
-<span class="normal"><a href="#__codelineno-2-13">13</a></span>
-<span class="normal"><a href="#__codelineno-2-14">14</a></span>
-<span class="normal"><a href="#__codelineno-2-15">15</a></span>
-<span class="normal"><a href="#__codelineno-2-16">16</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">FileInfo</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)})</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="n">combine</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">),</span> <span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">)])</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="c1"># support recursively combining files</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9"></a><span class="c1"># ...</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11"></a><span class="c1"># the combined file uses a list layout</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12"></a><span class="c1"># [ {&#39;1&#39;:1,&#39;2&#39;:2,...}, [1.0,2.0,3.0,...] ]</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13"></a><span class="c1"># so one can read it as follows, details in coming section</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;0/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">101</span>  <span class="c1"># also reader[0][101]</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;1/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">101.0</span>  <span class="c1"># also reader[1][101]</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="deserialization">Deserialization</h2>
-<p>Use <code>LazyReader</code> to read a file.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-3-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-3-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-3-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-3-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-3-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-3-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-3-10">10</a></span>
-<span class="normal"><a href="#__codelineno-3-11">11</a></span>
-<span class="normal"><a href="#__codelineno-3-12">12</a></span>
-<span class="normal"><a href="#__codelineno-3-13">13</a></span>
-<span class="normal"><a href="#__codelineno-3-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span><span class="p">,</span> <span class="n">to_obj</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># return a LazyDict, LazyList, dict, list or primitive value</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s2">&quot;b/c&quot;</span><span class="p">]</span>  <span class="c1"># subscriptable if the actual data is subscriptable</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6"></a>    <span class="c1"># data = reader[2:]  # also support slicing if its underlying data is list compatible</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;b/c&quot;</span><span class="p">)</span>  <span class="c1"># or provide a path to visit a particular node</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># 4</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9"></a>    <span class="n">b_dict</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">b_dict</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>  <span class="c1"># &lt;class &#39;msglc.reader.LazyDict&#39;&gt;</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11"></a>    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>  <span class="c1"># dict compatible</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12"></a>        <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>  <span class="c1"># c 4, d 5</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14"></a>    <span class="n">b_json</span> <span class="o">=</span> <span class="n">to_obj</span><span class="p">(</span><span class="n">b_dict</span><span class="p">)</span>  <span class="c1"># ensure plain dict</span>
-</code></pre></div></td></tr></table></div>
+<p><img alt="read 1k random elements" src="../read_time_log_1k.pdf" /></p>
+<p><img alt="read 10k random elements" src="../read_time_log_10k.pdf" /></p>
 
 
 
@@ -923,7 +783,7 @@ The combined files can be further combined.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../motivation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Motivation">
+          <a href="../tutorial/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Examples">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -933,20 +793,20 @@ The combined files can be further combined.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Motivation
+                Examples
               </div>
             </div>
           </a>
         
         
           
-          <a href="../benchmark/" class="md-footer__link md-footer__link--next" aria-label="Next: Benchmark">
+          <a href="../api/utility/" class="md-footer__link md-footer__link--next" aria-label="Next: Utility">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Benchmark
+                Utility
               </div>
             </div>
             <div class="md-footer__button md-icon">
