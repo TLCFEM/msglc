@@ -8,7 +8,7 @@ from timer import get_color, timeit
 from msglc.reader import LazyReader
 from msglc.unpacker import MsgspecUnpacker
 
-repeat = 10000
+repeat = 1000
 
 
 @timeit
