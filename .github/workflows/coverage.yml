@@ -75,6 +75,7 @@ jobs:
           name: msglc-sdist
           path: dist/*.tar.gz
   documentation:
+    name: Documentation
     needs: wheels
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
