@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from io import BytesIO
 from typing import BinaryIO
 
@@ -40,7 +40,7 @@ class Node:
 
 class TOC:
     def __init__(
-            self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None
+        self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None
     ):  # type: ignore
         self._buffer: BytesIO | BinaryIO = buffer
         self._packer: Packer = packer
@@ -152,7 +152,7 @@ class TOC:
             return _resume_flag(_generate(start_pos))
 
         if all_small_obj:
-            if isinstance(obj, dict) or 0 == len(obj):
+            if isinstance(obj, dict) or len(obj) == 0:
                 return _resume_flag(_generate(start_pos))
 
             groups: list = []

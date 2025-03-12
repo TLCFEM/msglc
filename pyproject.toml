@@ -55,3 +55,7 @@ ormsgpack = [
 "Homepage" = "https://github.com/TLCFEM/msglc"
 "Bug Reports" = "https://github.com/TLCFEM/msglc/issuess"
 "Source" = "https://github.com/TLCFEM/msglc"
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "SIM", "I"]
+ignore = ["B008","E501"]

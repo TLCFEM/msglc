@@ -16,18 +16,18 @@
 from __future__ import annotations
 
 import asyncio
-from inspect import isclass
 import pickle
-from io import BytesIO, BufferedReader
+from inspect import isclass
+from io import BufferedReader, BytesIO
 
-from bitarray import bitarray
 import msgpack
+from bitarray import bitarray
 
-from .config import config, increment_gc_counter, decrement_gc_counter, BufferReader
+from .config import BufferReader, config, decrement_gc_counter, increment_gc_counter
 from .index import normalise_index, to_index
+from .unpacker import MsgpackUnpacker, Unpacker
 from .utility import MockIO
 from .writer import LazyWriter
-from .unpacker import Unpacker, MsgpackUnpacker
 
 
 def to_obj(v):
@@ -150,7 +150,7 @@ class LazyItem:
         if (child_toc := toc.get("t", None)) is None:
             # {"p": [start_pos, end_pos]}
             # this is used in small objects
-            if 2 == len(child_pos := toc["p"]) and all(
+            if len(child_pos := toc["p"]) == 2 and all(
                 isinstance(x, int) for x in child_pos
             ):
                 if (
@@ -207,9 +207,7 @@ class LazyList(LazyItem):
         super().__init__(
             buffer, offset, counter=counter, cached=cached, unpacker=unpacker
         )
-        self._toc: list | None = toc.get(
-            "t", None
-        )  # if None, it's a list of small objects
+        self._toc: list | None = toc.get("t")  # if None, it's a list of small objects
         self._pos: list = toc.get("p", None)  # noqa # if None, it comes from a combined archive
         self._index: int = 0
         self._cache: list = [None] * len(self)
@@ -253,8 +251,10 @@ class LazyList(LazyItem):
         if isinstance(index, str):
             try:
                 index_range = [int(index)]
-            except ValueError:
-                raise TypeError(f"Invalid type: {type(index)} for index {index}.")
+            except ValueError as err:
+                raise TypeError(
+                    f"Invalid type: {type(index)} for index {index}."
+                ) from err
         elif isinstance(index, slice):
             index_range = range(*index.indices(len(self)))
         elif isinstance(index, int):
@@ -266,7 +266,7 @@ class LazyList(LazyItem):
             for item in index_range:
                 item = normalise_index(item, len(self))
 
-                if 0 == self._mask[item]:
+                if self._mask[item] == 0:
                     if self._toc is not None:
                         self._mask[item] = 1
                         self._cache[item] = self._child(self._toc[item])
@@ -346,7 +346,7 @@ class LazyList(LazyItem):
                 num_start, num_end = 0, 0
                 for size, start, end in self._pos:
                     num_end += size
-                    if 0 == self._mask[num_start]:
+                    if self._mask[num_start] == 0:
                         self._cache[num_start:num_end] = self._all(start, end)
                     num_start = num_end
 
@@ -479,7 +479,7 @@ class LazyReader(LazyItem):
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
-            buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)
+            buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)  # noqa: SIM115
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader, MockIO)):
             buffer = self._buffer_or_path
         else:

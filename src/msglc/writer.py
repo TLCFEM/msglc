@@ -16,16 +16,17 @@
 from __future__ import annotations
 
 import os.path
-from io import BytesIO, BufferedReader
-from typing import Generator, Literal
+from collections.abc import Generator
+from io import BufferedReader, BytesIO
+from typing import Literal
 
 from msgpack import Packer, packb, unpackb  # type: ignore
 
 from .config import (
-    config,
-    increment_gc_counter,
-    decrement_gc_counter,
     BufferWriter,
+    config,
+    decrement_gc_counter,
+    increment_gc_counter,
     max_magic_len,
 )
 from .toc import TOC

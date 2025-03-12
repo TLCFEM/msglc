@@ -18,9 +18,9 @@ from itertools import cycle
 
 import pytest
 
-from msglc import LazyWriter, FileInfo, combine, append
-from msglc.config import config, increment_gc_counter, decrement_gc_counter, configure
-from msglc.reader import LazyStats, LazyReader, async_to_obj
+from msglc import FileInfo, LazyWriter, append, combine
+from msglc.config import config, configure, decrement_gc_counter, increment_gc_counter
+from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
 
 
@@ -88,34 +88,36 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
-            with LazyReader(buffer, counter=stats, cached=cached) as reader:
-                assert (
-                    reader.read(
-                        "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
-                    )
-                    == "XML"
+        with (
+            MockIO(target, "rb", 0, 500 * 2**20) as buffer,
+            LazyReader(buffer, counter=stats, cached=cached) as reader,
+        ):
+            assert (
+                reader.read(
+                    "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
                 )
-                assert reader.read("glossary/empty_list") == []
-                assert reader.read("glossary/none_list/0") is None
-                assert reader.read() == json_after
-                assert reader == json_after
+                == "XML"
+            )
+            assert reader.read("glossary/empty_list") == []
+            assert reader.read("glossary/none_list/0") is None
+            assert reader.read() == json_after
+            assert reader == json_after
 
-                dict_container = reader.read("glossary/GlossDiv")
-                assert len(dict_container) == 2
-                assert dict_container.get("invalid_key") is None
-                assert "invalid_key" not in dict_container
-                assert set(dict_container.keys()) == {"title", "GlossList"}
-                for x, _ in dict_container.items():
-                    assert x in ["title", "GlossList"]
+            dict_container = reader.read("glossary/GlossDiv")
+            assert len(dict_container) == 2
+            assert dict_container.get("invalid_key") is None
+            assert "invalid_key" not in dict_container
+            assert set(dict_container.keys()) == {"title", "GlossList"}
+            for x, _ in dict_container.items():
+                assert x in ["title", "GlossList"]
 
-                list_container = reader.read(
-                    "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso"
-                )
-                assert len(list_container) == 2
-                for x in list_container:
-                    assert x in ["GML", "XML"]
-                assert set(list_container) == {"GML", "XML"}
+            list_container = reader.read(
+                "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso"
+            )
+            assert len(list_container) == 2
+            for x in list_container:
+                assert x in ["GML", "XML"]
+            assert set(list_container) == {"GML", "XML"}
 
         str(stats)
 
@@ -143,35 +145,37 @@ async def test_async_msglc(
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        with MockIO(target, "rb", 0, 500 * 2**20) as buffer:
-            with LazyReader(buffer, counter=stats, cached=cached) as reader:
-                assert (
-                    await reader.async_read(
-                        "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
-                    )
-                    == "XML"
+        with (
+            MockIO(target, "rb", 0, 500 * 2**20) as buffer,
+            LazyReader(buffer, counter=stats, cached=cached) as reader,
+        ):
+            assert (
+                await reader.async_read(
+                    "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
                 )
-                assert await reader.async_read("glossary/empty_list") == []
-                assert await reader.async_read("glossary/none_list/0") is None
-                assert await reader.async_read() == json_after
-                assert await async_to_obj(reader) == json_after
-                assert reader == json_after
+                == "XML"
+            )
+            assert await reader.async_read("glossary/empty_list") == []
+            assert await reader.async_read("glossary/none_list/0") is None
+            assert await reader.async_read() == json_after
+            assert await async_to_obj(reader) == json_after
+            assert reader == json_after
 
-                dict_container = await reader.async_read("glossary/GlossDiv")
-                assert len(dict_container) == 2
-                assert dict_container.get("invalid_key") is None
-                assert "invalid_key" not in dict_container
-                assert set(dict_container.keys()) == {"title", "GlossList"}
-                for x, _ in dict_container.items():
-                    assert x in ["title", "GlossList"]
+            dict_container = await reader.async_read("glossary/GlossDiv")
+            assert len(dict_container) == 2
+            assert dict_container.get("invalid_key") is None
+            assert "invalid_key" not in dict_container
+            assert set(dict_container.keys()) == {"title", "GlossList"}
+            for x, _ in dict_container.items():
+                assert x in ["title", "GlossList"]
 
-                list_container = await reader.async_read(
-                    "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso"
-                )
-                assert len(list_container) == 2
-                for x in list_container:
-                    assert x in ["GML", "XML"]
-                assert set(list_container) == {"GML", "XML"}
+            list_container = await reader.async_read(
+                "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso"
+            )
+            assert len(list_container) == 2
+            for x in list_container:
+                assert x in ["GML", "XML"]
+            assert set(list_container) == {"GML", "XML"}
 
         str(stats)
 
@@ -200,10 +204,10 @@ def test_list_exception(monkeypatch, tmpdir, cached, threshold, trivial):
             with pytest.raises(TypeError):
                 print(reader["a:2:"])
 
-            assert reader[f"{-2-total_size}:"] == [198.0, 199.0]
-            assert reader[f"{2*total_size-2}:"] == [198.0, 199.0]
-            assert reader[f":{total_size+2}"] == [0.0, 1.0]
-            assert reader[f":{-2*total_size+2}"] == [0.0, 1.0]
+            assert reader[f"{-2 - total_size}:"] == [198.0, 199.0]
+            assert reader[f"{2 * total_size - 2}:"] == [198.0, 199.0]
+            assert reader[f":{total_size + 2}"] == [0.0, 1.0]
+            assert reader[f":{-2 * total_size + 2}"] == [0.0, 1.0]
             assert reader[:2] == [0.0, 1.0]
 
             for _ in range(2 * total_size):

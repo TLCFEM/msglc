@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import gc
 from dataclasses import dataclass
-from io import BytesIO, BufferedReader
-from typing import Union, BinaryIO
+from io import BufferedReader, BytesIO
+from typing import BinaryIO, Union
 
 from msglc.utility import MockIO
 

@@ -28,7 +28,7 @@ class MockIO:
         read_speed: int | list = 1 * 2**20,
     ):
         self._path = path if isinstance(path, str) else None
-        self._io = open(path, mode) if isinstance(path, str) else path
+        self._io = open(path, mode) if isinstance(path, str) else path  # noqa: SIM115
         self._seek_delay: float = seek_delay
         self._read_speed: int | list = read_speed
 

@@ -21,7 +21,7 @@ import msgpack  # type: ignore
 
 from msglc import dump
 from msglc.config import configure
-from msglc.reader import LazyDict, LazyList, LazyStats, LazyReader
+from msglc.reader import LazyDict, LazyList, LazyReader, LazyStats
 from msglc.unpacker import Unpacker
 
 
@@ -127,7 +127,7 @@ def generate(*, depth=6, width=11, threshold=23):
 def compare(mode, size: int = 13, total: int = 5, unpacker: Unpacker = None):
     accumulator: int = 0
 
-    with open("path.txt", "r") as f:
+    with open("path.txt") as f:
         if mode > 0:
             counter = LazyStats()
             with LazyReader(

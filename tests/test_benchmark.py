@@ -16,16 +16,16 @@
 import random
 
 import pytest
-
-from msglc import dump, config
 from generate import (
-    generate_random_json,
-    find_all_paths,
-    goto_path,
-    generate,
     compare,
+    find_all_paths,
+    generate,
+    generate_random_json,
+    goto_path,
 )
-from msglc.reader import LazyStats, LazyReader
+
+from msglc import config, dump
+from msglc.reader import LazyReader, LazyStats
 from msglc.unpacker import MsgpackUnpacker, MsgspecUnpacker
 
 
