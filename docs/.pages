@@ -2,4 +2,5 @@ nav:
     - msglc: index.md
     - Motivation: motivation.md
     - Examples: tutorial.md
+    - Benchmark: benchmark.md
     - API: api
