@@ -74,3 +74,24 @@ jobs:
         with:
           name: msglc-sdist
           path: dist/*.tar.gz
+  documentation:
+    needs: wheels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Deploy
+        run: |
+          pip install -e .[dev,numpy,msgspec]
+          mkdocs build
+          git fetch origin
+          git config --global user.name "Theodore Chang"
+          git config --global user.email "tlcfem@gmail.com"
+          git pull
+          mkdocs gh-deploy
