@@ -108,7 +108,14 @@ class TOC:
         elif isinstance(obj, list):
             _pack_bin(self._packer.pack_array_header(len(obj)))
 
-            if self._in_numpy_array and len(obj) > 0 and not isinstance(obj[0], list):
+            if (
+                self._in_numpy_array
+                and len(obj) > 0
+                and (
+                    isinstance(obj[0], float)
+                    or (config.numpy_fast_int_pack and isinstance(obj[0], int))
+                )
+            ):
                 list_start: int = self._pos
 
                 for v in obj:
@@ -121,27 +128,30 @@ class TOC:
                 # compute the groups using a cheaper method
                 total_items: int = len(obj)
                 item_size: int = (self._pos - list_start) // total_items
-                group_size: int = min(
-                    total_items,
-                    config.small_obj_optimization_threshold // item_size + 1,
-                )
-                numpy_groups: list = []
-                current_pos: int = list_start
-                while total_items != 0:
-                    current_block: int = min(group_size, total_items)
-                    numpy_groups.append(
-                        (
-                            current_block,
-                            current_pos,
-                            current_pos + current_block * item_size,
-                        )
+                if item_size * total_items == self._pos - list_start:
+                    group_size: int = min(
+                        total_items,
+                        config.small_obj_optimization_threshold // item_size + 1,
                     )
-                    current_pos += current_block * item_size
-                    total_items -= current_block
+                    numpy_groups: list = []
+                    current_pos: int = list_start
+                    while total_items != 0:
+                        current_block: int = min(group_size, total_items)
+                        numpy_groups.append(
+                            (
+                                current_block,
+                                current_pos,
+                                current_pos + current_block * item_size,
+                            )
+                        )
+                        current_pos += current_block * item_size
+                        total_items -= current_block
 
-                assert current_pos == self._pos
+                    assert current_pos == self._pos
 
-                return _resume_flag(Node(None, numpy_groups))
+                    return _resume_flag(Node(None, numpy_groups))
+
+                self._buffer.seek(start_pos)
 
             obj_toc = [self._pack(v) for v in self._transform(obj)]  # type: ignore
             all_small_obj = all(v.s for v in obj_toc)

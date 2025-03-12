@@ -38,6 +38,7 @@ class Config:
     simple_repr: bool = True
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
+    numpy_fast_int_pack: bool = False
 
 
 config = Config()
@@ -58,6 +59,7 @@ def configure(
     simple_repr: bool | None = None,
     copy_chunk_size: int | None = None,
     numpy_encoder: bool | None = None,
+    numpy_fast_int_pack: bool | None = None,
     magic: bytes | None = None,
 ):
     """
@@ -94,6 +96,11 @@ def configure(
             If enabled, the `numpy` arrays will be encoded using the `dumps` method provided by `numpy`.
             The arrays are stored as binary data directly.
             If disabled, the `numpy` arrays will be converted to lists before encoding.
+    :param numpy_fast_int_pack:
+            If enabled, the integer numpy array will be packed assigning each element has identical size (4 or 8 bytes).
+            This improves the performance of packing by avoiding the overhead of checking the size of each element.
+            However, depending on the backend, for example, `messagepack` C implementation packs unsigned long long or long long.
+            But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
     """
@@ -136,6 +143,9 @@ def configure(
 
     if isinstance(numpy_encoder, bool):
         config.numpy_encoder = numpy_encoder
+
+    if isinstance(numpy_fast_int_pack, bool):
+        config.numpy_fast_int_pack = numpy_fast_int_pack
 
     if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
         from msglc import LazyWriter
