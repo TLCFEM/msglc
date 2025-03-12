@@ -29,7 +29,7 @@ def generate_h5(mat: np.ndarray, block: int, **kwargs):
 The write time of `msglc` is in general constant, because the packer needs to traverse the whole json object.
 Depending on different configurations, `h5py` requires different amounts of time to dump the matrix.
 
-![write time](./write_time.pdf)
+![write time](write_time.png)
 
 `msglc` shall be used for data that is written to disk for cold storage and does not require frequent changes.
 When compression is on, `h5py` needs to traverse the object just like `msglc`, thus requires a similar amount of time.
@@ -55,6 +55,10 @@ def read_h5(file: str):
             dataset[random.randint(0, 4999)][random.randint(0, 4999)]`
 ```
 
-![read 1k random elements](./read_time_log_1k.pdf)
+The following is the result of reading 1000 elements.
 
-![read 10k random elements](./read_time_log_10k.pdf)
+![read 1k random elements](read_time_log_1k.png)
+
+The following is the result of reading 10000 elements.
+
+![read 10k random elements](read_time_log_10k.png)
