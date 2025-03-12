@@ -720,7 +720,7 @@ The matrix is dumped onto the disk with different configurations.</p>
 </code></pre></div></td></tr></table></div>
 <p>The write time of <code>msglc</code> is in general constant, because the packer needs to traverse the whole json object.
 Depending on different configurations, <code>h5py</code> requires different amounts of time to dump the matrix.</p>
-<p><img alt="write time" src="../write_time.pdf" /></p>
+<p><img alt="write time" src="../write_time.png" /></p>
 <p><code>msglc</code> shall be used for data that is written to disk for cold storage and does not require frequent changes.
 When compression is on, <code>h5py</code> needs to traverse the object just like <code>msglc</code>, thus requires a similar amount of time.</p>
 <h2 id="read-test">Read Test</h2>
@@ -752,8 +752,10 @@ To this end, we repeatedly read random locations in the matrix and measure the t
 <a id="__codelineno-1-12" name="__codelineno-1-12"></a>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13"></a>            <span class="n">dataset</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)][</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)]</span><span class="err">`</span>
 </code></pre></div></td></tr></table></div>
-<p><img alt="read 1k random elements" src="../read_time_log_1k.pdf" /></p>
-<p><img alt="read 10k random elements" src="../read_time_log_10k.pdf" /></p>
+<p>The following is the result of reading 1000 elements.</p>
+<p><img alt="read 1k random elements" src="../read_time_log_1k.png" /></p>
+<p>The following is the result of reading 10000 elements.</p>
+<p><img alt="read 10k random elements" src="../read_time_log_10k.png" /></p>
 
 
 
