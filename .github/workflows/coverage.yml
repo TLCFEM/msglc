@@ -30,29 +30,29 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: TLCFEM/msglc
           plugins: pycoverage
-  benchmark:
-    name: Benchmark
-    runs-on: ubuntu-latest
-    timeout-minutes: 100
-    steps:
-      - name: Clone
-        uses: actions/checkout@v4
-      - name: Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.11
-      - name: Build
-        run: pip install .[dev,msgspec,numpy] matplotlib h5py
-      - name: Test
-        run: |
-          python3 h5/generate.py
-          python3 h5/read.py
-          tar czf benchmark.tar.gz ./h5/*.pdf
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: msglc-benchmark
-          path: benchmark.tar.gz
+  # benchmark:
+  #   name: Benchmark
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 100
+  #   steps:
+  #     - name: Clone
+  #       uses: actions/checkout@v4
+  #     - name: Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: 3.11
+  #     - name: Build
+  #       run: pip install .[dev,msgspec,numpy] matplotlib h5py
+  #     - name: Test
+  #       run: |
+  #         python3 h5/generate.py
+  #         python3 h5/read.py
+  #         tar czf benchmark.tar.gz ./h5/*.pdf
+  #     - name: Upload
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: msglc-benchmark
+  #         path: benchmark.tar.gz
   wheels:
     name: Build
     runs-on: ubuntu-latest
