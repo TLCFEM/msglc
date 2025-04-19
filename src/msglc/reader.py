@@ -330,37 +330,33 @@ class LazyList(LazyItem):
         def _read_all():
             for index in range(len(self)):
                 self._cache[index] = to_obj(self[index])
+            return self._cache
 
         if not self._cached:
             if self._toc is None:
                 result: list = []
                 for _, start, end in self._pos:
                     result.extend(self._all(start, end))
-
                 return result
 
-            if self._pos:
-                return self._read(*self._pos)
-
-            _read_all()
-            return self._cache
+            return self._read(*self._pos) if self._pos else _read_all()
 
         if not self._full_loaded:
             self._full_loaded = True
+
             if not self._fast_loading:
                 _read_all()
-            elif self._toc is not None:
-                if self._pos:
-                    self._cache = self._read(*self._pos)
-                else:
-                    _read_all()
-            else:
+            elif self._toc is None:
                 num_start, num_end = 0, 0
                 for size, start, end in self._pos:
                     num_end += size
                     if self._mask[num_start] == 0:
                         self._cache[num_start:num_end] = self._all(start, end)
                     num_start = num_end
+            elif self._pos:
+                self._cache = self._read(*self._pos)
+            else:
+                _read_all()
 
             self._mask.setall(1)
 
@@ -447,13 +443,10 @@ class LazyDict(LazyItem):
         def _read_all():
             for k in self:
                 self._cache[k] = to_obj(self[k])
+            return self._cache
 
         if not self._cached:
-            if self._pos:
-                return self._read(*self._pos)
-
-            _read_all()
-            return self._cache
+            return self._read(*self._pos) if self._pos else _read_all()
 
         if not self._full_loaded:
             self._full_loaded = True
