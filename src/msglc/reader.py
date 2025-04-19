@@ -207,8 +207,9 @@ class LazyList(LazyItem):
         super().__init__(
             buffer, offset, counter=counter, cached=cached, unpacker=unpacker
         )
-        self._toc: list | None = toc.get("t")  # if None, it's a list of small objects
+        self._toc: list = toc.get("t", None)  # noqa # if None, it's a list of small objects
         self._pos: list = toc.get("p", None)  # noqa # if None, it comes from a combined archive
+        assert self._toc or self._pos, "Invalid TOC"
         self._index: int = 0
         self._cache: list = [None] * len(self)
         self._mask: bitarray = bitarray(len(self))
@@ -325,23 +326,34 @@ class LazyList(LazyItem):
         This method will read the entire data structure into memory.
         Data returned by this method can leave the `LazyReader` context.
         """
+
+        def _read_all():
+            for index in range(len(self)):
+                self._cache[index] = to_obj(self[index])
+
         if not self._cached:
-            if self._toc is not None:
+            if self._toc is None:
+                result: list = []
+                for _, start, end in self._pos:
+                    result.extend(self._all(start, end))
+
+                return result
+
+            if self._pos:
                 return self._read(*self._pos)
 
-            result: list = []
-            for _, start, end in self._pos:
-                result.extend(self._all(start, end))
-
-            return result
+            _read_all()
+            return self._cache
 
         if not self._full_loaded:
             self._full_loaded = True
             if not self._fast_loading:
-                for index in range(len(self)):
-                    self._cache[index] = to_obj(self[index])
+                _read_all()
             elif self._toc is not None:
-                self._cache = self._read(*self._pos)
+                if self._pos:
+                    self._cache = self._read(*self._pos)
+                else:
+                    _read_all()
             else:
                 num_start, num_end = 0, 0
                 for size, start, end in self._pos:
@@ -431,16 +443,24 @@ class LazyDict(LazyItem):
         This method will read the entire data structure into memory.
         Data returned by this method can leave the `LazyReader` context.
         """
+
+        def _read_all():
+            for k in self:
+                self._cache[k] = to_obj(self[k])
+
         if not self._cached:
-            return self._read(*self._pos)
+            if self._pos:
+                return self._read(*self._pos)
+
+            _read_all()
+            return self._cache
 
         if not self._full_loaded:
             self._full_loaded = True
             if self._fast_loading and self._pos is not None:
                 self._cache = self._read(*self._pos)
             else:
-                for k in self:
-                    self._cache[k] = to_obj(self[k])
+                _read_all()
 
         return self._cache
 
