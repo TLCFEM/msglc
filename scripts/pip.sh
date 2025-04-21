@@ -16,7 +16,7 @@ then
   fi
 fi
 
-uv pip compile --refresh -U --annotation-style=line pyproject.toml
+uv pip compile --refresh -U --annotation-style=line --output-file=requirements.txt pyproject.toml
 uv pip compile --refresh -U --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 
 cd ..

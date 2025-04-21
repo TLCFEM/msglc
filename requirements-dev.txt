@@ -31,7 +31,7 @@ mkdocstrings-python==1.16.10  # via mkdocstrings
 msgpack==1.1.0            # via msglc (pyproject.toml)
 msgspec==0.19.0           # via msglc (pyproject.toml)
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
-numpy==2.2.4              # via msglc (pyproject.toml)
+numpy==2.2.5              # via msglc (pyproject.toml)
 ormsgpack==1.9.1          # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
