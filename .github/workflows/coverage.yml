@@ -85,7 +85,7 @@ jobs:
       - name: Delete
         uses: strumwolf/delete-deployment-environment@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ALL }}
           environment: github-pages
       - name: Clone
         uses: actions/checkout@v4
