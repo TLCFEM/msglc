@@ -1,6 +1,6 @@
 site_name: msglc
 site_author: Theodore Chang
-copyright: Copyright © 2024 Theodore Chang
+copyright: Copyright © 2024-2025 Theodore Chang
 repo_url: "https://github.com/TLCFEM/msglc"
 theme:
   name: material

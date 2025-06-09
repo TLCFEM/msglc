@@ -3,4 +3,3 @@ prune scripts
 prune tests
 prune docs
 exclude .gitignore
-exclude pytest.ini
