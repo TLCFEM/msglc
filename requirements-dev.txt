@@ -2,15 +2,15 @@
 #    uv pip compile --refresh --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 babel==2.17.0             # via mkdocs-material
 backrefs==5.9             # via mkdocs-material
-bitarray==3.5.2           # via msglc (pyproject.toml)
+bitarray==3.6.0           # via msglc (pyproject.toml)
 bracex==2.6               # via wcmatch
-certifi==2025.7.14        # via requests
+certifi==2025.8.3         # via requests
 charset-normalizer==3.4.2  # via requests
 click==8.2.1              # via mkdocs
 colorama==0.4.6           # via griffe, mkdocs-material
 coverage==7.10.1          # via pytest-cov
 ghp-import==2.1.0         # via mkdocs
-griffe==1.8.0             # via mkdocstrings-python
+griffe==1.9.0             # via mkdocstrings-python
 idna==3.10                # via requests
 importlib-metadata==8.7.0  # via mike
 importlib-resources==6.5.2  # via mike
@@ -40,7 +40,7 @@ platformdirs==4.3.8       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pygments==2.19.2          # via mkdocs-material, pytest
-pymdown-extensions==10.16  # via mkdocs-material, mkdocstrings
+pymdown-extensions==10.16.1  # via mkdocs-material, mkdocstrings
 pyparsing==3.2.3          # via mike
 pytest==8.4.1             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==1.1.0     # via msglc (pyproject.toml)
@@ -50,7 +50,7 @@ python-dateutil==2.9.0.post0  # via ghp-import
 pyyaml==6.0.2             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.4          # via mkdocs-material
-ruff==0.12.5              # via msglc (pyproject.toml)
+ruff==0.12.7              # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 urllib3==2.5.0            # via requests
 verspec==0.1.0            # via mike
