@@ -16,7 +16,7 @@ jobs:
         python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Python
         uses: actions/setup-python@v5
         with:
@@ -38,7 +38,7 @@ jobs:
   #   timeout-minutes: 100
   #   steps:
   #     - name: Clone
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v5
   #     - name: Python
   #       uses: actions/setup-python@v5
   #       with:
@@ -62,7 +62,7 @@ jobs:
       - test
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build
         run: pipx run build --sdist
       - name: Check
@@ -88,7 +88,7 @@ jobs:
           token: ${{ secrets.ALL }}
           environment: github-pages
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup
         uses: actions/setup-python@v5
         with:
