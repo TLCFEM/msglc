@@ -2,15 +2,15 @@
 #    uv pip compile --refresh --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 babel==2.17.0             # via mkdocs-material
 backrefs==5.9             # via mkdocs-material
-bitarray==3.6.1           # via msglc (pyproject.toml)
+bitarray==3.7.1           # via msglc (pyproject.toml)
 bracex==2.6               # via wcmatch
 certifi==2025.8.3         # via requests
 charset-normalizer==3.4.3  # via requests
 click==8.2.1              # via mkdocs, mkdocs-material
 colorama==0.4.6           # via griffe, mkdocs-material
-coverage==7.10.5          # via pytest-cov
+coverage==7.10.6          # via pytest-cov
 ghp-import==2.1.0         # via mkdocs
-griffe==1.12.1            # via mkdocstrings-python
+griffe==1.13.0            # via mkdocstrings-python
 idna==3.10                # via requests
 importlib-metadata==8.7.0  # via mike
 importlib-resources==6.5.2  # via mike
@@ -21,13 +21,13 @@ markupsafe==3.0.2         # via jinja2, mkdocs, mkdocs-autorefs, mkdocstrings
 mergedeep==1.3.4          # via mkdocs, mkdocs-get-deps
 mike==2.1.3               # via msglc (pyproject.toml)
 mkdocs==1.6.1             # via mike, mkdocs-autorefs, mkdocs-awesome-pages-plugin, mkdocs-material, mkdocstrings
-mkdocs-autorefs==1.4.2    # via mkdocstrings, mkdocstrings-python
+mkdocs-autorefs==1.4.3    # via mkdocstrings, mkdocstrings-python
 mkdocs-awesome-pages-plugin==2.10.1  # via msglc (pyproject.toml)
 mkdocs-get-deps==0.2.0    # via mkdocs
 mkdocs-material==9.6.18   # via msglc (pyproject.toml)
 mkdocs-material-extensions==1.3.1  # via mkdocs-material
 mkdocstrings==0.30.0      # via mkdocstrings-python, msglc (pyproject.toml)
-mkdocstrings-python==1.17.0  # via mkdocstrings
+mkdocstrings-python==1.18.2  # via mkdocstrings
 msgpack==1.1.1            # via msglc (pyproject.toml)
 msgspec==0.19.0           # via msglc (pyproject.toml)
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
@@ -36,7 +36,7 @@ ormsgpack==1.10.0         # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
 pathspec==0.12.1          # via mkdocs
-platformdirs==4.3.8       # via mkdocs-get-deps
+platformdirs==4.4.0       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pygments==2.19.2          # via mkdocs-material, pytest
@@ -50,7 +50,7 @@ python-dateutil==2.9.0.post0  # via ghp-import
 pyyaml==6.0.2             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.5          # via mkdocs-material
-ruff==0.12.10             # via msglc (pyproject.toml)
+ruff==0.12.11             # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 urllib3==2.5.0            # via requests
 verspec==0.1.0            # via mike
