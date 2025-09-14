@@ -24,14 +24,14 @@ mkdocs==1.6.1             # via mike, mkdocs-autorefs, mkdocs-awesome-pages-plug
 mkdocs-autorefs==1.4.3    # via mkdocstrings, mkdocstrings-python
 mkdocs-awesome-pages-plugin==2.10.1  # via msglc (pyproject.toml)
 mkdocs-get-deps==0.2.0    # via mkdocs
-mkdocs-material==9.6.18   # via msglc (pyproject.toml)
+mkdocs-material==9.6.19   # via msglc (pyproject.toml)
 mkdocs-material-extensions==1.3.1  # via mkdocs-material
 mkdocstrings==0.30.0      # via mkdocstrings-python, msglc (pyproject.toml)
 mkdocstrings-python==1.18.2  # via mkdocstrings
 msgpack==1.1.1            # via msglc (pyproject.toml)
 msgspec==0.19.0           # via msglc (pyproject.toml)
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
-numpy==2.3.2              # via msglc (pyproject.toml)
+numpy==2.3.3              # via msglc (pyproject.toml)
 ormsgpack==1.10.0         # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
@@ -41,17 +41,18 @@ pluggy==1.6.0             # via pytest, pytest-cov
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pygments==2.19.2          # via mkdocs-material, pytest
 pymdown-extensions==10.16.1  # via mkdocs-material, mkdocstrings
-pyparsing==3.2.3          # via mike
+pyparsing==3.2.4          # via mike
 pytest==8.4.2             # via pytest-asyncio, pytest-benchmark, pytest-cov
-pytest-asyncio==1.1.0     # via msglc (pyproject.toml)
+pytest-asyncio==1.2.0     # via msglc (pyproject.toml)
 pytest-benchmark==5.1.0   # via msglc (pyproject.toml)
-pytest-cov==6.3.0         # via msglc (pyproject.toml)
+pytest-cov==7.0.0         # via msglc (pyproject.toml)
 python-dateutil==2.9.0.post0  # via ghp-import
 pyyaml==6.0.2             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.5          # via mkdocs-material
-ruff==0.12.12             # via msglc (pyproject.toml)
+ruff==0.13.0              # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
+typing-extensions==4.15.0  # via pytest-asyncio
 urllib3==2.5.0            # via requests
 verspec==0.1.0            # via mike
 watchdog==6.0.0           # via mkdocs
