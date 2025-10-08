@@ -1,9 +1,9 @@
 name: CICD
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 permissions:
   contents: write
 jobs:
@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python-version: [ '3.9', '3.10', '3.11', '3.12', '3.13' ]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Clone
         uses: actions/checkout@v5
@@ -92,8 +92,8 @@ jobs:
       - name: Setup
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
       - name: Deploy
         run: |
           pip install -e .[dev,numpy,msgspec]
