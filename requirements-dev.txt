@@ -32,11 +32,11 @@ msgpack==1.1.2            # via msglc (pyproject.toml)
 msgspec==0.19.0           # via msglc (pyproject.toml)
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
 numpy==2.3.3              # via msglc (pyproject.toml)
-ormsgpack==1.10.0         # via msglc (pyproject.toml)
+ormsgpack==1.11.0         # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
 pathspec==0.12.1          # via mkdocs
-platformdirs==4.4.0       # via mkdocs-get-deps
+platformdirs==4.5.0       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pygments==2.19.2          # via mkdocs-material, pytest
