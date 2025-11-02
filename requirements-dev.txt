@@ -24,7 +24,7 @@ mkdocs==1.6.1             # via mike, mkdocs-autorefs, mkdocs-awesome-pages-plug
 mkdocs-autorefs==1.4.3    # via mkdocstrings, mkdocstrings-python
 mkdocs-awesome-pages-plugin==2.10.1  # via msglc (pyproject.toml)
 mkdocs-get-deps==0.2.0    # via mkdocs
-mkdocs-material==9.6.22   # via msglc (pyproject.toml)
+mkdocs-material==9.6.23   # via msglc (pyproject.toml)
 mkdocs-material-extensions==1.3.1  # via mkdocs-material
 mkdocstrings==0.30.1      # via mkdocstrings-python, msglc (pyproject.toml)
 mkdocstrings-python==1.18.2  # via mkdocstrings
@@ -44,13 +44,13 @@ pymdown-extensions==10.16.1  # via mkdocs-material, mkdocstrings
 pyparsing==3.2.5          # via mike
 pytest==8.4.2             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==1.2.0     # via msglc (pyproject.toml)
-pytest-benchmark==5.1.0   # via msglc (pyproject.toml)
+pytest-benchmark==5.2.0   # via msglc (pyproject.toml)
 pytest-cov==7.0.0         # via msglc (pyproject.toml)
 python-dateutil==2.9.0.post0  # via ghp-import
 pyyaml==6.0.3             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.5          # via mkdocs-material
-ruff==0.14.2              # via msglc (pyproject.toml)
+ruff==0.14.3              # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via pytest-asyncio
 urllib3==2.5.0            # via requests
