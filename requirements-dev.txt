@@ -2,13 +2,13 @@
 #    uv pip compile --refresh --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 babel==2.17.0             # via mkdocs-material
 backrefs==5.9             # via mkdocs-material
-bitarray==3.7.2           # via msglc (pyproject.toml)
+bitarray==3.8.0           # via msglc (pyproject.toml)
 bracex==2.6               # via wcmatch
 certifi==2025.10.5        # via requests
 charset-normalizer==3.4.4  # via requests
 click==8.3.0              # via mkdocs
 colorama==0.4.6           # via griffe, mkdocs-material
-coverage==7.11.0          # via pytest-cov
+coverage==7.11.2          # via pytest-cov
 ghp-import==2.1.0         # via mkdocs
 griffe==1.14.0            # via mkdocstrings-python
 idna==3.11                # via requests
@@ -16,7 +16,7 @@ importlib-metadata==8.7.0  # via mike
 importlib-resources==6.5.2  # via mike
 iniconfig==2.3.0          # via pytest
 jinja2==3.1.6             # via mike, mkdocs, mkdocs-material, mkdocstrings
-markdown==3.9             # via mkdocs, mkdocs-autorefs, mkdocs-material, mkdocstrings, pymdown-extensions
+markdown==3.10            # via mkdocs, mkdocs-autorefs, mkdocs-material, mkdocstrings, pymdown-extensions
 markupsafe==3.0.3         # via jinja2, mkdocs, mkdocs-autorefs, mkdocstrings
 mergedeep==1.3.4          # via mkdocs, mkdocs-get-deps
 mike==2.1.3               # via msglc (pyproject.toml)
@@ -32,7 +32,7 @@ msgpack==1.1.2            # via msglc (pyproject.toml)
 msgspec==0.19.0           # via msglc (pyproject.toml)
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
 numpy==2.3.4              # via msglc (pyproject.toml)
-ormsgpack==1.11.0         # via msglc (pyproject.toml)
+ormsgpack==1.12.0         # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
 pathspec==0.12.1          # via mkdocs
@@ -44,13 +44,13 @@ pymdown-extensions==10.16.1  # via mkdocs-material, mkdocstrings
 pyparsing==3.2.5          # via mike
 pytest==8.4.2             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==1.2.0     # via msglc (pyproject.toml)
-pytest-benchmark==5.2.0   # via msglc (pyproject.toml)
+pytest-benchmark==5.2.2   # via msglc (pyproject.toml)
 pytest-cov==7.0.0         # via msglc (pyproject.toml)
 python-dateutil==2.9.0.post0  # via ghp-import
 pyyaml==6.0.3             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.5          # via mkdocs-material
-ruff==0.14.3              # via msglc (pyproject.toml)
+ruff==0.14.4              # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via pytest-asyncio
 urllib3==2.5.0            # via requests
