@@ -27,7 +27,7 @@ mkdocs-get-deps==0.2.0    # via mkdocs
 mkdocs-material==9.7.0    # via msglc (pyproject.toml)
 mkdocs-material-extensions==1.3.1  # via mkdocs-material
 mkdocstrings==1.0.0       # via mkdocstrings-python, msglc (pyproject.toml)
-mkdocstrings-python==2.0.0  # via mkdocstrings
+mkdocstrings-python==2.0.1  # via mkdocstrings
 msgpack==1.1.2            # via msglc (pyproject.toml)
 msgspec==0.20.0           # via msglc (pyproject.toml)
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
@@ -36,13 +36,13 @@ ormsgpack==1.12.0         # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
 pathspec==0.12.1          # via mkdocs
-platformdirs==4.5.0       # via mkdocs-get-deps
+platformdirs==4.5.1       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pygments==2.19.2          # via mkdocs-material, pytest
 pymdown-extensions==10.17.2  # via mkdocs-material, mkdocstrings
 pyparsing==3.2.5          # via mike
-pytest==9.0.1             # via pytest-asyncio, pytest-benchmark, pytest-cov
+pytest==9.0.2             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==1.3.0     # via msglc (pyproject.toml)
 pytest-benchmark==5.2.3   # via msglc (pyproject.toml)
 pytest-cov==7.0.0         # via msglc (pyproject.toml)
@@ -50,10 +50,10 @@ python-dateutil==2.9.0.post0  # via ghp-import
 pyyaml==6.0.3             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.5          # via mkdocs-material
-ruff==0.14.7              # via msglc (pyproject.toml)
+ruff==0.14.8              # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via pytest-asyncio
-urllib3==2.5.0            # via requests
+urllib3==2.6.0            # via requests
 verspec==0.1.0            # via mike
 watchdog==6.0.0           # via mkdocs
 wcmatch==10.1             # via mkdocs-awesome-pages-plugin
