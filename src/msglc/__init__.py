@@ -39,7 +39,10 @@ def dump(file: str | BytesIO, obj, **kwargs):
 class FileInfo:
     """
     Wrap the file path or in memory buffer and name into a FileInfo object.
-    The name is optional and is only used when the file is combined in the dictionary (key-value) mode.
+    The `name` is optional and is only used when the file is combined in the dictionary (key-value) mode.
+
+    The `s3fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.
+    It is not affected by the global `s3fs` object stored in `config`.
 
     :param path: a string representing the file path or an in memory buffer
     :param name: key name of the content in the combined dict

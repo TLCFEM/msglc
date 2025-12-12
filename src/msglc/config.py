@@ -118,6 +118,9 @@ def configure(
             Magic bytes (max length: 30) to set, used to identify the file format version.
     :param s3fs:
             The global `S3FileSystem` object that will be used by default so that there is no need to provide this for every function call.
+            This is used to 1) read data from by readers, 2) write data to by writers/combiners.
+            It is **not** used to read data from by combiners, in which case specific `S3FileSystem` object needs to be assigned
+            to `FileInfo`.
     """
     if (
         isinstance(small_obj_optimization_threshold, int)
