@@ -19,9 +19,9 @@ jobs:
         run: pip install .[dev,msgspec,numpy] matplotlib h5py
       - name: Test
         run: |
-          python3 h5/generate.py
-          python3 h5/read.py
-          tar czf benchmark.tar.gz ./h5/*.pdf
+          python3 ./tests/h5/generate.py
+          python3 ./tests/h5/read.py
+          tar czf benchmark.tar.gz ./tests/h5/*.pdf
       - name: Upload
         uses: actions/upload-artifact@v5
         with:
