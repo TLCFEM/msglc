@@ -7,8 +7,8 @@ import s3fs
 @pytest.fixture(scope="session")
 def s3_client():
     fs = s3fs.S3FileSystem(
-        key="",
-        secret="",
+        key="minioadmin",
+        secret="minioadmin",
         client_kwargs={"endpoint_url": "http://localhost:9000"},
     )
     yield fs
@@ -35,9 +35,10 @@ def temp_bucket(s3_client):
 def test_connection(temp_bucket):
     bucket_name, fs = temp_bucket
 
-    with fs.open(f"{bucket_name}/hello.txt", "wb") as f:
-        f.write(b"Hello from Python!")
+    msg = "Hello from Python!"
 
-    with fs.open(f"{bucket_name}/hello.txt", "rb") as f:
-        content = f.read()
-        print(content.decode())
+    with fs.open(f"{bucket_name}/hello.txt", "w") as f:
+        f.write(msg)
+
+    with fs.open(f"{bucket_name}/hello.txt", "r") as f:
+        assert f.read() == msg
