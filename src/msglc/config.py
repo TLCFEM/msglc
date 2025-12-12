@@ -50,6 +50,7 @@ class Config:
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
     numpy_fast_int_pack: bool = False
+    s3fs = None
 
 
 config = Config()
@@ -72,6 +73,7 @@ def configure(
     numpy_encoder: bool | None = None,
     numpy_fast_int_pack: bool | None = None,
     magic: bytes | None = None,
+    s3fs=None,
 ):
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.
@@ -114,6 +116,10 @@ def configure(
             But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
+    :param s3fs:
+            The global `S3FileSystem` object that will be used by default so that there is no need to provide this for every function call.
+            It is used to 1) read data by readers, 2) write output by writers/combiners.
+            To specify where combiners read input files from, assign a specific `S3FileSystem` object to each `FileInfo`.
     """
     if (
         isinstance(small_obj_optimization_threshold, int)
@@ -157,6 +163,8 @@ def configure(
 
     if isinstance(numpy_fast_int_pack, bool):
         config.numpy_fast_int_pack = numpy_fast_int_pack
+
+    config.s3fs = s3fs
 
     if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
         from msglc import LazyWriter

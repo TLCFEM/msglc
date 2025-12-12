@@ -15,8 +15,8 @@
 
 from __future__ import annotations
 
-import dataclasses
 import os.path
+from contextlib import nullcontext
 from io import BytesIO
 from typing import BinaryIO, Literal
 
@@ -37,15 +37,38 @@ def dump(file: str | BytesIO, obj, **kwargs):
         msglc_writer.write(obj)
 
 
-@dataclasses.dataclass
 class FileInfo:
     """
     Wrap the file path or in memory buffer and name into a FileInfo object.
-    The name is optional and is only used when the file is combined in the dictionary (key-value) mode.
+    The `name` is optional and is only used when the file is combined in the dictionary (key-value) mode.
+
+    The `s3fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.
+    It is not affected by the global `s3fs` object stored in `config`.
+
+    :param path: a string representing the file path or an in memory buffer
+    :param name: key name of the content in the combined dict
+    :param s3fs: s3fs object (s3fs.S3FileSystem) to read the object from
     """
 
-    path: str | BinaryIO
-    name: str | None = None
+    def __init__(self, path: str | BinaryIO, name: str | None = None, *, s3fs=None):
+        self.path = path
+        self.name = name
+        self._s3fs = s3fs
+
+    def exists(self):
+        if not isinstance(self.path, str):
+            return True
+
+        if self._s3fs:
+            return self._s3fs.exists(self.path)
+
+        return os.path.exists(self.path)
+
+    def open(self):
+        if not isinstance(self.path, str):
+            return nullcontext(self.path)
+
+        return self._s3fs.open(self.path) if self._s3fs else open(self.path, "rb")
 
 
 def combine(
@@ -81,36 +104,33 @@ def combine(
     ):
         raise ValueError("Files must have unique names.")
 
-    def _validate(_fp):
-        if isinstance(_fp, str):
-            if not os.path.exists(_fp):
-                raise ValueError(f"File {_fp} does not exist.")
-            with open(_fp, "rb") as _file:
+    def _validate(_fp: FileInfo):
+        if isinstance(_fp.path, str):
+            if not _fp.exists():
+                raise ValueError(f"File {_fp.path} does not exist.")
+            with _fp.open() as _file:
                 if _file.read(LazyWriter.magic_len()) != LazyWriter.magic:
-                    raise ValueError(f"Invalid file format: {_fp}.")
+                    raise ValueError(f"Invalid file format: {_fp.path}.")
         else:
-            ini_pos = _fp.tell()
-            magic = _fp.read(LazyWriter.magic_len())
-            _fp.seek(ini_pos)
-            if magic != LazyWriter.magic:
-                raise ValueError("Invalid file format.")
+            with _fp.open() as _file:
+                ini_pos = _file.tell()
+                magic = _file.read(LazyWriter.magic_len())
+                _file.seek(ini_pos)
+                if magic != LazyWriter.magic:
+                    raise ValueError("Invalid file format.")
 
     if validate:
         for file in files:
-            _validate(file.path)
+            _validate(file)
 
-    def _iter(path: str | BinaryIO):
-        if isinstance(path, str):
-            with open(path, "rb") as _file:
-                while _data := _file.read(config.copy_chunk_size):
-                    yield _data
-        else:
-            while _data := path.read(config.copy_chunk_size):
+    def _iter(_fp: FileInfo):
+        with _fp.open() as _file:
+            while _data := _file.read(config.copy_chunk_size):
                 yield _data
 
     with LazyCombiner(archive, mode=mode, s3fs=s3fs) as combiner:
         for file in files:
-            combiner.write(_iter(file.path), file.name)
+            combiner.write(_iter(file), file.name)
 
 
 def append(

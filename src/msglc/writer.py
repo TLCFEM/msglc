@@ -41,8 +41,8 @@ def _upsert(source: BufferReader, target: str, fs):
     with fs.open(target, "wb", block_size=config.write_buffer_size) as s3_file:
         # now transfer the local cache to s3
         source.seek(0)
-        while chuck := source.read(config.write_buffer_size):
-            s3_file.write(chuck)
+        while chunk := source.read(config.write_buffer_size):
+            s3_file.write(chunk)
 
 
 class LazyWriter:
@@ -69,7 +69,7 @@ class LazyWriter:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
-        self._s3fs = s3fs
+        self._s3fs = s3fs or config.s3fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
@@ -158,7 +158,7 @@ class LazyCombiner:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
-        self._s3fs = s3fs
+        self._s3fs = s3fs or config.s3fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
 
@@ -172,8 +172,8 @@ class LazyCombiner:
                 self._buffer = TemporaryFile()
                 if self._s3fs.exists(self._buffer_or_path):
                     with self._s3fs.open(self._buffer_or_path, "rb") as s3_file:
-                        while chuck := s3_file.read(config.read_buffer_size):
-                            self._buffer.write(chuck)
+                        while chunk := s3_file.read(config.read_buffer_size):
+                            self._buffer.write(chunk)
                     self._buffer.seek(0)
             else:
                 mode: str = (
