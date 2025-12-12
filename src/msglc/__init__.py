@@ -54,14 +54,20 @@ def combine(
     *,
     mode: Literal["a", "w"] = "w",
     validate: bool = True,
+    s3fs=None,
 ):
     """
     This function is used to combine the multiple serialized files into a single archive.
+    If `s3fs` is given, the combined archive will be uploaded to S3.
+
+    The files to be combined must exist in local filesystem regardless of whether `s3fs` is given.
+    In other words, only local files can be combined.
 
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
     :param mode: a string representing the combination mode, 'w' for write and 'a' for append
     :param validate: switch on to validate the files before combining
+    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
     :return: None
     """
     if isinstance(files, FileInfo):
@@ -102,20 +108,29 @@ def combine(
             while _data := path.read(config.copy_chunk_size):
                 yield _data
 
-    with LazyCombiner(archive, mode=mode) as combiner:
+    with LazyCombiner(archive, mode=mode, s3fs=s3fs) as combiner:
         for file in files:
             combiner.write(_iter(file.path), file.name)
 
 
 def append(
-    archive: str | BytesIO, files: FileInfo | list[FileInfo], *, validate: bool = True
+    archive: str | BytesIO,
+    files: FileInfo | list[FileInfo],
+    *,
+    validate: bool = True,
+    s3fs=None,
 ):
     """
     This function is used to append the multiple serialized files to an existing single archive.
+    If `s3fs` is given, the target will be downloaded first if it exists in the bucket.
+    The final archive will be uploaded to S3.
+
+    The files to be appended must exist in local filesystem regardless of whether `s3fs` is given.
 
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
     :param validate: switch on to validate the files before combining
+    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
     :return: None
     """
-    combine(archive, files, mode="a", validate=validate)
+    combine(archive, files, mode="a", validate=validate, s3fs=s3fs)

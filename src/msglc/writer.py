@@ -24,6 +24,7 @@ from typing import Literal
 from msgpack import Packer, packb, unpackb  # type: ignore
 
 from .config import (
+    BufferReader,
     BufferWriter,
     config,
     decrement_gc_counter,
@@ -31,6 +32,17 @@ from .config import (
     max_magic_len,
 )
 from .toc import TOC
+
+
+def _upsert(source: BufferReader, target: str, fs):
+    if not fs:
+        return
+
+    with fs.open(target, "wb", block_size=config.write_buffer_size) as s3_file:
+        # now transfer the local cache to s3
+        source.seek(0)
+        while chuck := source.read(config.write_buffer_size):
+            s3_file.write(chuck)
 
 
 class LazyWriter:
@@ -45,7 +57,7 @@ class LazyWriter:
         cls.magic = magic.rjust(max_magic_len, b"\0")
 
     def __init__(
-        self, buffer_or_path: str | BufferWriter, packer: Packer = None, s3fs=None
+        self, buffer_or_path: str | BufferWriter, packer: Packer = None, *, s3fs=None
     ):
         """
         It is possible to provide a custom packer object to be used for packing the object.
@@ -98,14 +110,7 @@ class LazyWriter:
         if not isinstance(self._buffer_or_path, str):
             return
 
-        if self._s3fs:
-            with self._s3fs.open(
-                self._buffer_or_path, "wb", block_size=config.write_buffer_size
-            ) as s3_file:
-                # now transfer the local cache to s3
-                self._buffer.seek(0)
-                while chuck := self._buffer.read(config.write_buffer_size):
-                    s3_file.write(chuck)
+        _upsert(self._buffer, self._buffer_or_path, self._s3fs)
 
         self._buffer.close()
 
@@ -136,7 +141,11 @@ class LazyWriter:
 
 class LazyCombiner:
     def __init__(
-        self, buffer_or_path: str | BufferWriter, *, mode: Literal["a", "w"] = "w"
+        self,
+        buffer_or_path: str | BufferWriter,
+        *,
+        mode: Literal["a", "w"] = "w",
+        s3fs=None,
     ):
         """
         The mode resembles typical mode designations and implies the same meaning.
@@ -145,11 +154,13 @@ class LazyCombiner:
 
         :param buffer_or_path: target buffer or file path
         :param mode: mode of operation, 'w' for write and 'a' for append
+        :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
+        self._s3fs = s3fs
 
-        self._buffer: BufferWriter = None  # type: ignore
+        self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
 
         self._toc: dict | list = None  # type: ignore
         self._header_start: int = 0
@@ -157,14 +168,22 @@ class LazyCombiner:
 
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
-            mode: str = (
-                "wb"
-                if not os.path.exists(self._buffer_or_path) or self._mode == "w"
-                else "r+b"
-            )
-            self._buffer = open(  # type: ignore
-                self._buffer_or_path, mode, buffering=config.write_buffer_size
-            )
+            if self._s3fs:
+                self._buffer = TemporaryFile()
+                if self._s3fs.exists(self._buffer_or_path):
+                    with self._s3fs.open(self._buffer_or_path, "rb") as s3_file:
+                        while chuck := s3_file.read(config.read_buffer_size):
+                            self._buffer.write(chuck)
+                    self._buffer.seek(0)
+            else:
+                mode: str = (
+                    "wb"
+                    if not os.path.exists(self._buffer_or_path) or self._mode == "w"
+                    else "r+b"
+                )
+                self._buffer = open(  # type: ignore
+                    self._buffer_or_path, mode, buffering=config.write_buffer_size
+                )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
@@ -227,8 +246,12 @@ class LazyCombiner:
         self._buffer.write(packb(toc_start).rjust(10, b"\0"))
         self._buffer.write(packb(len(packed_toc)).rjust(10, b"\0"))
 
-        if isinstance(self._buffer_or_path, str):
-            self._buffer.close()
+        if not isinstance(self._buffer_or_path, str):
+            return
+
+        _upsert(self._buffer, self._buffer_or_path, self._s3fs)
+
+        self._buffer.close()
 
     def write(self, obj: Generator, name: str | None = None) -> None:
         """
