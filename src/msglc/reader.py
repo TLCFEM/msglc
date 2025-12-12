@@ -23,7 +23,13 @@ from io import BytesIO
 import msgpack
 from bitarray import bitarray
 
-from .config import BufferReader, config, decrement_gc_counter, increment_gc_counter
+from .config import (
+    BufferReader,
+    BufferReaderType,
+    config,
+    decrement_gc_counter,
+    increment_gc_counter,
+)
 from .index import normalise_index, to_index
 from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
@@ -499,7 +505,7 @@ class LazyReader(LazyItem):
                 buffer = open(  # noqa: SIM115
                     self._buffer_or_path, "rb", buffering=config.read_buffer_size
                 )
-        elif isinstance(self._buffer_or_path, BufferReader):
+        elif isinstance(self._buffer_or_path, BufferReaderType):
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
