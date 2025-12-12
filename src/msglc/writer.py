@@ -18,6 +18,7 @@ from __future__ import annotations
 import os.path
 from collections.abc import Generator
 from io import BufferedReader, BytesIO
+from tempfile import TemporaryFile
 from typing import Literal
 
 from msgpack import Packer, packb, unpackb  # type: ignore
@@ -57,7 +58,7 @@ class LazyWriter:
         self._packer = packer if packer else Packer()
         self._s3fs = s3fs
 
-        self._buffer: BufferWriter = None  # type: ignore
+        self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
         self._header_start: int = 0
         self._file_start: int = 0
@@ -68,9 +69,10 @@ class LazyWriter:
 
         if isinstance(self._buffer_or_path, str):
             if self._s3fs:
-                self._buffer = self._s3fs.open(
-                    self._buffer_or_path, block_size=config.write_buffer_size
-                )
+                # we need to seek to the beginning and overwrite the header
+                # however, s3 does not allow seek in write mode
+                # thus use a local temp file as cache
+                self._buffer = TemporaryFile()
             else:
                 self._buffer = open(
                     self._buffer_or_path, "wb", buffering=config.write_buffer_size
@@ -92,8 +94,19 @@ class LazyWriter:
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
 
-        if isinstance(self._buffer_or_path, str):
-            self._buffer.close()
+        if not isinstance(self._buffer_or_path, str):
+            return
+
+        if self._s3fs:
+            with self._s3fs.open(
+                self._buffer_or_path, "wb", block_size=config.write_buffer_size
+            ) as s3_file:
+                # now transfer the local cache to s3
+                self._buffer.seek(0)
+                while chuck := self._buffer.read(config.write_buffer_size):
+                    s3_file.write(chuck)
+
+        self._buffer.close()
 
     def write(self, obj) -> None:
         """
