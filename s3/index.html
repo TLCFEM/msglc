@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../s3/">
+        <link rel="prev" href="../tutorial/">
       
       
-        <link rel="next" href="../api/utility/">
+        <link rel="next" href="../benchmark/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Benchmark - msglc</title>
+        <title>S3 Support - msglc</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#benchmark" class="md-skip">
+        <a href="#s3-support" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Benchmark
+              S3 Support
             
           </span>
         </div>
@@ -280,9 +280,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../s3/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -299,11 +301,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../benchmark/" class="md-tabs__link">
         
   
   
@@ -466,33 +466,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../s3/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    S3 Support
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -512,7 +485,7 @@
   <span class="md-ellipsis">
     
   
-    Benchmark
+    S3 Support
   
 
     
@@ -530,7 +503,7 @@
   <span class="md-ellipsis">
     
   
-    Benchmark
+    S3 Support
   
 
     
@@ -556,10 +529,49 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#data-generation" class="md-nav__link">
+  <a href="#read" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Generation
+        Read
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#s3file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S3File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-string-s3filesystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path String + S3FileSystem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#write-combine-append" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Write, Combine, Append
       
     </span>
   </a>
@@ -567,10 +579,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#read-test" class="md-nav__link">
+  <a href="#local-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Read Test
+        Local Demo
       
     </span>
   </a>
@@ -581,6 +593,33 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmark/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmark
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -781,10 +820,49 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#data-generation" class="md-nav__link">
+  <a href="#read" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Generation
+        Read
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#s3file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        S3File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path-string-s3filesystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path String + S3FileSystem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#write-combine-append" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Write, Combine, Append
       
     </span>
   </a>
@@ -792,10 +870,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#read-test" class="md-nav__link">
+  <a href="#local-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Read Test
+        Local Demo
       
     </span>
   </a>
@@ -822,75 +900,125 @@
   
 
 
-<h1 id="benchmark">Benchmark</h1>
-<p>The embedded structure allows fast read without loading the whole archive, which is the main advantage of this package.
-In the following, we benchmark the random read performance and compare with the <code>HDF5</code> format.</p>
-<h2 id="data-generation">Data Generation</h2>
-<p>A square matrix of size 5000 with random floating-point numbers is used.
-The matrix is dumped onto the disk with different configurations.</p>
-<ol>
-<li>For <code>msglc</code>, <code>small_obj_optimization_threshold</code> varies from 4KB to 4MB, <code>numpy_encoder</code> is switched off so the matrix is stored as plain json instead binary blob.</li>
-<li>For <code>h5py</code>, the chunk size is computed so that each block has a size similar to <code>small_obj_optimization_threshold</code>. Compression is optionally switched on.</li>
-</ol>
-<p>The following code snippets show the relevant functions.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-0-10">10</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_msg</span><span class="p">(</span><span class="n">mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a>    <span class="n">configure</span><span class="p">(</span><span class="n">small_obj_optimization_threshold</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="n">block</span><span class="p">,</span> <span class="n">numpy_encoder</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># 16KB</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    <span class="n">dump</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;data-</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">.msg&quot;</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">generate_h5</span><span class="p">(</span><span class="n">mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6"></a>    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_name</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7"></a>        <span class="k">if</span> <span class="n">block</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8"></a>            <span class="n">chunk_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">block</span> <span class="o">/</span> <span class="mi">128</span><span class="p">))</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9"></a>            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">)</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10"></a>        <span class="n">f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">mat</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>from msglc.reader import LazyReader</p>
+<h1 id="s3-support">S3 Support</h1>
+<p>S3 storage is supported via the <code>s3fs</code> package.
+One shall install it first.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>s3fs
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="c1"># or in one step</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>pip<span class="w"> </span>install<span class="w"> </span>msglc<span class="o">[</span>s3fs<span class="o">]</span>
 </code></pre></div></td></tr></table></div>
-<p>The write time of <code>msglc</code> is in general constant, because the packer needs to traverse the whole json object.
-Depending on different configurations, <code>h5py</code> requires different amounts of time to dump the matrix.</p>
-<p><img alt="write time" src="../write_time.png" /></p>
-<p><code>msglc</code> shall be used for data that is written to disk for cold storage and does not require frequent changes.
-When compression is on, <code>h5py</code> needs to traverse the object just like <code>msglc</code>, thus requires a similar amount of time.</p>
-<h2 id="read-test">Read Test</h2>
-<p>We mainly test the random read.
-To this end, we repeatedly read random locations in the matrix and measure the time required.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-1-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-1-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-1-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-1-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-1-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-1-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-1-10">10</a></span>
-<span class="normal"><a href="#__codelineno-1-11">11</a></span>
-<span class="normal"><a href="#__codelineno-1-12">12</a></span>
-<span class="normal"><a href="#__codelineno-1-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="nd">@timeit</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">read_msg</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3"></a>    <span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">unpacker</span><span class="o">=</span><span class="n">MsgspecUnpacker</span><span class="p">,</span> <span class="n">cached</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4"></a>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5"></a>            <span class="n">reader</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)][</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)]</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7"></a>
-<a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="nd">@timeit</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">read_h5</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10"></a>    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11"></a>        <span class="n">dataset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12"></a>        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13"></a>            <span class="n">dataset</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)][</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4999</span><span class="p">)]</span><span class="err">`</span>
+<h2 id="read">Read</h2>
+<p>For <code>LazyReader</code>, there are two options to use <code>s3fs</code>.</p>
+<h3 id="s3file"><code>S3File</code></h3>
+<p>Pass a <a href="https://s3fs.readthedocs.io/en/latest/api.html#s3fs.core.S3File"><code>S3File</code></a> object to <code>LazyReader</code> directly.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span>
+<span class="normal"><a href="#__codelineno-1-3">3</a></span>
+<span class="normal"><a href="#__codelineno-1-4">4</a></span>
+<span class="normal"><a href="#__codelineno-1-5">5</a></span>
+<span class="normal"><a href="#__codelineno-1-6">6</a></span>
+<span class="normal"><a href="#__codelineno-1-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">s3fs</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3FileSystem</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="n">s3</span> <span class="o">=</span> <span class="n">S3FileSystem</span><span class="p">()</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="k">with</span> <span class="n">s3</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6"></a>    <span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7"></a>        <span class="o">...</span>
 </code></pre></div></td></tr></table></div>
-<p>The following is the result of reading 1000 elements.</p>
-<p><img alt="read 1k random elements" src="../read_time_log_1k.png" /></p>
-<p>The following is the result of reading 10000 elements.</p>
-<p><img alt="read 10k random elements" src="../read_time_log_10k.png" /></p>
+<h3 id="path-string-s3filesystem">Path String + <code>S3FileSystem</code></h3>
+<p>Pass a path string to the object with an explicit <a href="https://s3fs.readthedocs.io/en/latest/api.html#s3fs.core.S3FileSystem">
+<code>S3FileSystem</code></a>.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
+<span class="normal"><a href="#__codelineno-2-2">2</a></span>
+<span class="normal"><a href="#__codelineno-2-3">3</a></span>
+<span class="normal"><a href="#__codelineno-2-4">4</a></span>
+<span class="normal"><a href="#__codelineno-2-5">5</a></span>
+<span class="normal"><a href="#__codelineno-2-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">s3fs</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3FileSystem</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="n">s3</span> <span class="o">=</span> <span class="n">S3FileSystem</span><span class="p">()</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6"></a>    <span class="o">...</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="write-combine-append">Write, Combine, Append</h2>
+<p>For <code>LazyWriter</code> and <code>LazyCombiner</code>, passing in a <code>S3File</code> object is <strong>not</strong> feasible.
+Only the second option is supported.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
+<span class="normal"><a href="#__codelineno-3-2">2</a></span>
+<span class="normal"><a href="#__codelineno-3-3">3</a></span>
+<span class="normal"><a href="#__codelineno-3-4">4</a></span>
+<span class="normal"><a href="#__codelineno-3-5">5</a></span>
+<span class="normal"><a href="#__codelineno-3-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">s3fs</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3FileSystem</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyWriter</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="n">s3</span> <span class="o">=</span> <span class="n">S3FileSystem</span><span class="p">()</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6"></a>    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<div class="admonition note">
+<p class="admonition-title">implementation details</p>
+<p>The S3 storage does not support random seek in write mode.
+However, the TOC can only be updated after all data are serialized.
+Thus, it is impossible to directly operate on <code>S3File</code> objects in write mode.
+The implementation will create a local temporary file and write the byte stream to it.
+Once all contents are written and updated properly, the whole blob will be uploaded to the S3 storage.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">minimum local storage requirement</p>
+<p>Due to the above limitation, the local storage must have sufficient space to write the whole blob.</p>
+</div>
+<h2 id="local-demo">Local Demo</h2>
+<p>Here we show a local demo using <code>rustfs</code> with minimum configuration.
+The following command spins up a <code>rustfs</code> container in the background.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9000</span>:9000<span class="w"> </span>rustfs/rustfs:latest
+</code></pre></div></td></tr></table></div>
+<p>Now one can use the default credentials to connect.
+After successful connection, just write/read as normal.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-5-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-5-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-5-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-5-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-5-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-5-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-5-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-5-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-5-10">10</a></span>
+<span class="normal"><a href="#__codelineno-5-11">11</a></span>
+<span class="normal"><a href="#__codelineno-5-12">12</a></span>
+<span class="normal"><a href="#__codelineno-5-13">13</a></span>
+<span class="normal"><a href="#__codelineno-5-14">14</a></span>
+<span class="normal"><a href="#__codelineno-5-15">15</a></span>
+<span class="normal"><a href="#__codelineno-5-16">16</a></span>
+<span class="normal"><a href="#__codelineno-5-17">17</a></span>
+<span class="normal"><a href="#__codelineno-5-18">18</a></span>
+<span class="normal"><a href="#__codelineno-5-19">19</a></span>
+<span class="normal"><a href="#__codelineno-5-20">20</a></span>
+<span class="normal"><a href="#__codelineno-5-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">s3fs</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyWriter</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="n">fs</span> <span class="o">=</span> <span class="n">s3fs</span><span class="o">.</span><span class="n">S3FileSystem</span><span class="p">(</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6"></a>    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;rustfsadmin&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7"></a>    <span class="n">secret</span><span class="o">=</span><span class="s2">&quot;rustfsadmin&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8"></a>    <span class="n">client_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;endpoint_url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:9000&quot;</span><span class="p">},</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9"></a><span class="p">)</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10"></a>
+<a id="__codelineno-5-11" name="__codelineno-5-11"></a><span class="n">bucket</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;test-bucket&quot;</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12"></a>
+<a id="__codelineno-5-13" name="__codelineno-5-13"></a><span class="n">fs</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">bucket</span><span class="p">)</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14"></a>
+<a id="__codelineno-5-15" name="__codelineno-5-15"></a><span class="n">object_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bucket</span><span class="si">}</span><span class="s1">/example&#39;</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16"></a>
+<a id="__codelineno-5-17" name="__codelineno-5-17"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18"></a>    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">({</span><span class="s1">&#39;hello&#39;</span><span class="p">:</span> <span class="s1">&#39;world&#39;</span><span class="p">})</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19"></a>
+<a id="__codelineno-5-20" name="__codelineno-5-20"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-5-21" name="__codelineno-5-21"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
 
 
 
@@ -920,7 +1048,7 @@ To this end, we repeatedly read random locations in the matrix and measure the t
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../s3/" class="md-footer__link md-footer__link--prev" aria-label="Previous: S3 Support">
+          <a href="../tutorial/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Examples">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -930,20 +1058,20 @@ To this end, we repeatedly read random locations in the matrix and measure the t
                 Previous
               </span>
               <div class="md-ellipsis">
-                S3 Support
+                Examples
               </div>
             </div>
           </a>
         
         
           
-          <a href="../api/utility/" class="md-footer__link md-footer__link--next" aria-label="Next: Utility">
+          <a href="../benchmark/" class="md-footer__link md-footer__link--next" aria-label="Next: Benchmark">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Utility
+                Benchmark
               </div>
             </div>
             <div class="md-footer__button md-icon">
