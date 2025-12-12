@@ -24,6 +24,7 @@ from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
 
 
+@pytest.mark.parametrize("target", ["test.msg", BytesIO()])
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
 def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cached):
