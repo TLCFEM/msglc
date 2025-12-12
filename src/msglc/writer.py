@@ -53,6 +53,7 @@ class LazyWriter:
 
         :param buffer_or_path: target buffer or file path
         :param packer: packer object to be used for packing the object
+        :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()

@@ -493,7 +493,7 @@ class LazyReader(LazyItem):
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data
         :param unpacker: the unpacker object for reading the data
-        :param s3fs: the s3fs object for reading from S3 (if applicable)
+        :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)
         """
         self._buffer_or_path: str | BufferReader = buffer_or_path
 
