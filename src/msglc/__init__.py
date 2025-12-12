@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import os.path
+from contextlib import nullcontext
 from io import BytesIO
 from typing import BinaryIO, Literal
 
@@ -65,7 +66,7 @@ class FileInfo:
 
     def open(self):
         if not isinstance(self.path, str):
-            return self.path
+            return nullcontext(self.path)
 
         return self._s3fs.open(self.path) if self._s3fs else open(self.path, "rb")
 

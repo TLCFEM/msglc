@@ -164,8 +164,7 @@ def configure(
     if isinstance(numpy_fast_int_pack, bool):
         config.numpy_fast_int_pack = numpy_fast_int_pack
 
-    if s3fs:
-        config.s3fs = s3fs
+    config.s3fs = s3fs
 
     if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
         from msglc import LazyWriter
