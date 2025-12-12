@@ -148,12 +148,13 @@ class LazyCombiner:
                 if not os.path.exists(self._buffer_or_path) or self._mode == "w"
                 else "r+b"
             )
-            self._buffer = open(
+            self._buffer = open(  # type: ignore
                 self._buffer_or_path, mode, buffering=config.write_buffer_size
             )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
+                # need to read the header anyway
                 self._buffer.seek(0)
         else:
             raise ValueError("Expecting a buffer or path.")
