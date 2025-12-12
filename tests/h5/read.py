@@ -57,7 +57,7 @@ def plot_memory_usage(memory: dict):
 
     plt.figure(figsize=(10, 10))
     plt.bar(x, y, color=color)
-    plt.ylabel("memory usage")
+    plt.ylabel("memory usage (KB)")
     plt.xlabel("format")
     plt.xticks(rotation=-90)
     plt.tight_layout()
@@ -80,4 +80,4 @@ if __name__ == "__main__":
     memory_dict = {k: v[1] for k, v in collect.items()}
     plot_read_time(time_dict)
     plot_read_time(time_dict, logscale=True)
-    # plot_memory_usage(memory_dict)
+    plot_memory_usage(memory_dict)

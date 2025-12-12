@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Build
-        run: pip install .[dev,msgspec,numpy] matplotlib h5py
+        run: pip install .[dev,msgspec,numpy] matplotlib h5py psutil
       - name: Test
         run: |
           python3 ./tests/h5/generate.py
