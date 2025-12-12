@@ -17,7 +17,9 @@ jobs:
         ports:
           - 9000:9000
           - 9001:9001
-        options: --entrypoint "minio server /data"
+        options: >-
+          --entrypoint /bin/sh
+          -c "minio server /data"
     strategy:
       matrix:
         python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13", "3.14" ]
