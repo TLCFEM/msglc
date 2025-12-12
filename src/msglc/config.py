@@ -17,12 +17,21 @@ from __future__ import annotations
 
 import gc
 from dataclasses import dataclass
+from importlib.util import find_spec
 from io import BufferedReader, BytesIO
 from typing import BinaryIO, Union
 
 from msglc.utility import MockIO
 
+HAS_S3FS: bool = find_spec("s3fs") is not None
+
 BufferWriter = Union[BinaryIO, BytesIO, BufferedReader]
+
+if HAS_S3FS:
+    from fsspec.spec import AbstractBufferedFile
+
+    BufferWriter = Union[BufferWriter, AbstractBufferedFile]
+
 BufferReader = Union[BufferWriter, MockIO]
 
 

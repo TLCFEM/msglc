@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 import pickle
 from inspect import isclass
-from io import BufferedReader, BytesIO
+from io import BytesIO
 
 import msgpack
 from bitarray import bitarray
@@ -26,7 +26,6 @@ from bitarray import bitarray
 from .config import BufferReader, config, decrement_gc_counter, increment_gc_counter
 from .index import normalise_index, to_index
 from .unpacker import MsgpackUnpacker, Unpacker
-from .utility import MockIO
 from .writer import LazyWriter
 
 
@@ -466,6 +465,7 @@ class LazyReader(LazyItem):
         counter: LazyStats | None = None,
         cached: bool = True,
         unpacker: Unpacker | None = None,
+        s3fs=None,
     ):
         """
         It is possible to use a customized unpacker.
@@ -487,13 +487,19 @@ class LazyReader(LazyItem):
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data
         :param unpacker: the unpacker object for reading the data
+        :param s3fs: the s3fs object for reading from S3 (if applicable)
         """
         self._buffer_or_path: str | BufferReader = buffer_or_path
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
-            buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)  # noqa: SIM115
-        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader, MockIO)):
+            if s3fs is not None:
+                buffer = s3fs.open(self._buffer_or_path, "rb")
+            else:
+                buffer = open(  # noqa: SIM115
+                    self._buffer_or_path, "rb", buffering=config.read_buffer_size
+                )
+        elif isinstance(self._buffer_or_path, BufferReader):
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
