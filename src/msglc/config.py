@@ -17,13 +17,24 @@ from __future__ import annotations
 
 import gc
 from dataclasses import dataclass
+from importlib.util import find_spec
 from io import BufferedReader, BytesIO
 from typing import BinaryIO, Union
 
 from msglc.utility import MockIO
 
 BufferWriter = Union[BinaryIO, BytesIO, BufferedReader]
+BufferWriterType = (BinaryIO, BytesIO, BufferedReader)
+
 BufferReader = Union[BufferWriter, MockIO]
+BufferReaderType = BufferWriterType + (MockIO,)
+
+
+if find_spec("s3fs"):
+    from fsspec.spec import AbstractBufferedFile
+
+    BufferReader = Union[BufferReader, AbstractBufferedFile]
+    BufferReaderType = BufferReaderType + (AbstractBufferedFile,)
 
 
 @dataclass

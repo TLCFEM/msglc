@@ -13,12 +13,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import msgpack
 
 
-class Unpacker:
+class Unpacker(ABC):
     @abstractmethod
     def decode(self, data):
         raise NotImplementedError

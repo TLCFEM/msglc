@@ -18,15 +18,20 @@ from __future__ import annotations
 import asyncio
 import pickle
 from inspect import isclass
-from io import BufferedReader, BytesIO
+from io import BytesIO
 
 import msgpack
 from bitarray import bitarray
 
-from .config import BufferReader, config, decrement_gc_counter, increment_gc_counter
+from .config import (
+    BufferReader,
+    BufferReaderType,
+    config,
+    decrement_gc_counter,
+    increment_gc_counter,
+)
 from .index import normalise_index, to_index
-from .unpacker import MsgpackUnpacker, Unpacker
-from .utility import MockIO
+from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
 
 
@@ -100,7 +105,7 @@ class LazyItem:
         elif isclass(unpacker) and issubclass(unpacker, Unpacker):
             self._unpacker = unpacker()
         elif unpacker is None:
-            self._unpacker = MsgpackUnpacker()
+            self._unpacker = MsgspecUnpacker()
         else:
             raise TypeError("Need a valid unpacker.")
 
@@ -466,6 +471,7 @@ class LazyReader(LazyItem):
         counter: LazyStats | None = None,
         cached: bool = True,
         unpacker: Unpacker | None = None,
+        s3fs=None,
     ):
         """
         It is possible to use a customized unpacker.
@@ -487,13 +493,21 @@ class LazyReader(LazyItem):
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data
         :param unpacker: the unpacker object for reading the data
+        :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)
         """
         self._buffer_or_path: str | BufferReader = buffer_or_path
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
-            buffer = open(self._buffer_or_path, "rb", buffering=config.read_buffer_size)  # noqa: SIM115
-        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader, MockIO)):
+            if s3fs is not None:
+                buffer = s3fs.open(
+                    self._buffer_or_path, "rb", block_size=config.read_buffer_size
+                )
+            else:
+                buffer = open(  # noqa: SIM115
+                    self._buffer_or_path, "rb", buffering=config.read_buffer_size
+                )
+        elif isinstance(self._buffer_or_path, BufferReaderType):
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")

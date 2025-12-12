@@ -51,6 +51,9 @@ msgspec = [
 ormsgpack = [
     "ormsgpack",
 ]
+s3fs = [
+    "s3fs"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/TLCFEM/msglc"
@@ -59,7 +62,7 @@ ormsgpack = [
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "SIM", "I"]
-ignore = ["B008","E501"]
+ignore = ["B008", "E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

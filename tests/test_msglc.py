@@ -24,50 +24,6 @@ from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
 
 
-@pytest.fixture(scope="function")
-def json_base():
-    return {
-        "title": "example glossary",
-        "GlossDiv": {
-            "title": "S",
-            "GlossList": {
-                "GlossEntry": {
-                    "ID": "SGML",
-                    "SortAs": "SGML",
-                    "GlossTerm": "Standard Generalized Markup Language",
-                    "Acronym": "SGML",
-                    "Abbrev": "ISO 8879:1986",
-                    "GlossDef": {
-                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
-                        "GlossSeeAlso": ["GML", "XML"],
-                    },
-                    "GlossSee": "markup",
-                }
-            },
-        },
-        "empty_list": [],
-        "none_list": [None],
-    }
-
-
-@pytest.fixture(scope="function")
-def json_before(json_base):
-    return {
-        "glossary": json_base,
-        "some_tuple": (1, 2, 3),
-        "some_set": {1, 2, 3},
-    }
-
-
-@pytest.fixture(scope="function")
-def json_after(json_base):
-    return {
-        "glossary": json_base,
-        "some_tuple": [1, 2, 3],
-        "some_set": [1, 2, 3],
-    }
-
-
 @pytest.mark.parametrize("target", ["test.msg", BytesIO()])
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
