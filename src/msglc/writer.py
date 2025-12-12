@@ -43,7 +43,9 @@ class LazyWriter:
     def set_magic(cls, magic: bytes):
         cls.magic = magic.rjust(max_magic_len, b"\0")
 
-    def __init__(self, buffer_or_path: str | BufferWriter, packer: Packer = None):
+    def __init__(
+        self, buffer_or_path: str | BufferWriter, packer: Packer = None, s3fs=None
+    ):
         """
         It is possible to provide a custom packer object to be used for packing the object.
         However, this packer must be compatible with the `msgpack` packer.
@@ -53,6 +55,7 @@ class LazyWriter:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
+        self._s3fs = s3fs
 
         self._buffer: BufferWriter = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
@@ -64,9 +67,14 @@ class LazyWriter:
         increment_gc_counter()
 
         if isinstance(self._buffer_or_path, str):
-            self._buffer = open(
-                self._buffer_or_path, "wb", buffering=config.write_buffer_size
-            )
+            if self._s3fs:
+                self._buffer = self._s3fs.open(
+                    self._buffer_or_path, block_size=config.write_buffer_size
+                )
+            else:
+                self._buffer = open(
+                    self._buffer_or_path, "wb", buffering=config.write_buffer_size
+                )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
         else:

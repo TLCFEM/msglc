@@ -25,7 +25,7 @@ from bitarray import bitarray
 
 from .config import BufferReader, config, decrement_gc_counter, increment_gc_counter
 from .index import normalise_index, to_index
-from .unpacker import MsgpackUnpacker, Unpacker
+from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
 
 
@@ -99,7 +99,7 @@ class LazyItem:
         elif isclass(unpacker) and issubclass(unpacker, Unpacker):
             self._unpacker = unpacker()
         elif unpacker is None:
-            self._unpacker = MsgpackUnpacker()
+            self._unpacker = MsgspecUnpacker()
         else:
             raise TypeError("Need a valid unpacker.")
 
