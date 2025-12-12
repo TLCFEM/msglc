@@ -496,11 +496,12 @@ class LazyReader(LazyItem):
         :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)
         """
         self._buffer_or_path: str | BufferReader = buffer_or_path
+        self._s3fs = s3fs or config.s3fs
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
-            if s3fs is not None:
-                buffer = s3fs.open(
+            if self._s3fs:
+                buffer = self._s3fs.open(
                     self._buffer_or_path, "rb", block_size=config.read_buffer_size
                 )
             else:

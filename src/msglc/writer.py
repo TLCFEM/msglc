@@ -69,7 +69,7 @@ class LazyWriter:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
-        self._s3fs = s3fs
+        self._s3fs = s3fs or config.s3fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
@@ -158,7 +158,7 @@ class LazyCombiner:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
-        self._s3fs = s3fs
+        self._s3fs = s3fs or config.s3fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
 
