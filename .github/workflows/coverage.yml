@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:
-      minio:
-        image: minio/minio
+      rustfs:
+        image: rustfs/rustfs:latest
         ports:
           - 9000:9000
           - 9001:9001

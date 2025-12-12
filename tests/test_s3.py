@@ -2,13 +2,14 @@ import uuid
 
 import pytest
 import s3fs
+from s3fs import S3FileSystem
 
 
 @pytest.fixture(scope="session")
 def s3_client():
     fs = s3fs.S3FileSystem(
-        key="minioadmin",
-        secret="minioadmin",
+        key="rustfsadmin",
+        secret="rustfsadmin",
         client_kwargs={"endpoint_url": "http://localhost:9000"},
     )
     yield fs
@@ -33,6 +34,7 @@ def temp_bucket(s3_client):
 
 
 def test_connection(temp_bucket):
+    fs: S3FileSystem
     bucket_name, fs = temp_bucket
 
     msg = "Hello from Python!"
