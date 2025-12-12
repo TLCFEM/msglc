@@ -26,14 +26,15 @@ from msglc.utility import MockIO
 BufferWriter = Union[BinaryIO, BytesIO, BufferedReader]
 BufferWriterType = (BinaryIO, BytesIO, BufferedReader)
 
+BufferReader = Union[BufferWriter, MockIO]
+BufferReaderType = BufferWriterType + (MockIO,)
+
+
 if find_spec("s3fs"):
     from fsspec.spec import AbstractBufferedFile
 
-    BufferWriter = Union[BufferWriter, AbstractBufferedFile]
-    BufferWriterType = BufferWriterType + (AbstractBufferedFile,)
-
-BufferReader = Union[BufferWriter, MockIO]
-BufferReaderType = BufferWriterType + (MockIO,)
+    BufferReader = Union[BufferReader, AbstractBufferedFile]
+    BufferReaderType = BufferReaderType + (AbstractBufferedFile,)
 
 
 @dataclass
