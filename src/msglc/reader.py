@@ -500,7 +500,9 @@ class LazyReader(LazyItem):
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
             if s3fs is not None:
-                buffer = s3fs.open(self._buffer_or_path, "rb")
+                buffer = s3fs.open(
+                    self._buffer_or_path, "rb", block_size=config.read_buffer_size
+                )
             else:
                 buffer = open(  # noqa: SIM115
                     self._buffer_or_path, "rb", buffering=config.read_buffer_size
