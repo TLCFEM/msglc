@@ -19,12 +19,12 @@ import asyncio
 import pickle
 from inspect import isclass
 from io import BytesIO
+from typing import TYPE_CHECKING
 
 import msgpack
 from bitarray import bitarray
 
 from .config import (
-    BufferReader,
     BufferReaderType,
     config,
     decrement_gc_counter,
@@ -33,6 +33,9 @@ from .config import (
 from .index import normalise_index, to_index
 from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
+
+if TYPE_CHECKING:
+    from .config import BufferReader
 
 
 def to_obj(v):

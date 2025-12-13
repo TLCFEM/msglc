@@ -16,22 +16,25 @@
 from __future__ import annotations
 
 import os.path
-from collections.abc import Generator
 from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
-from typing import Literal
+from typing import TYPE_CHECKING
 
 from msgpack import Packer, packb, unpackb  # type: ignore
 
 from .config import (
-    BufferReader,
-    BufferWriter,
     config,
     decrement_gc_counter,
     increment_gc_counter,
     max_magic_len,
 )
 from .toc import TOC
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from typing import Literal
+
+    from .config import BufferReader, BufferWriter
 
 
 def _upsert(source: BufferReader, target: str, fs):

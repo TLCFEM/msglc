@@ -16,12 +16,15 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from io import BytesIO
-from typing import BinaryIO
-
-from msgpack import Packer  # type: ignore
+from typing import TYPE_CHECKING
 
 from .config import config
+
+if TYPE_CHECKING:
+    from io import BytesIO
+    from typing import BinaryIO
+
+    from msgpack import Packer  # type: ignore
 
 try:
     import numpy  # type: ignore

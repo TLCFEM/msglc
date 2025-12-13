@@ -17,11 +17,14 @@ from __future__ import annotations
 
 import os.path
 from contextlib import nullcontext
-from io import BytesIO
-from typing import BinaryIO, Literal
+from typing import TYPE_CHECKING
 
 from .config import config
 from .writer import LazyCombiner, LazyWriter
+
+if TYPE_CHECKING:
+    from io import BytesIO
+    from typing import BinaryIO, Literal
 
 
 def dump(file: str | BytesIO, obj, **kwargs):
