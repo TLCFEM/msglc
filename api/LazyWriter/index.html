@@ -981,7 +981,7 @@
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span><span class="p">,</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">packer</span><span class="p">:</span> <span class="n">Packer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">s3fs</span><span class="p">:</span> <span class="n">S3FS</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="p">):</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        It is possible to provide a custom packer object to be used for packing the object.</span>
@@ -993,7 +993,7 @@
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span> <span class="o">=</span> <span class="n">buffer_or_path</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_packer</span> <span class="o">=</span> <span class="n">packer</span> <span class="k">if</span> <span class="n">packer</span> <span class="k">else</span> <span class="n">Packer</span><span class="p">()</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">S3FS</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span> <span class="n">BufferWriter</span> <span class="o">|</span> <span class="n">TemporaryFile</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_toc_packer</span><span class="p">:</span> <span class="n">TOC</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
@@ -1140,7 +1140,7 @@ However, this packer must be compatible with the <code>msgpack</code> packer.</p
                 <code>s3fs</code>
             </td>
             <td>
-                  <code><span title="msglc.config.S3FileSystem">S3FileSystem</span> | None</code>
+                  <code><span title="msglc.config.S3FS">S3FS</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1185,7 +1185,7 @@ However, this packer must be compatible with the <code>msgpack</code> packer.</p
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="n">buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span><span class="p">,</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">packer</span><span class="p">:</span> <span class="n">Packer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">S3FS</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="p">):</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">    It is possible to provide a custom packer object to be used for packing the object.</span>
@@ -1197,7 +1197,7 @@ However, this packer must be compatible with the <code>msgpack</code> packer.</p
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span> <span class="o">=</span> <span class="n">buffer_or_path</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_packer</span> <span class="o">=</span> <span class="n">packer</span> <span class="k">if</span> <span class="n">packer</span> <span class="k">else</span> <span class="n">Packer</span><span class="p">()</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">S3FS</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span> <span class="n">BufferWriter</span> <span class="o">|</span> <span class="n">TemporaryFile</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_toc_packer</span><span class="p">:</span> <span class="n">TOC</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
