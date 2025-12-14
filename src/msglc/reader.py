@@ -35,7 +35,7 @@ from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
 
 if TYPE_CHECKING:
-    from .config import BufferReader
+    from .config import S3FS, BufferReader
 
 
 def to_obj(v):
@@ -474,7 +474,7 @@ class LazyReader(LazyItem):
         counter: LazyStats | None = None,
         cached: bool = True,
         unpacker: Unpacker | None = None,
-        s3fs=None,
+        s3fs: S3FS | None = None,
     ):
         """
         It is possible to use a customized unpacker.
@@ -499,7 +499,7 @@ class LazyReader(LazyItem):
         :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)
         """
         self._buffer_or_path: str | BufferReader = buffer_or_path
-        self._s3fs = s3fs or config.s3fs
+        self._s3fs: S3FS | None = s3fs or config.s3fs
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):

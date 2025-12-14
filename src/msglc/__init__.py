@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from io import BytesIO
     from typing import BinaryIO, Literal
 
+    from .config import S3FS
+
 
 def dump(file: str | BytesIO, obj, **kwargs):
     """
@@ -53,10 +55,16 @@ class FileInfo:
     :param s3fs: s3fs object (s3fs.S3FileSystem) to read the object from
     """
 
-    def __init__(self, path: str | BinaryIO, name: str | None = None, *, s3fs=None):
+    def __init__(
+        self,
+        path: str | BinaryIO,
+        name: str | None = None,
+        *,
+        s3fs: S3FS | None = None,
+    ):
         self.path = path
         self.name = name
-        self._s3fs = s3fs
+        self._s3fs: S3FS | None = s3fs
 
     def exists(self):
         if not isinstance(self.path, str):
@@ -80,7 +88,7 @@ def combine(
     *,
     mode: Literal["a", "w"] = "w",
     validate: bool = True,
-    s3fs=None,
+    s3fs: S3FS | None = None,
 ):
     """
     This function is used to combine the multiple serialized files into a single archive.
@@ -141,7 +149,7 @@ def append(
     files: FileInfo | list[FileInfo],
     *,
     validate: bool = True,
-    s3fs=None,
+    s3fs: S3FS | None = None,
 ):
     """
     This function is used to append the multiple serialized files to an existing single archive.
