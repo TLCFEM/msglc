@@ -1306,7 +1306,7 @@
 <a id="__codelineno-0-474" name="__codelineno-0-474"></a>        <span class="n">counter</span><span class="p">:</span> <span class="n">LazyStats</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-475" name="__codelineno-0-475"></a>        <span class="n">cached</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-476" name="__codelineno-0-476"></a>        <span class="n">unpacker</span><span class="p">:</span> <span class="n">Unpacker</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-477" name="__codelineno-0-477"></a>        <span class="n">s3fs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-477" name="__codelineno-0-477"></a>        <span class="n">s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-478" name="__codelineno-0-478"></a>    <span class="p">):</span>
 <a id="__codelineno-0-479" name="__codelineno-0-479"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-480" name="__codelineno-0-480"></a><span class="sd">        It is possible to use a customized unpacker.</span>
@@ -1331,7 +1331,7 @@
 <a id="__codelineno-0-499" name="__codelineno-0-499"></a><span class="sd">        :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)</span>
 <a id="__codelineno-0-500" name="__codelineno-0-500"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-501" name="__codelineno-0-501"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferReader</span> <span class="o">=</span> <span class="n">buffer_or_path</span>
-<a id="__codelineno-0-502" name="__codelineno-0-502"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
 <a id="__codelineno-0-503" name="__codelineno-0-503"></a>
 <a id="__codelineno-0-504" name="__codelineno-0-504"></a>        <span class="n">buffer</span><span class="p">:</span> <span class="n">BufferReader</span>
 <a id="__codelineno-0-505" name="__codelineno-0-505"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1677,6 +1677,7 @@ There are already several unpackers available using different libraries.</p>
                 <code>s3fs</code>
             </td>
             <td>
+                  <code><span title="msglc.config.S3FileSystem">S3FileSystem</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1774,7 +1775,7 @@ There are already several unpackers available using different libraries.</p>
 <a id="__codelineno-0-474" name="__codelineno-0-474"></a>    <span class="n">counter</span><span class="p">:</span> <span class="n">LazyStats</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-475" name="__codelineno-0-475"></a>    <span class="n">cached</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-476" name="__codelineno-0-476"></a>    <span class="n">unpacker</span><span class="p">:</span> <span class="n">Unpacker</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-477" name="__codelineno-0-477"></a>    <span class="n">s3fs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-477" name="__codelineno-0-477"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-478" name="__codelineno-0-478"></a><span class="p">):</span>
 <a id="__codelineno-0-479" name="__codelineno-0-479"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-480" name="__codelineno-0-480"></a><span class="sd">    It is possible to use a customized unpacker.</span>
@@ -1799,7 +1800,7 @@ There are already several unpackers available using different libraries.</p>
 <a id="__codelineno-0-499" name="__codelineno-0-499"></a><span class="sd">    :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)</span>
 <a id="__codelineno-0-500" name="__codelineno-0-500"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-501" name="__codelineno-0-501"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferReader</span> <span class="o">=</span> <span class="n">buffer_or_path</span>
-<a id="__codelineno-0-502" name="__codelineno-0-502"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">S3FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
 <a id="__codelineno-0-503" name="__codelineno-0-503"></a>
 <a id="__codelineno-0-504" name="__codelineno-0-504"></a>    <span class="n">buffer</span><span class="p">:</span> <span class="n">BufferReader</span>
 <a id="__codelineno-0-505" name="__codelineno-0-505"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
