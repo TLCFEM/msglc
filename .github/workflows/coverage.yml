@@ -54,7 +54,7 @@ jobs:
         run: pipx run twine check dist/*
       - uses: pypa/gh-action-pypi-publish@release/v1
         if: contains(github.event.head_commit.message, '[publish]')
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: msglc-sdist
           path: dist/*.tar.gz
