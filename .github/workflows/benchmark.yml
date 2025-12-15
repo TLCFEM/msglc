@@ -23,7 +23,7 @@ jobs:
           python3 ./tests/h5/read.py
           tar czf benchmark.tar.gz ./tests/h5/*.pdf
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: msglc-benchmark
           path: benchmark.tar.gz
