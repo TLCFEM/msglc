@@ -1,5 +1,6 @@
 import os
 import random
+from pathlib import Path
 
 import h5py
 import matplotlib.pyplot as plt
@@ -9,6 +10,14 @@ from msglc.reader import LazyReader
 from msglc.unpacker import MsgspecUnpacker
 
 repeat = 1000
+
+
+try:
+    from scalene.scalene_profiler import enable_profiling
+except ImportError:
+    from contextlib import nullcontext
+
+    enable_profiling = nullcontext
 
 
 @timeit
@@ -65,16 +74,17 @@ def plot_memory_usage(memory: dict):
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
+    os.chdir(Path(__file__).parent / "../../.dirty")
 
-    collect = {}
-    for file in os.listdir():
-        if "data" not in file:
-            continue
-        if "msg" in file:
-            collect[file] = read_msg(file)
-        elif "h5" in file:
-            collect[file] = read_h5(file)
+    with enable_profiling():
+        collect = {}
+        for file in os.listdir():
+            if "data" not in file:
+                continue
+            if "msg" in file:
+                collect[file] = read_msg(file)
+            elif "h5" in file:
+                collect[file] = read_h5(file)
 
     time_dict = {k: v[0] for k, v in collect.items()}
     memory_dict = {k: v[1] for k, v in collect.items()}

@@ -1,5 +1,6 @@
 import os
 from math import sqrt
+from pathlib import Path
 
 import h5py
 import matplotlib.pyplot as plt
@@ -93,7 +94,7 @@ def plot_memory_usage(write_memory: dict):
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
+    os.chdir(Path(__file__).parent / "../../.dirty")
 
     collect = {}
 
