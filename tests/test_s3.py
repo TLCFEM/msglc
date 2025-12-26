@@ -1,15 +1,59 @@
+#  Copyright (C) 2024-2026 Theodore Chang
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import uuid
 from io import BytesIO
 
 import pytest
-from s3fs import S3FileSystem
+import s3fs
 
 from msglc import FileInfo, LazyWriter, append, combine
+from msglc.config import FileSystem
 from msglc.reader import LazyReader, LazyStats
 
 
+@pytest.fixture(scope="session")
+def s3_client():
+    fs = s3fs.S3FileSystem(
+        key="rustfsadmin",
+        secret="rustfsadmin",
+        client_kwargs={"endpoint_url": "http://localhost:9000"},
+    )
+    yield fs
+
+
+@pytest.fixture(scope="function")
+def temp_bucket(s3_client):
+    bucket_name: str = f"test-bucket-{uuid.uuid4().hex}"
+
+    s3_client.mkdir(bucket_name)
+
+    yield bucket_name, s3_client
+
+    try:
+        if s3_client.exists(bucket_name):
+            files = s3_client.ls(bucket_name)
+            for f in files:
+                s3_client.rm(f)
+            s3_client.rmdir(bucket_name)
+    except Exception as e:
+        print(f"Error cleaning up bucket {bucket_name}: {e}")
+
+
 def test_connection(temp_bucket):
-    fs: S3FileSystem
+    fs: FileSystem
     bucket_name, fs = temp_bucket
 
     msg = "Hello from Python!"
@@ -22,7 +66,7 @@ def test_connection(temp_bucket):
 
 
 def test_s3_write_read(temp_bucket, json_before, json_after):
-    fs: S3FileSystem
+    fs: FileSystem
     bucket_name, fs = temp_bucket
 
     target: str = f"{bucket_name}/{str(uuid.uuid4())}"
@@ -67,7 +111,7 @@ def test_s3_write_read(temp_bucket, json_before, json_after):
 
 @pytest.mark.parametrize("remote", [True, False])
 def test_s3_combine_append(tmpdir, temp_bucket, json_after, remote):
-    fs: S3FileSystem
+    fs: FileSystem
     bucket_name, fs = temp_bucket
 
     target: str = f"{bucket_name}/{str(uuid.uuid4())}"
