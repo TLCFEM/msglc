@@ -589,6 +589,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#more-fs-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More FS Support
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -880,6 +891,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#more-fs-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        More FS Support
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1006,7 +1028,7 @@ After successful connection, just write/read as normal.</p>
 <a id="__codelineno-5-8" name="__codelineno-5-8"></a>    <span class="n">client_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;endpoint_url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:9000&quot;</span><span class="p">},</span>
 <a id="__codelineno-5-9" name="__codelineno-5-9"></a><span class="p">)</span>
 <a id="__codelineno-5-10" name="__codelineno-5-10"></a>
-<a id="__codelineno-5-11" name="__codelineno-5-11"></a><span class="n">bucket</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;test-bucket&quot;</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11"></a><span class="n">bucket</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;test-bucket&quot;</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12"></a>
 <a id="__codelineno-5-13" name="__codelineno-5-13"></a><span class="n">fs</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">bucket</span><span class="p">)</span>
 <a id="__codelineno-5-14" name="__codelineno-5-14"></a>
@@ -1018,6 +1040,66 @@ After successful connection, just write/read as normal.</p>
 <a id="__codelineno-5-20" name="__codelineno-5-20"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
 <a id="__codelineno-5-21" name="__codelineno-5-21"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
+<h2 id="more-fs-support">More FS Support</h2>
+<p>In fact, any <code>fsspec</code> compatible file system objects can be passed in.
+The following is an example using the <code>pyarrow</code> package.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-6-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-6-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-6-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-6-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-6-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-6-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-6-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-6-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-6-10">10</a></span>
+<span class="normal"><a href="#__codelineno-6-11">11</a></span>
+<span class="normal"><a href="#__codelineno-6-12">12</a></span>
+<span class="normal"><a href="#__codelineno-6-13">13</a></span>
+<span class="normal"><a href="#__codelineno-6-14">14</a></span>
+<span class="normal"><a href="#__codelineno-6-15">15</a></span>
+<span class="normal"><a href="#__codelineno-6-16">16</a></span>
+<span class="normal"><a href="#__codelineno-6-17">17</a></span>
+<span class="normal"><a href="#__codelineno-6-18">18</a></span>
+<span class="normal"><a href="#__codelineno-6-19">19</a></span>
+<span class="normal"><a href="#__codelineno-6-20">20</a></span>
+<span class="normal"><a href="#__codelineno-6-21">21</a></span>
+<span class="normal"><a href="#__codelineno-6-22">22</a></span>
+<span class="normal"><a href="#__codelineno-6-23">23</a></span>
+<span class="normal"><a href="#__codelineno-6-24">24</a></span>
+<span class="normal"><a href="#__codelineno-6-25">25</a></span>
+<span class="normal"><a href="#__codelineno-6-26">26</a></span>
+<span class="normal"><a href="#__codelineno-6-27">27</a></span>
+<span class="normal"><a href="#__codelineno-6-28">28</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">fsspec.implementations.arrow</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrowFSWrapper</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pyarrow.fs</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3FileSystem</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyWriter</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7"></a><span class="n">fs</span> <span class="o">=</span> <span class="n">ArrowFSWrapper</span><span class="p">(</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8"></a>    <span class="n">S3FileSystem</span><span class="p">(</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9"></a>        <span class="n">access_key</span><span class="o">=</span><span class="s2">&quot;rustfsadmin&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10"></a>        <span class="n">secret_key</span><span class="o">=</span><span class="s2">&quot;rustfsadmin&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11"></a>        <span class="n">endpoint_override</span><span class="o">=</span><span class="s2">&quot;localhost:9000&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12"></a>        <span class="n">scheme</span><span class="o">=</span><span class="s2">&quot;http&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13"></a>        <span class="n">allow_bucket_creation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14"></a>        <span class="n">allow_bucket_deletion</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15"></a>    <span class="p">)</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16"></a><span class="p">)</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17"></a>
+<a id="__codelineno-6-18" name="__codelineno-6-18"></a><span class="n">bucket</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;test-bucket&quot;</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19"></a>
+<a id="__codelineno-6-20" name="__codelineno-6-20"></a><span class="n">fs</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">bucket</span><span class="p">)</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21"></a>
+<a id="__codelineno-6-22" name="__codelineno-6-22"></a><span class="n">object_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bucket</span><span class="si">}</span><span class="s2">/example&quot;</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23"></a>
+<a id="__codelineno-6-24" name="__codelineno-6-24"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25"></a>    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">({</span><span class="s2">&quot;hello&quot;</span><span class="p">:</span> <span class="s2">&quot;world&quot;</span><span class="p">})</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26"></a>
+<a id="__codelineno-6-27" name="__codelineno-6-27"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-6-28" name="__codelineno-6-28"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+<p>Because <code>pyarrow</code> supports other file systems, they can be wrapped and passed in as well.</p>
 
 
 
