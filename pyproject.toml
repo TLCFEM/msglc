@@ -29,6 +29,7 @@ classifiers = [
 dependencies = [
     "msgpack>=1",
     "bitarray",
+    "fsspec>=2021.9.0", # to be compatible with pyarrow
 ]
 
 [project.optional-dependencies]
@@ -53,6 +54,9 @@ ormsgpack = [
 ]
 s3fs = [
     "s3fs"
+]
+pyarrow = [
+    "pyarrow"
 ]
 
 [project.urls]

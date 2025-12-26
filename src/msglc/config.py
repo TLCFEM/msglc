@@ -17,31 +17,20 @@ from __future__ import annotations
 
 import gc
 from dataclasses import dataclass
-from importlib.util import find_spec
 from io import BufferedReader, BytesIO
 from typing import BinaryIO, Union
+
+from fsspec import AbstractFileSystem as FileSystem
+from fsspec.implementations.arrow import ArrowFile
+from fsspec.spec import AbstractBufferedFile
 
 from msglc.utility import MockIO
 
 BufferWriter = Union[BinaryIO, BytesIO, BufferedReader]
 BufferWriterType = (BinaryIO, BytesIO, BufferedReader)
 
-BufferReader = Union[BufferWriter, MockIO]
-BufferReaderType = BufferWriterType + (MockIO,)
-
-
-if find_spec("s3fs"):
-    from fsspec.spec import AbstractBufferedFile
-    from s3fs import S3FileSystem
-
-    BufferReader = Union[BufferReader, AbstractBufferedFile]
-    BufferReaderType = BufferReaderType + (AbstractBufferedFile,)
-
-    S3FS = S3FileSystem
-else:
-    from types import NoneType
-
-    S3FS = NoneType
+BufferReader = Union[BufferWriter, MockIO, ArrowFile, AbstractBufferedFile]
+BufferReaderType = BufferWriterType + (MockIO, ArrowFile, AbstractBufferedFile)  # type: ignore
 
 
 @dataclass
@@ -57,7 +46,7 @@ class Config:
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
     numpy_fast_int_pack: bool = False
-    s3fs: S3FS | None = None
+    s3fs: FileSystem | None = None
 
 
 config = Config()
@@ -80,7 +69,7 @@ def configure(
     numpy_encoder: bool | None = None,
     numpy_fast_int_pack: bool | None = None,
     magic: bytes | None = None,
-    s3fs: S3FS | None = None,
+    s3fs: FileSystem | None = None,
 ):
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.

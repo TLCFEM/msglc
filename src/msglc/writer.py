@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from typing import Literal
 
-    from .config import S3FS, BufferReader, BufferWriter
+    from .config import BufferReader, BufferWriter, FileSystem
 
 
 def _upsert(source: BufferReader, target: str, fs):
@@ -64,7 +64,7 @@ class LazyWriter:
         buffer_or_path: str | BufferWriter,
         packer: Packer = None,
         *,
-        s3fs: S3FS | None = None,
+        s3fs: FileSystem | None = None,
     ):
         """
         It is possible to provide a custom packer object to be used for packing the object.
@@ -76,7 +76,7 @@ class LazyWriter:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
-        self._s3fs: S3FS | None = s3fs or config.s3fs
+        self._s3fs: FileSystem | None = s3fs or config.s3fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
@@ -152,7 +152,7 @@ class LazyCombiner:
         buffer_or_path: str | BufferWriter,
         *,
         mode: Literal["a", "w"] = "w",
-        s3fs: S3FS | None = None,
+        s3fs: FileSystem | None = None,
     ):
         """
         The mode resembles typical mode designations and implies the same meaning.
@@ -165,7 +165,7 @@ class LazyCombiner:
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
-        self._s3fs: S3FS | None = s3fs or config.s3fs
+        self._s3fs: FileSystem | None = s3fs or config.s3fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
 
