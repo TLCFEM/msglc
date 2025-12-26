@@ -15,9 +15,10 @@
 
 from __future__ import annotations
 
-import os.path
 from contextlib import nullcontext
 from typing import TYPE_CHECKING
+
+from fsspec.implementations.local import LocalFileSystem
 
 from .config import config
 from .writer import LazyCombiner, LazyWriter
@@ -64,22 +65,16 @@ class FileInfo:
     ):
         self.path = path
         self.name = name
-        self._s3fs: FileSystem | None = s3fs
+        self._s3fs: FileSystem = s3fs or LocalFileSystem()
 
     def exists(self):
-        if not isinstance(self.path, str):
-            return True
-
-        if self._s3fs:
-            return self._s3fs.exists(self.path)
-
-        return os.path.exists(self.path)
+        return not isinstance(self.path, str) or self._s3fs.exists(self.path)
 
     def open(self):
-        if not isinstance(self.path, str):
-            return nullcontext(self.path)
+        if isinstance(self.path, str):
+            return self._s3fs.open(self.path)
 
-        return self._s3fs.open(self.path) if self._s3fs else open(self.path, "rb")
+        return nullcontext(self.path)
 
 
 def combine(

@@ -17,20 +17,20 @@ from __future__ import annotations
 
 import gc
 from dataclasses import dataclass
-from io import BufferedReader, BytesIO
-from typing import BinaryIO, Union
-
-from fsspec import AbstractFileSystem as FileSystem
-from fsspec.implementations.arrow import ArrowFile
-from fsspec.spec import AbstractBufferedFile
+from io import IOBase
+from typing import TYPE_CHECKING, BinaryIO, Union
 
 from msglc.utility import MockIO
 
-BufferWriter = Union[BinaryIO, BytesIO, BufferedReader]
-BufferWriterType = (BinaryIO, BytesIO, BufferedReader)
+BufferWriter = Union[BinaryIO, IOBase]
+BufferWriterType = (BinaryIO, IOBase)
 
-BufferReader = Union[BufferWriter, MockIO, ArrowFile, AbstractBufferedFile]
-BufferReaderType = BufferWriterType + (MockIO, ArrowFile, AbstractBufferedFile)  # type: ignore
+BufferReader = Union[BufferWriter, MockIO]
+BufferReaderType = BufferWriterType + (MockIO,)
+
+
+if TYPE_CHECKING:
+    from fsspec import AbstractFileSystem as FileSystem
 
 
 @dataclass

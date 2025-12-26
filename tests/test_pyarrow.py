@@ -18,15 +18,15 @@ from io import BytesIO
 
 import pytest
 from fsspec.implementations.arrow import ArrowFSWrapper
-from pyarrow import fs
 
 from msglc import FileInfo, LazyWriter, append, combine
-from msglc.config import FileSystem
 from msglc.reader import LazyReader, LazyStats
 
 
 @pytest.fixture(scope="session")
 def s3_client():
+    from pyarrow import fs
+
     yield ArrowFSWrapper(
         fs.S3FileSystem(
             access_key="rustfsadmin",
@@ -58,7 +58,6 @@ def temp_bucket(s3_client):
 
 
 def test_connection(temp_bucket):
-    fs: FileSystem
     bucket_name, fs = temp_bucket
 
     msg = "Hello from Python!"
@@ -71,7 +70,6 @@ def test_connection(temp_bucket):
 
 
 def test_s3_write_read(temp_bucket, json_before, json_after):
-    fs: FileSystem
     bucket_name, fs = temp_bucket
 
     target: str = f"{bucket_name}/{str(uuid.uuid4())}"
@@ -116,7 +114,6 @@ def test_s3_write_read(temp_bucket, json_before, json_after):
 
 @pytest.mark.parametrize("remote", [True, False])
 def test_s3_combine_append(tmpdir, temp_bucket, json_after, remote):
-    fs: FileSystem
     bucket_name, fs = temp_bucket
 
     target: str = f"{bucket_name}/{str(uuid.uuid4())}"
