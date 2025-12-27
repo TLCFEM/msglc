@@ -48,12 +48,12 @@ class FileInfo:
     Wrap the file path or in memory buffer and name into a FileInfo object.
     The `name` is optional and is only used when the file is combined in the dictionary (key-value) mode.
 
-    The `s3fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.
-    It is not affected by the global `s3fs` object stored in `config`.
+    The `fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.
+    It is not affected by the global `fs` object stored in `config`.
 
     :param path: a string representing the file path or an in memory buffer
     :param name: key name of the content in the combined dict
-    :param s3fs: s3fs object (s3fs.S3FileSystem) to read the object from
+    :param fs: `FileSystem` object to read the object from
     """
 
     def __init__(
@@ -61,18 +61,18 @@ class FileInfo:
         path: str | BinaryIO,
         name: str | None = None,
         *,
-        s3fs: FileSystem | None = None,
+        fs: FileSystem | None = None,
     ):
         self.path = path
         self.name = name
-        self._s3fs: FileSystem = s3fs or LocalFileSystem()
+        self._fs: FileSystem = fs or LocalFileSystem()
 
     def exists(self):
-        return not isinstance(self.path, str) or self._s3fs.exists(self.path)
+        return not isinstance(self.path, str) or self._fs.exists(self.path)
 
     def open(self):
         if isinstance(self.path, str):
-            return self._s3fs.open(self.path)
+            return self._fs.open(self.path)
 
         return nullcontext(self.path)
 
@@ -83,20 +83,20 @@ def combine(
     *,
     mode: Literal["a", "w"] = "w",
     validate: bool = True,
-    s3fs: FileSystem | None = None,
+    fs: FileSystem | None = None,
 ):
     """
     This function is used to combine the multiple serialized files into a single archive.
-    If `s3fs` is given, the combined archive will be uploaded to S3.
+    If `fs` is given, the combined archive will be uploaded to remote.
 
-    The files to be combined must exist in local filesystem regardless of whether `s3fs` is given.
+    The files to be combined must exist in local filesystem regardless of whether `fs` is given.
     In other words, only local files can be combined.
 
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
     :param mode: a string representing the combination mode, 'w' for write and 'a' for append
     :param validate: switch on to validate the files before combining
-    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
+    :param fs: `FileSystem` object to be used for storing
     :return: None
     """
     if isinstance(files, FileInfo):
@@ -134,7 +134,7 @@ def combine(
             while _data := _file.read(config.copy_chunk_size):
                 yield _data
 
-    with LazyCombiner(archive, mode=mode, s3fs=s3fs) as combiner:
+    with LazyCombiner(archive, mode=mode, fs=fs) as combiner:
         for file in files:
             combiner.write(_iter(file), file.name)
 
@@ -144,19 +144,19 @@ def append(
     files: FileInfo | list[FileInfo],
     *,
     validate: bool = True,
-    s3fs: FileSystem | None = None,
+    fs: FileSystem | None = None,
 ):
     """
     This function is used to append the multiple serialized files to an existing single archive.
-    If `s3fs` is given, the target will be downloaded first if it exists in the bucket.
-    The final archive will be uploaded to S3.
+    If `fs` is given, the target will be downloaded first if it exists in the remote.
+    The final archive will be uploaded to remote.
 
-    The files to be appended must exist in local filesystem regardless of whether `s3fs` is given.
+    The files to be appended must exist in local filesystem regardless of whether `fs` is given.
 
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
     :param validate: switch on to validate the files before combining
-    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
+    :param fs: `FileSystem` object to be used for storing
     :return: None
     """
-    combine(archive, files, mode="a", validate=validate, s3fs=s3fs)
+    combine(archive, files, mode="a", validate=validate, fs=fs)

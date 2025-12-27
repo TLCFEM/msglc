@@ -64,7 +64,7 @@ class LazyWriter:
         buffer_or_path: str | BufferWriter,
         packer: Packer = None,
         *,
-        s3fs: FileSystem | None = None,
+        fs: FileSystem | None = None,
     ):
         """
         It is possible to provide a custom packer object to be used for packing the object.
@@ -72,11 +72,11 @@ class LazyWriter:
 
         :param buffer_or_path: target buffer or file path
         :param packer: packer object to be used for packing the object
-        :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
+        :param fs: `FileSystem` object to be used for storing
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
-        self._s3fs: FileSystem | None = s3fs or config.s3fs
+        self._fs: FileSystem | None = fs or config.fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
@@ -88,7 +88,7 @@ class LazyWriter:
         increment_gc_counter()
 
         if isinstance(self._buffer_or_path, str):
-            if self._s3fs:
+            if self._fs:
                 # we need to seek to the beginning and overwrite the header
                 # however, s3 does not allow seek in write mode
                 # thus use a local temp file as cache
@@ -117,7 +117,7 @@ class LazyWriter:
         if not isinstance(self._buffer_or_path, str):
             return
 
-        _upsert(self._buffer, self._buffer_or_path, self._s3fs)
+        _upsert(self._buffer, self._buffer_or_path, self._fs)
 
         self._buffer.close()
 
@@ -152,7 +152,7 @@ class LazyCombiner:
         buffer_or_path: str | BufferWriter,
         *,
         mode: Literal["a", "w"] = "w",
-        s3fs: FileSystem | None = None,
+        fs: FileSystem | None = None,
     ):
         """
         The mode resembles typical mode designations and implies the same meaning.
@@ -161,11 +161,11 @@ class LazyCombiner:
 
         :param buffer_or_path: target buffer or file path
         :param mode: mode of operation, 'w' for write and 'a' for append
-        :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing
+        :param fs: `FileSystem` object to be used for storing
         """
         self._buffer_or_path: str | BufferWriter = buffer_or_path
         self._mode: str = mode
-        self._s3fs: FileSystem | None = s3fs or config.s3fs
+        self._fs: FileSystem | None = fs or config.fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
 
@@ -175,10 +175,12 @@ class LazyCombiner:
 
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
-            if self._s3fs:
+            # we do not use a unified interface via `LocalFileSystem`
+            # because for local storage we can skip the cache file
+            if self._fs:
                 self._buffer = TemporaryFile()
-                if self._s3fs.exists(self._buffer_or_path):
-                    with self._s3fs.open(self._buffer_or_path, "rb") as s3_file:
+                if self._fs.exists(self._buffer_or_path):
+                    with self._fs.open(self._buffer_or_path, "rb") as s3_file:
                         while chunk := s3_file.read(config.read_buffer_size):
                             self._buffer.write(chunk)
                     self._buffer.seek(0)
@@ -256,7 +258,7 @@ class LazyCombiner:
         if not isinstance(self._buffer_or_path, str):
             return
 
-        _upsert(self._buffer, self._buffer_or_path, self._s3fs)
+        _upsert(self._buffer, self._buffer_or_path, self._fs)
 
         self._buffer.close()
 

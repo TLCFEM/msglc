@@ -475,7 +475,7 @@ class LazyReader(LazyItem):
         counter: LazyStats | None = None,
         cached: bool = True,
         unpacker: Unpacker | None = None,
-        s3fs: FileSystem | None = None,
+        fs: FileSystem | None = None,
     ):
         """
         It is possible to use a customized unpacker.
@@ -497,14 +497,14 @@ class LazyReader(LazyItem):
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data
         :param unpacker: the unpacker object for reading the data
-        :param s3fs: s3fs object (s3fs.S3FileSystem) for reading from S3 (if applicable)
+        :param fs: `FileSystem` object for reading data from (if applicable)
         """
         self._buffer_or_path: str | BufferReader = buffer_or_path
-        self._s3fs: FileSystem = s3fs or config.s3fs or LocalFileSystem()
+        self._fs: FileSystem = fs or config.fs or LocalFileSystem()
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
-            buffer = self._s3fs.open(
+            buffer = self._fs.open(
                 self._buffer_or_path, "rb", block_size=config.read_buffer_size
             )
         elif isinstance(self._buffer_or_path, BufferReaderType):

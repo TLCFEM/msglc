@@ -17,19 +17,36 @@ import uuid
 from io import BytesIO
 
 import pytest
-from s3fs import S3FileSystem
+from fsspec.implementations.arrow import ArrowFSWrapper
 
 from msglc import FileInfo, LazyWriter, append, combine
 from msglc.reader import LazyReader, LazyStats
 
 
-@pytest.fixture(scope="session")
-def s3_client():
-    yield S3FileSystem(
-        key="rustfsadmin",
-        secret="rustfsadmin",
-        client_kwargs={"endpoint_url": "http://localhost:9000"},
-    )
+@pytest.fixture(scope="session", params=["s3fs", "pyarrow"])
+def s3_client(request):
+    if request.param == "s3fs":
+        from s3fs import S3FileSystem
+
+        yield S3FileSystem(
+            key="rustfsadmin",
+            secret="rustfsadmin",
+            client_kwargs={"endpoint_url": "http://localhost:9000"},
+        )
+
+    elif request.param == "pyarrow":
+        from pyarrow.fs import S3FileSystem
+
+        yield ArrowFSWrapper(
+            S3FileSystem(
+                access_key="rustfsadmin",
+                secret_key="rustfsadmin",
+                endpoint_override="localhost:9000",
+                scheme="http",
+                allow_bucket_creation=True,
+                allow_bucket_deletion=True,
+            )
+        )
 
 
 @pytest.fixture(scope="function")
@@ -67,14 +84,14 @@ def test_s3_write_read(temp_bucket, json_before, json_after):
 
     target: str = f"{bucket_name}/{str(uuid.uuid4())}"
 
-    with LazyWriter(target, s3fs=fs) as writer:
+    with LazyWriter(target, fs=fs) as writer:
         writer.write(json_before)
         with pytest.raises(ValueError):
             writer.write(json_before)
 
     stats = LazyStats()
 
-    with LazyReader(target, counter=stats, s3fs=fs) as reader:
+    with LazyReader(target, counter=stats, fs=fs) as reader:
         assert (
             reader.read(
                 "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
@@ -119,15 +136,15 @@ def test_s3_combine_append(tmpdir, temp_bucket, json_after, remote):
             dict_name = f"{bucket_name}/{dict_name}"
         s3fs = fs if remote else None
 
-        with LazyWriter(list_name, s3fs=s3fs) as writer:
+        with LazyWriter(list_name, fs=s3fs) as writer:
             writer.write([x for x in range(30)])
-        with LazyWriter(dict_name, s3fs=s3fs) as writer:
+        with LazyWriter(dict_name, fs=s3fs) as writer:
             writer.write(json_after)
 
-        combine(target, [FileInfo(dict_name, s3fs=s3fs)], s3fs=fs)
-        combine(target, [FileInfo(list_name, s3fs=s3fs)], mode="a", s3fs=fs)
+        combine(target, [FileInfo(dict_name, fs=s3fs)], fs=fs)
+        combine(target, [FileInfo(list_name, fs=s3fs)], mode="a", fs=fs)
 
-        with LazyReader(target, s3fs=fs) as reader:
+        with LazyReader(target, fs=fs) as reader:
             assert reader.read("0/glossary/title") == "example glossary"
             assert reader.read("1/2") == 2
             assert reader.read("1/-1") == 29
@@ -146,26 +163,26 @@ def test_s3_combine_append(tmpdir, temp_bucket, json_after, remote):
             assert reader.visit("1/24:2:30") == [24, 26, 28]
             assert reader.visit("1/:2:5") == [0, 2, 4]
             assert reader.visit("1/24:2:") == [24, 26, 28]
-            with LazyReader(dict_name, s3fs=s3fs) as inner_reader:
+            with LazyReader(dict_name, fs=s3fs) as inner_reader:
                 assert reader[0] == inner_reader
-            with LazyReader(list_name, s3fs=s3fs) as inner_reader:
+            with LazyReader(list_name, fs=s3fs) as inner_reader:
                 assert reader[1] == inner_reader
 
         with pytest.raises(ValueError):
-            append(target, FileInfo(list_name, "no_name", s3fs=s3fs), s3fs=fs)
+            append(target, FileInfo(list_name, "no_name", fs=s3fs), fs=fs)
 
         with pytest.raises(ValueError):
-            combine(target, FileInfo(list_name, "no_name", s3fs=s3fs), s3fs=fs)
-            append(target, FileInfo(list_name, "no_name", s3fs=s3fs), s3fs=fs)
+            combine(target, FileInfo(list_name, "no_name", fs=s3fs), fs=fs)
+            append(target, FileInfo(list_name, "no_name", fs=s3fs), fs=fs)
 
         with pytest.raises(ValueError):
-            combine(target, FileInfo(list_name, "no_name", s3fs=s3fs), s3fs=fs)
-            append(target, FileInfo(list_name, s3fs=s3fs), s3fs=fs)
+            combine(target, FileInfo(list_name, "no_name", fs=s3fs), fs=fs)
+            append(target, FileInfo(list_name, fs=s3fs), fs=fs)
 
         with pytest.raises(ValueError):
-            combine(target, FileInfo(BytesIO(b"0" * 100), "no_name"), s3fs=fs)
+            combine(target, FileInfo(BytesIO(b"0" * 100), "no_name"), fs=fs)
 
         with pytest.raises(ValueError):
             with open("trivial.msg", "wb") as trivial:
                 trivial.write(b"0" * 300)
-            combine(target, FileInfo("trivial.msg", "no_name"), s3fs=fs)
+            combine(target, FileInfo("trivial.msg", "no_name"), fs=fs)

@@ -47,7 +47,7 @@ class Config:
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
     numpy_fast_int_pack: bool = False
-    s3fs: FileSystem | None = None
+    fs: FileSystem | None = None
     compatibility_check: Callable[[bytes], bool] | None = None
 
     def check_compatibility(self, magic: bytes):
@@ -78,7 +78,7 @@ def configure(
     numpy_encoder: bool | None = None,
     numpy_fast_int_pack: bool | None = None,
     magic: bytes | None = None,
-    s3fs: FileSystem | None = None,
+    fs: FileSystem | None = None,
     compatibility_check: Callable[[bytes], bool] | None = None,
 ):
     """
@@ -122,10 +122,10 @@ def configure(
             But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
-    :param s3fs:
-            The global `S3FileSystem` object that will be used by default so that there is no need to provide this for every function call.
+    :param fs:
+            The global `FileSystem` object that will be used by default so that there is no need to provide this for every function call.
             It is used to 1) read data by readers, 2) write output by writers/combiners.
-            To specify where combiners read input files from, assign a specific `S3FileSystem` object to each `FileInfo`.
+            To specify where combiners read input files **from**, assign a specific `FileSystem` object to each `FileInfo`.
     :param compatibility_check:
             A function that returns a boolean based on the input magic bytes.
     """
@@ -172,7 +172,7 @@ def configure(
     if isinstance(numpy_fast_int_pack, bool):
         config.numpy_fast_int_pack = numpy_fast_int_pack
 
-    config.s3fs = s3fs
+    config.fs = fs
 
     config.compatibility_check = compatibility_check
 

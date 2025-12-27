@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from .config import config
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from io import BytesIO
     from typing import BinaryIO
 
@@ -43,8 +44,8 @@ class Node:
 
 class TOC:
     def __init__(
-        self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: callable = None
-    ):  # type: ignore
+        self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: Callable = None
+    ):
         self._buffer: BytesIO | BinaryIO = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
@@ -53,7 +54,7 @@ class TOC:
         def plain_forward(obj):
             return obj
 
-        self._transform: callable = transform if transform else plain_forward  # type: ignore
+        self._transform: Callable = transform if transform else plain_forward
 
     @property
     def _pos(self) -> int:

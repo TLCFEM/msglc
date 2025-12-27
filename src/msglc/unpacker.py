@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from abc import ABC, abstractmethod
+from importlib.util import find_spec
 
 import msgpack
 
@@ -33,7 +34,7 @@ class MsgpackUnpacker(Unpacker):
         return self._unpacker.unpack()
 
 
-try:
+if find_spec("msgspec"):
     import msgspec
 
     class MsgspecUnpacker(Unpacker):
@@ -42,15 +43,15 @@ try:
 
         def decode(self, data):
             return self._unpacker.decode(data)
-except ImportError:
+else:
     MsgspecUnpacker = MsgpackUnpacker
 
-try:
+
+if find_spec("ormsgpack"):
     import ormsgpack
 
     class OrmsgpackUnpacker(Unpacker):
         def decode(self, data):
             return ormsgpack.unpackb(data)
-
-except ImportError:
+else:
     OrmsgpackUnpacker = MsgpackUnpacker
