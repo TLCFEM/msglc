@@ -961,7 +961,7 @@ One shall install it first.</p>
 <a id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3"></a>
 <a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="n">s3</span> <span class="o">=</span> <span class="n">S3FileSystem</span><span class="p">()</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6"></a>    <span class="o">...</span>
 </code></pre></div></td></tr></table></div>
 <h2 id="write-combine-append">Write, Combine, Append</h2>
@@ -976,7 +976,7 @@ Only the second option is supported.</p>
 <a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyWriter</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="n">s3</span> <span class="o">=</span> <span class="n">S3FileSystem</span><span class="p">()</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="s1">&#39;my-bucket/my-file&#39;</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">s3</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6"></a>    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <div class="admonition note">
@@ -1034,10 +1034,10 @@ After successful connection, just write/read as normal.</p>
 <a id="__codelineno-5-14" name="__codelineno-5-14"></a>
 <a id="__codelineno-5-15" name="__codelineno-5-15"></a><span class="n">object_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">bucket</span><span class="si">}</span><span class="s1">/example&#39;</span>
 <a id="__codelineno-5-16" name="__codelineno-5-16"></a>
-<a id="__codelineno-5-17" name="__codelineno-5-17"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
 <a id="__codelineno-5-18" name="__codelineno-5-18"></a>    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">({</span><span class="s1">&#39;hello&#39;</span><span class="p">:</span> <span class="s1">&#39;world&#39;</span><span class="p">})</span>
 <a id="__codelineno-5-19" name="__codelineno-5-19"></a>
-<a id="__codelineno-5-20" name="__codelineno-5-20"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-5-20" name="__codelineno-5-20"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
 <a id="__codelineno-5-21" name="__codelineno-5-21"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
 <h2 id="more-fs-support">More FS Support</h2>
@@ -1093,10 +1093,10 @@ The following is an example using the <code>pyarrow</code> package.</p>
 <a id="__codelineno-6-21" name="__codelineno-6-21"></a>
 <a id="__codelineno-6-22" name="__codelineno-6-22"></a><span class="n">object_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bucket</span><span class="si">}</span><span class="s2">/example&quot;</span>
 <a id="__codelineno-6-23" name="__codelineno-6-23"></a>
-<a id="__codelineno-6-24" name="__codelineno-6-24"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24"></a><span class="k">with</span> <span class="n">LazyWriter</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
 <a id="__codelineno-6-25" name="__codelineno-6-25"></a>    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">({</span><span class="s2">&quot;hello&quot;</span><span class="p">:</span> <span class="s2">&quot;world&quot;</span><span class="p">})</span>
 <a id="__codelineno-6-26" name="__codelineno-6-26"></a>
-<a id="__codelineno-6-27" name="__codelineno-6-27"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-6-27" name="__codelineno-6-27"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">object_name</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
 <a id="__codelineno-6-28" name="__codelineno-6-28"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
 <p>Because <code>pyarrow</code> supports other file systems, they can be wrapped and passed in as well.</p>

@@ -981,7 +981,7 @@
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span><span class="p">,</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">packer</span><span class="p">:</span> <span class="n">Packer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="p">):</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        It is possible to provide a custom packer object to be used for packing the object.</span>
@@ -989,11 +989,11 @@
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">        :param buffer_or_path: target buffer or file path</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">        :param packer: packer object to be used for packing the object</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        :param fs: `FileSystem` object to be used for storing</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span> <span class="o">=</span> <span class="n">buffer_or_path</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_packer</span> <span class="o">=</span> <span class="n">packer</span> <span class="k">if</span> <span class="n">packer</span> <span class="k">else</span> <span class="n">Packer</span><span class="p">()</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">fs</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span> <span class="n">BufferWriter</span> <span class="o">|</span> <span class="n">TemporaryFile</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_toc_packer</span><span class="p">:</span> <span class="n">TOC</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
@@ -1005,7 +1005,7 @@
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="n">increment_gc_counter</span><span class="p">()</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="p">:</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>                <span class="c1"># we need to seek to the beginning and overwrite the header</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a>                <span class="c1"># however, s3 does not allow seek in write mode</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>                <span class="c1"># thus use a local temp file as cache</span>
@@ -1034,7 +1034,7 @@
 <a id="__codelineno-0-117" name="__codelineno-0-117"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-0-118" name="__codelineno-0-118"></a>            <span class="k">return</span>
 <a id="__codelineno-0-119" name="__codelineno-0-119"></a>
-<a id="__codelineno-0-120" name="__codelineno-0-120"></a>        <span class="n">_upsert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">)</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a>        <span class="n">_upsert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="p">)</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121"></a>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <a id="__codelineno-0-123" name="__codelineno-0-123"></a>
@@ -1081,7 +1081,7 @@
 
 
 <h2 id="msglc.writer.LazyWriter.__init__" class="doc doc-heading">
-            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">buffer_or_path</span><span class="p">,</span> <span class="n">packer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">buffer_or_path</span><span class="p">,</span> <span class="n">packer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -1137,14 +1137,14 @@ However, this packer must be compatible with the <code>msgpack</code> packer.</p
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>s3fs</code>
+                <code>fs</code>
             </td>
             <td>
                   <code><span title="msglc.config.FileSystem">FileSystem</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>s3fs object (s3fs.S3FileSystem) to be used for storing</p>
+                <p><code>FileSystem</code> object to be used for storing</p>
               </div>
             </td>
             <td>
@@ -1185,7 +1185,7 @@ However, this packer must be compatible with the <code>msgpack</code> packer.</p
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="n">buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span><span class="p">,</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">packer</span><span class="p">:</span> <span class="n">Packer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="p">):</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">    It is possible to provide a custom packer object to be used for packing the object.</span>
@@ -1193,11 +1193,11 @@ However, this packer must be compatible with the <code>msgpack</code> packer.</p
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">    :param buffer_or_path: target buffer or file path</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    :param packer: packer object to be used for packing the object</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">    :param fs: `FileSystem` object to be used for storing</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BufferWriter</span> <span class="o">=</span> <span class="n">buffer_or_path</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_packer</span> <span class="o">=</span> <span class="n">packer</span> <span class="k">if</span> <span class="n">packer</span> <span class="k">else</span> <span class="n">Packer</span><span class="p">()</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">fs</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">fs</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span> <span class="n">BufferWriter</span> <span class="o">|</span> <span class="n">TemporaryFile</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_toc_packer</span><span class="p">:</span> <span class="n">TOC</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>

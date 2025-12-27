@@ -1019,8 +1019,8 @@
 
         <p>Wrap the file path or in memory buffer and name into a FileInfo object.
 The <code>name</code> is optional and is only used when the file is combined in the dictionary (key-value) mode.</p>
-<p>The <code>s3fs</code> can be different for each <code>FileInfo</code> object, meaning it is possible to combine files from different sources.
-It is not affected by the global <code>s3fs</code> object stored in <code>config</code>.</p>
+<p>The <code>fs</code> can be different for each <code>FileInfo</code> object, meaning it is possible to combine files from different sources.
+It is not affected by the global <code>fs</code> object stored in <code>config</code>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1068,14 +1068,14 @@ It is not affected by the global <code>s3fs</code> object stored in <code>config
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>s3fs</code>
+                <code>fs</code>
             </td>
             <td>
                   <code><span title="msglc.config.FileSystem">FileSystem</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>s3fs object (s3fs.S3FileSystem) to read the object from</p>
+                <p><code>FileSystem</code> object to read the object from</p>
               </div>
             </td>
             <td>
@@ -1130,12 +1130,12 @@ It is not affected by the global <code>s3fs</code> object stored in <code>config
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Wrap the file path or in memory buffer and name into a FileInfo object.</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    The `name` is optional and is only used when the file is combined in the dictionary (key-value) mode.</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    The `s3fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    It is not affected by the global `s3fs` object stored in `config`.</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    The `fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    It is not affected by the global `fs` object stored in `config`.</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    :param path: a string representing the file path or an in memory buffer</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">    :param name: key name of the content in the combined dict</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    :param s3fs: s3fs object (s3fs.S3FileSystem) to read the object from</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    :param fs: `FileSystem` object to read the object from</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -1143,18 +1143,18 @@ It is not affected by the global <code>s3fs</code> object stored in <code>config
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">BinaryIO</span><span class="p">,</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="p">):</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">=</span> <span class="n">s3fs</span> <span class="ow">or</span> <span class="n">LocalFileSystem</span><span class="p">()</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">=</span> <span class="n">fs</span> <span class="ow">or</span> <span class="n">LocalFileSystem</span><span class="p">()</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="k">return</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="k">return</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_s3fs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="k">return</span> <span class="n">nullcontext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -1313,8 +1313,8 @@ It is not affected by the global <code>s3fs</code> object stored in <code>config
     <div class="doc doc-contents first">
 
         <p>This function is used to combine the multiple serialized files into a single archive.
-If <code>s3fs</code> is given, the combined archive will be uploaded to S3.</p>
-<p>The files to be combined must exist in local filesystem regardless of whether <code>s3fs</code> is given.
+If <code>fs</code> is given, the combined archive will be uploaded to remote.</p>
+<p>The files to be combined must exist in local filesystem regardless of whether <code>fs</code> is given.
 In other words, only local files can be combined.</p>
 
 
@@ -1395,14 +1395,14 @@ In other words, only local files can be combined.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>s3fs</code>
+                <code>fs</code>
             </td>
             <td>
                   <code><span title="msglc.config.FileSystem">FileSystem</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>s3fs object (s3fs.S3FileSystem) to be used for storing</p>
+                <p><code>FileSystem</code> object to be used for storing</p>
               </div>
             </td>
             <td>
@@ -1502,20 +1502,20 @@ In other words, only local files can be combined.</p>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="o">*</span><span class="p">,</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="p">):</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">    This function is used to combine the multiple serialized files into a single archive.</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">    If `s3fs` is given, the combined archive will be uploaded to S3.</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">    If `fs` is given, the combined archive will be uploaded to remote.</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">    The files to be combined must exist in local filesystem regardless of whether `s3fs` is given.</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">    The files to be combined must exist in local filesystem regardless of whether `fs` is given.</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93"></a><span class="sd">    In other words, only local files can be combined.</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94"></a>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">    :param archive: a string representing the file path of the archive</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">    :param files: a list of FileInfo objects</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">    :param mode: a string representing the combination mode, &#39;w&#39; for write and &#39;a&#39; for append</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">    :param validate: switch on to validate the files before combining</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">    :param fs: `FileSystem` object to be used for storing</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    :return: None</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">FileInfo</span><span class="p">):</span>
@@ -1553,7 +1553,7 @@ In other words, only local files can be combined.</p>
 <a id="__codelineno-0-134" name="__codelineno-0-134"></a>            <span class="k">while</span> <span class="n">_data</span> <span class="o">:=</span> <span class="n">_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">copy_chunk_size</span><span class="p">):</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a>                <span class="k">yield</span> <span class="n">_data</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">with</span> <span class="n">LazyCombiner</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">s3fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">combiner</span><span class="p">:</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">with</span> <span class="n">LazyCombiner</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">combiner</span><span class="p">:</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139"></a>            <span class="n">combiner</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">_iter</span><span class="p">(</span><span class="n">file</span><span class="p">),</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -1571,9 +1571,9 @@ In other words, only local files can be combined.</p>
     <div class="doc doc-contents first">
 
         <p>This function is used to append the multiple serialized files to an existing single archive.
-If <code>s3fs</code> is given, the target will be downloaded first if it exists in the bucket.
-The final archive will be uploaded to S3.</p>
-<p>The files to be appended must exist in local filesystem regardless of whether <code>s3fs</code> is given.</p>
+If <code>fs</code> is given, the target will be downloaded first if it exists in the remote.
+The final archive will be uploaded to remote.</p>
+<p>The files to be appended must exist in local filesystem regardless of whether <code>fs</code> is given.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1637,14 +1637,14 @@ The final archive will be uploaded to S3.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>s3fs</code>
+                <code>fs</code>
             </td>
             <td>
                   <code><span title="msglc.config.FileSystem">FileSystem</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>s3fs object (s3fs.S3FileSystem) to be used for storing</p>
+                <p><code>FileSystem</code> object to be used for storing</p>
               </div>
             </td>
             <td>
@@ -1704,22 +1704,22 @@ The final archive will be uploaded to S3.</p>
 <a id="__codelineno-0-144" name="__codelineno-0-144"></a>    <span class="n">files</span><span class="p">:</span> <span class="n">FileInfo</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">],</span>
 <a id="__codelineno-0-145" name="__codelineno-0-145"></a>    <span class="o">*</span><span class="p">,</span>
 <a id="__codelineno-0-146" name="__codelineno-0-146"></a>    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="p">):</span>
 <a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150"></a><span class="sd">    This function is used to append the multiple serialized files to an existing single archive.</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="sd">    If `s3fs` is given, the target will be downloaded first if it exists in the bucket.</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="sd">    The final archive will be uploaded to S3.</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="sd">    If `fs` is given, the target will be downloaded first if it exists in the remote.</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="sd">    The final archive will be uploaded to remote.</span>
 <a id="__codelineno-0-153" name="__codelineno-0-153"></a>
-<a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="sd">    The files to be appended must exist in local filesystem regardless of whether `s3fs` is given.</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="sd">    The files to be appended must exist in local filesystem regardless of whether `fs` is given.</span>
 <a id="__codelineno-0-155" name="__codelineno-0-155"></a>
 <a id="__codelineno-0-156" name="__codelineno-0-156"></a><span class="sd">    :param archive: a string representing the file path of the archive</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a><span class="sd">    :param files: a list of FileInfo objects</span>
 <a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">    :param validate: switch on to validate the files before combining</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="sd">    :param s3fs: s3fs object (s3fs.S3FileSystem) to be used for storing</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a><span class="sd">    :param fs: `FileSystem` object to be used for storing</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">    :return: None</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">combine</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">s3fs</span><span class="o">=</span><span class="n">s3fs</span><span class="p">)</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">combine</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1943,14 +1943,14 @@ The function updates the values of the configuration parameters if they are prov
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>s3fs</code>
+                <code>fs</code>
             </td>
             <td>
                   <code><span title="fsspec.AbstractFileSystem">AbstractFileSystem</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The global <code>S3FileSystem</code> object that will be used by default so that there is no need to provide this for every function call. It is used to 1) read data by readers, 2) write output by writers/combiners. To specify where combiners read input files from, assign a specific <code>S3FileSystem</code> object to each <code>FileInfo</code>.</p>
+                <p>The global <code>FileSystem</code> object that will be used by default so that there is no need to provide this for every function call. It is used to 1) read data by readers, 2) write output by writers/combiners. To specify where combiners read input files <strong>from</strong>, assign a specific <code>FileSystem</code> object to each <code>FileInfo</code>.</p>
               </div>
             </td>
             <td>
@@ -2108,7 +2108,7 @@ The function updates the values of the configuration parameters if they are prov
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="n">numpy_encoder</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="n">numpy_fast_int_pack</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="n">magic</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="n">s3fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">compatibility_check</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">bytes</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="p">):</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2152,10 +2152,10 @@ The function updates the values of the configuration parameters if they are prov
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">            But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).</span>
 <a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">    :param magic:</span>
 <a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">            Magic bytes (max length: 30) to set, used to identify the file format version.</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">    :param s3fs:</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">            The global `S3FileSystem` object that will be used by default so that there is no need to provide this for every function call.</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">    :param fs:</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">            The global `FileSystem` object that will be used by default so that there is no need to provide this for every function call.</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">            It is used to 1) read data by readers, 2) write output by writers/combiners.</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">            To specify where combiners read input files from, assign a specific `S3FileSystem` object to each `FileInfo`.</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">            To specify where combiners read input files **from**, assign a specific `FileSystem` object to each `FileInfo`.</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a><span class="sd">    :param compatibility_check:</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="sd">            A function that returns a boolean based on the input magic bytes.</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -2202,7 +2202,7 @@ The function updates the values of the configuration parameters if they are prov
 <a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">numpy_fast_int_pack</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="n">config</span><span class="o">.</span><span class="n">numpy_fast_int_pack</span> <span class="o">=</span> <span class="n">numpy_fast_int_pack</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174"></a>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="n">config</span><span class="o">.</span><span class="n">s3fs</span> <span class="o">=</span> <span class="n">s3fs</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="n">config</span><span class="o">.</span><span class="n">fs</span> <span class="o">=</span> <span class="n">fs</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176"></a>
 <a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">config</span><span class="o">.</span><span class="n">compatibility_check</span> <span class="o">=</span> <span class="n">compatibility_check</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178"></a>
