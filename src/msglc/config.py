@@ -28,8 +28,9 @@ BufferWriterType = (BinaryIO, IOBase)
 BufferReader = Union[BufferWriter, MockIO]
 BufferReaderType = BufferWriterType + (MockIO,)
 
-
 if TYPE_CHECKING:
+    from typing import Callable
+
     from fsspec import AbstractFileSystem as FileSystem
 
 
@@ -47,10 +48,18 @@ class Config:
     numpy_encoder: bool = False
     numpy_fast_int_pack: bool = False
     s3fs: FileSystem | None = None
+    compatibility_check: Callable[[bytes], bool] | None = None
+
+    def check_compatibility(self, magic: bytes):
+        if self.compatibility_check is not None:
+            return self.compatibility_check(magic)
+
+        from .writer import LazyWriter
+
+        return magic == LazyWriter.magic
 
 
 config = Config()
-
 
 max_magic_len: int = 30
 
@@ -70,6 +79,7 @@ def configure(
     numpy_fast_int_pack: bool | None = None,
     magic: bytes | None = None,
     s3fs: FileSystem | None = None,
+    compatibility_check: Callable[[bytes], bool] | None = None,
 ):
     """
     This function is used to configure the settings. It accepts any number of keyword arguments.
@@ -116,6 +126,8 @@ def configure(
             The global `S3FileSystem` object that will be used by default so that there is no need to provide this for every function call.
             It is used to 1) read data by readers, 2) write output by writers/combiners.
             To specify where combiners read input files from, assign a specific `S3FileSystem` object to each `FileInfo`.
+    :param compatibility_check:
+            A function that returns a boolean based on the input magic bytes.
     """
     if (
         isinstance(small_obj_optimization_threshold, int)
@@ -161,6 +173,8 @@ def configure(
         config.numpy_fast_int_pack = numpy_fast_int_pack
 
     config.s3fs = s3fs
+
+    config.compatibility_check = compatibility_check
 
     if isinstance(magic, bytes) and 0 < len(magic) <= max_magic_len:
         from msglc import LazyWriter

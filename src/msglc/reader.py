@@ -523,7 +523,7 @@ class LazyReader(LazyItem):
         header: bytes = buffer.read(sep_c)
         buffer.seek(original_pos)
 
-        if header[:sep_a] != LazyWriter.magic:
+        if not config.check_compatibility(header[:sep_a]):
             raise ValueError("Invalid file format.")
 
         super().__init__(

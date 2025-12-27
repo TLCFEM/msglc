@@ -115,14 +115,14 @@ def combine(
             if not _fp.exists():
                 raise ValueError(f"File {_fp.path} does not exist.")
             with _fp.open() as _file:
-                if _file.read(LazyWriter.magic_len()) != LazyWriter.magic:
+                if not config.check_compatibility(_file.read(LazyWriter.magic_len())):
                     raise ValueError(f"Invalid file format: {_fp.path}.")
         else:
             with _fp.open() as _file:
                 ini_pos = _file.tell()
                 magic = _file.read(LazyWriter.magic_len())
                 _file.seek(ini_pos)
-                if magic != LazyWriter.magic:
+                if not config.check_compatibility(magic):
                     raise ValueError("Invalid file format.")
 
     if validate:

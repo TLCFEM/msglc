@@ -218,7 +218,7 @@ class LazyCombiner:
                 self._buffer.seek(ini_position)
                 raise ValueError(msg)
 
-            if header[:sep_a] != LazyWriter.magic:
+            if not config.check_compatibility(header[:sep_a]):
                 _raise_invalid(
                     "Invalid file format, cannot append to the current file."
                 )
