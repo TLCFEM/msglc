@@ -1080,7 +1080,7 @@
 <a id="__codelineno-0-218" name="__codelineno-0-218"></a>                <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">ini_position</span><span class="p">)</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 <a id="__codelineno-0-220" name="__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221"></a>            <span class="k">if</span> <span class="n">header</span><span class="p">[:</span><span class="n">sep_a</span><span class="p">]</span> <span class="o">!=</span> <span class="n">LazyWriter</span><span class="o">.</span><span class="n">magic</span><span class="p">:</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">check_compatibility</span><span class="p">(</span><span class="n">header</span><span class="p">[:</span><span class="n">sep_a</span><span class="p">]):</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222"></a>                <span class="n">_raise_invalid</span><span class="p">(</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223"></a>                    <span class="s2">&quot;Invalid file format, cannot append to the current file.&quot;</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224"></a>                <span class="p">)</span>
