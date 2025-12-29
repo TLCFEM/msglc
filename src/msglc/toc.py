@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
@@ -71,7 +72,7 @@ class TOC:
             _end = self._pos
             return Node(None, [_start, _end], _end <= _start + config.trivial_size)
 
-        if not isinstance(obj, (dict, list, set, tuple, ndarray)):
+        if not isinstance(obj, (Mapping, list, set, tuple, ndarray)):
             start_pos = self._pos
             _pack_obj(obj)
             return _generate(start_pos)
@@ -102,7 +103,7 @@ class TOC:
 
         obj_toc: dict | list
         all_small_obj: bool
-        if isinstance(obj, dict):
+        if isinstance(obj, Mapping):
             _pack_bin(self._packer.pack_map_header(len(obj)))
             obj_toc = {}
             for k, v in self._transform(obj.items()):  # type: ignore
@@ -166,7 +167,7 @@ class TOC:
             return _resume_flag(_generate(start_pos))
 
         if all_small_obj:
-            if isinstance(obj, dict) or len(obj) == 0:
+            if isinstance(obj, Mapping) or len(obj) == 0:
                 return _resume_flag(_generate(start_pos))
 
             groups: list = []

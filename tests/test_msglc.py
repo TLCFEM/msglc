@@ -13,12 +13,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import random
+from collections.abc import Generator, Mapping
 from io import BytesIO
 from itertools import cycle
 
 import pytest
 
-from msglc import FileInfo, LazyWriter, append, combine
+from msglc import FileInfo, LazyWriter, append, combine, dump
 from msglc.config import config, configure, decrement_gc_counter, increment_gc_counter
 from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
@@ -76,6 +77,36 @@ def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cache
             assert set(list_container) == {"GML", "XML"}
 
         str(stats)
+
+
+def test_lazy_generator(tmpdir):
+    class DictSteam(Mapping):
+        def __init__(self, generator: Generator, length: int):
+            self._len = length
+            self._gen = generator
+
+        def __iter__(self):
+            pass
+
+        def __getitem__(self, key, /):
+            pass
+
+        def __len__(self):
+            return self._len
+
+        def items(self):
+            yield from self._gen
+
+    def example():
+        yield "a", 1
+        yield "b", 2
+
+    target = "example.msg"
+    with tmpdir.as_cwd():
+        dump(target, DictSteam(example(), 2))
+
+        with LazyReader(target) as reader:
+            assert reader == {"a": 1, "b": 2}
 
 
 @pytest.mark.parametrize("target", ["test.msg", BytesIO()])

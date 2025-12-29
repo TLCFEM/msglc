@@ -80,3 +80,61 @@ with LazyReader("data.msg") as reader:
             print(k, v)  # c 4, d 5
     b_json = to_obj(b_dict)  # ensure plain dict
 ```
+
+## Streaming Data
+
+The data fed to the writer does not need to be fully generated in advance.
+It is possible to generate data on the fly.
+
+The writer expects and recognizes `collections.abc.Mapping` objects.
+It is thus possible to fake a dictionary with items generated from generators.
+
+The following is a minimum implementation.
+
+```python
+from collections.abc import Generator, Mapping
+
+
+class DictStream(Mapping):
+    def __init__(self, generator: Generator, length: int):
+        self._len = length
+        self._gen = generator
+
+    def __iter__(self): ...  # not used by writer but has to be implemented
+
+    def __getitem__(self, key, /): ...  # not used by writer but has to be implemented
+
+    def __len__(self):
+        # required
+        # note that the length needs to be known in advance
+        # you do not want to get it from the generator as doing so consumes it
+        return self._len
+
+    def items(self):
+        # required
+        yield from self._gen
+```
+
+!!! warning "length requirement"
+    Only two things will be invoked: `len()` and `.items()`.
+    Thus, `__len__(self)` and `items(self)` must be properly implemented.
+    If the length is **not** known in advance, streaming data is not feasible.
+
+With the above, one can do the following.
+
+```python
+from msglc import dump
+from msglc.reader import LazyReader
+
+
+def example():
+    yield "a", 1
+    yield "b", 2
+
+
+target = "example.msg"
+dump(target, DictSteam(example(), 2))
+
+with LazyReader(target) as reader:
+    assert reader == {"a": 1, "b": 2}
+```
