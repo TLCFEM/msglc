@@ -504,9 +504,7 @@ class LazyReader(LazyItem):
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
-            buffer = self._fs.open(
-                self._buffer_or_path, "rb", block_size=config.read_buffer_size
-            )
+            buffer = self._fs.open(self._buffer_or_path, "rb", config.read_buffer_size)
         elif isinstance(self._buffer_or_path, BufferReaderType):
             buffer = self._buffer_or_path
         else:

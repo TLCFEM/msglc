@@ -18,6 +18,7 @@ from __future__ import annotations
 import gc
 from dataclasses import dataclass
 from io import IOBase
+from threading import Lock
 from typing import TYPE_CHECKING, BinaryIO, Union
 
 from msglc.utility import MockIO
@@ -182,21 +183,37 @@ def configure(
         LazyWriter.set_magic(magic)
 
 
-__gc_counter: int = 0
+_gc_counter: int = 0
+_gc_lock = Lock()
 
 
 def increment_gc_counter():
-    global __gc_counter
-    if config.disable_gc:
-        __gc_counter += 1
-        gc.disable()
-    return __gc_counter
+    global _gc_counter
+
+    if not config.disable_gc:
+        return _gc_counter
+
+    with _gc_lock:
+        if _gc_counter == 0:
+            gc.disable()
+        _gc_counter += 1
+
+        return _gc_counter
 
 
 def decrement_gc_counter():
-    global __gc_counter
-    if config.disable_gc:
-        __gc_counter -= 1
-        if __gc_counter == 0:
+    global _gc_counter
+
+    if not config.disable_gc:
+        return _gc_counter
+
+    with _gc_lock:
+        _gc_counter -= 1
+        if _gc_counter < 0:
+            raise RuntimeError(
+                "GC counter underflow, check the call to increment_gc_counter() and decrement_gc_counter()."
+            )
+        if _gc_counter == 0:
             gc.enable()
-    return __gc_counter
+
+        return _gc_counter

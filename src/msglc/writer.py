@@ -95,7 +95,7 @@ class LazyWriter:
                 self._buffer = TemporaryFile()
             else:
                 self._buffer = open(
-                    self._buffer_or_path, "wb", buffering=config.write_buffer_size
+                    self._buffer_or_path, "wb", config.write_buffer_size
                 )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
@@ -191,7 +191,7 @@ class LazyCombiner:
                     else "r+b"
                 )
                 self._buffer = open(  # type: ignore
-                    self._buffer_or_path, mode, buffering=config.write_buffer_size
+                    self._buffer_or_path, mode, config.write_buffer_size
                 )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
