@@ -21,6 +21,7 @@ from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 
 from msgpack import Packer, packb, unpackb  # type: ignore
+from upath import UPath
 
 from .config import (
     config,
@@ -61,7 +62,7 @@ class LazyWriter:
 
     def __init__(
         self,
-        buffer_or_path: str | BufferWriter,
+        buffer_or_path: str | UPath | BufferWriter,
         packer: Packer = None,
         *,
         fs: FileSystem | None = None,
@@ -74,7 +75,7 @@ class LazyWriter:
         :param packer: packer object to be used for packing the object
         :param fs: `FileSystem` object to be used for storing
         """
-        self._buffer_or_path: str | BufferWriter = buffer_or_path
+        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._packer = packer if packer else Packer()
         self._fs: FileSystem | None = fs or config.fs
 
@@ -97,6 +98,8 @@ class LazyWriter:
                 self._buffer = open(
                     self._buffer_or_path, "wb", config.write_buffer_size
                 )
+        elif isinstance(self._buffer_or_path, UPath):
+            self._buffer = self._buffer_or_path.open("wb")
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
         else:
@@ -114,12 +117,11 @@ class LazyWriter:
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
 
-        if not isinstance(self._buffer_or_path, str):
-            return
+        if isinstance(self._buffer_or_path, str):
+            _upsert(self._buffer, self._buffer_or_path, self._fs)
 
-        _upsert(self._buffer, self._buffer_or_path, self._fs)
-
-        self._buffer.close()
+        if isinstance(self._buffer_or_path, str | UPath):
+            self._buffer.close()
 
     def write(self, obj) -> None:
         """
@@ -149,7 +151,7 @@ class LazyWriter:
 class LazyCombiner:
     def __init__(
         self,
-        buffer_or_path: str | BufferWriter,
+        buffer_or_path: str | UPath | BufferWriter,
         *,
         mode: Literal["a", "w"] = "w",
         fs: FileSystem | None = None,
@@ -163,7 +165,7 @@ class LazyCombiner:
         :param mode: mode of operation, 'w' for write and 'a' for append
         :param fs: `FileSystem` object to be used for storing
         """
-        self._buffer_or_path: str | BufferWriter = buffer_or_path
+        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._mode: str = mode
         self._fs: FileSystem | None = fs or config.fs
 
@@ -193,6 +195,12 @@ class LazyCombiner:
                 self._buffer = open(  # type: ignore
                     self._buffer_or_path, mode, config.write_buffer_size
                 )
+        elif isinstance(self._buffer_or_path, UPath):
+            self._buffer = self._buffer_or_path.open(
+                "wb"
+                if not self._buffer_or_path.exists() or self._mode == "w"
+                else "r+b"
+            )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
@@ -255,12 +263,11 @@ class LazyCombiner:
         self._buffer.write(packb(toc_start).rjust(10, b"\0"))
         self._buffer.write(packb(len(packed_toc)).rjust(10, b"\0"))
 
-        if not isinstance(self._buffer_or_path, str):
-            return
+        if isinstance(self._buffer_or_path, str):
+            _upsert(self._buffer, self._buffer_or_path, self._fs)
 
-        _upsert(self._buffer, self._buffer_or_path, self._fs)
-
-        self._buffer.close()
+        if isinstance(self._buffer_or_path, str | UPath):
+            self._buffer.close()
 
     def write(self, obj: Generator, name: str | None = None) -> None:
         """

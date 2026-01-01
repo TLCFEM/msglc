@@ -19,6 +19,7 @@ from contextlib import nullcontext
 from typing import TYPE_CHECKING
 
 from fsspec.implementations.local import LocalFileSystem
+from upath import UPath
 
 from .config import config
 from .writer import LazyCombiner, LazyWriter
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
     from .config import FileSystem
 
 
-def dump(file: str | BytesIO, obj, **kwargs):
+def dump(file: str | UPath | BytesIO, obj, **kwargs):
     """
     This function is used to write the object to the file.
 
@@ -58,7 +59,7 @@ class FileInfo:
 
     def __init__(
         self,
-        path: str | BinaryIO,
+        path: str | UPath | BinaryIO,
         name: str | None = None,
         *,
         fs: FileSystem | None = None,
@@ -68,17 +69,37 @@ class FileInfo:
         self._fs: FileSystem = fs or LocalFileSystem()
 
     def exists(self):
-        return not isinstance(self.path, str) or self._fs.exists(self.path)
+        if isinstance(self.path, str):
+            return self._fs.exists(self.path)
+        if isinstance(self.path, UPath):
+            return self.path.exists()
+        return True
 
     def open(self):
         if isinstance(self.path, str):
             return self._fs.open(self.path)
-
+        if isinstance(self.path, UPath):
+            return self.path.open("rb")
         return nullcontext(self.path)
+
+    def validate(self):
+        if isinstance(self.path, str | UPath):
+            if not self.exists():
+                raise ValueError(f"File {self.path} does not exist.")
+            with self.open() as _file:
+                if not config.check_compatibility(_file.read(LazyWriter.magic_len())):
+                    raise ValueError(f"Invalid file format: {self.path}.")
+        else:
+            with self.open() as _file:
+                ini_pos = _file.tell()
+                magic = _file.read(LazyWriter.magic_len())
+                _file.seek(ini_pos)
+                if not config.check_compatibility(magic):
+                    raise ValueError("Invalid file format.")
 
 
 def combine(
-    archive: str | BytesIO,
+    archive: str | UPath | BytesIO,
     files: FileInfo | list[FileInfo],
     *,
     mode: Literal["a", "w"] = "w",
@@ -110,24 +131,9 @@ def combine(
     ):
         raise ValueError("Files must have unique names.")
 
-    def _validate(_fp: FileInfo):
-        if isinstance(_fp.path, str):
-            if not _fp.exists():
-                raise ValueError(f"File {_fp.path} does not exist.")
-            with _fp.open() as _file:
-                if not config.check_compatibility(_file.read(LazyWriter.magic_len())):
-                    raise ValueError(f"Invalid file format: {_fp.path}.")
-        else:
-            with _fp.open() as _file:
-                ini_pos = _file.tell()
-                magic = _file.read(LazyWriter.magic_len())
-                _file.seek(ini_pos)
-                if not config.check_compatibility(magic):
-                    raise ValueError("Invalid file format.")
-
     if validate:
         for file in files:
-            _validate(file)
+            file.validate()
 
     def _iter(_fp: FileInfo):
         with _fp.open() as _file:
@@ -140,7 +146,7 @@ def combine(
 
 
 def append(
-    archive: str | BytesIO,
+    archive: str | UPath | BytesIO,
     files: FileInfo | list[FileInfo],
     *,
     validate: bool = True,
