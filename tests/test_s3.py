@@ -18,6 +18,7 @@ from io import BytesIO
 
 import pytest
 from fsspec.implementations.arrow import ArrowFSWrapper
+from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine
 from msglc.reader import LazyReader, LazyStats
@@ -79,10 +80,11 @@ def test_connection(temp_bucket):
         assert f.read() == msg
 
 
-def test_s3_write_read(temp_bucket, json_before, json_after):
+@pytest.mark.parametrize("is_upath", [True, False])
+def test_s3_write_read(temp_bucket, json_before, json_after, is_upath):
     bucket_name, fs = temp_bucket
 
-    target: str = f"{bucket_name}/{str(uuid.uuid4())}"
+    target: str | UPath = f"{bucket_name}/{str(uuid.uuid4())}"
 
     with LazyWriter(target, fs=fs) as writer:
         writer.write(json_before)
@@ -90,6 +92,14 @@ def test_s3_write_read(temp_bucket, json_before, json_after):
             writer.write(json_before)
 
     stats = LazyStats()
+
+    if is_upath:
+        target = UPath(
+            f"s3://{target}",
+            endpoint_url="http://localhost:9000",
+            key="rustfsadmin",
+            secret="rustfsadmin",
+        )
 
     with LazyReader(target, counter=stats, fs=fs) as reader:
         assert (
