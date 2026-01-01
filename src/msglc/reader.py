@@ -567,7 +567,7 @@ class LazyReader(LazyItem):
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
 
-        if isinstance(self._buffer_or_path, str | UPath):
+        if isinstance(self._buffer_or_path, (str, UPath)):
             self._buffer.close()
 
     def __getitem__(self, item):

@@ -120,7 +120,7 @@ class LazyWriter:
         if isinstance(self._buffer_or_path, str):
             _upsert(self._buffer, self._buffer_or_path, self._fs)
 
-        if isinstance(self._buffer_or_path, str | UPath):
+        if isinstance(self._buffer_or_path, (str, UPath)):
             self._buffer.close()
 
     def write(self, obj) -> None:
