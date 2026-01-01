@@ -32,7 +32,7 @@ class MockIO:
         seek_delay: float = 0,
         read_speed: int | list = 1 * 2**20,
     ):
-        self._path = path if isinstance(path, str | UPath) else None
+        self._path = path if isinstance(path, (str, UPath)) else None
         if isinstance(path, str):
             self._io = open(path, mode)  # noqa: SIM115
         elif isinstance(path, UPath):
