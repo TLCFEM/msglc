@@ -71,6 +71,15 @@ class LazyWriter:
         It is possible to provide a custom packer object to be used for packing the object.
         However, this packer must be compatible with the `msgpack` packer.
 
+        The `buffer_or_path` can be
+        1. a plain `str` pointing to a file on local filesystem,
+        2. a `UPath` object that points to a file on supported filesystem (either local or remote),
+        3. a `IO` object that has `.tell()`, `.seek()`, `.write()` methods.
+
+        Warning:
+        Not all backend filesystems supported by `UPath` can be used.
+        Some of them only supports sequential write thus cannot be used.
+
         :param buffer_or_path: target buffer or file path
         :param packer: packer object to be used for packing the object
         :param fs: `FileSystem` object to be used for storing

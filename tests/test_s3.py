@@ -81,10 +81,13 @@ def test_connection(temp_bucket):
 
 
 @pytest.mark.parametrize("is_upath", [True, False])
-def test_s3_write_read(temp_bucket, json_before, json_after, is_upath):
+@pytest.mark.parametrize("in_memory", [True, False])
+def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory):
     bucket_name, fs = temp_bucket
 
     target: str | UPath = f"{bucket_name}/{str(uuid.uuid4())}"
+    if in_memory:
+        target = UPath(f"memory://{target}")
 
     with LazyWriter(target, fs=fs) as writer:
         writer.write(json_before)
@@ -93,7 +96,7 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath):
 
     stats = LazyStats()
 
-    if is_upath:
+    if is_upath and isinstance(target, str):
         target = UPath(
             f"s3://{target}",
             endpoint_url="http://localhost:9000",
