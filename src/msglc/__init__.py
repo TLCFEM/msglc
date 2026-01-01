@@ -83,7 +83,7 @@ class FileInfo:
         return nullcontext(self.path)
 
     def validate(self):
-        if isinstance(self.path, str | UPath):
+        if isinstance(self.path, (str, UPath)):
             if not self.exists():
                 raise ValueError(f"File {self.path} does not exist.")
             with self.open() as _file:
