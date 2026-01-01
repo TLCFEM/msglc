@@ -18,6 +18,7 @@ from io import BytesIO
 from itertools import cycle
 
 import pytest
+from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
 from msglc.config import config, configure, decrement_gc_counter, increment_gc_counter
@@ -25,7 +26,10 @@ from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
 
 
-@pytest.mark.parametrize("target", ["test.msg", BytesIO()])
+@pytest.mark.parametrize(
+    "target",
+    ["test.msg", BytesIO(), UPath("test_upath.msg"), UPath("memory://test_upath.msg")],
+)
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
 def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cached):
@@ -327,7 +331,10 @@ def test_combine_archives(tmpdir, json_after, target):
             combine(target, [FileInfo("combined_aa.msg"), FileInfo("combined_a.msg")])
 
 
-@pytest.mark.parametrize("target", ["combined.msg", BytesIO()])
+@pytest.mark.parametrize(
+    "target",
+    ["combined.msg", BytesIO(), UPath("combined.msg"), UPath("memory://combined.msg")],
+)
 def test_combine_archives_append(tmpdir, json_after, target):
     with tmpdir.as_cwd():
         with LazyWriter("test_list.msg") as writer:

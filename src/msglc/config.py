@@ -23,16 +23,16 @@ from typing import TYPE_CHECKING, BinaryIO, Union
 
 from msglc.utility import MockIO
 
-BufferWriter = Union[BinaryIO, IOBase]
 BufferWriterType = (BinaryIO, IOBase)
-
-BufferReader = Union[BufferWriter, MockIO]
 BufferReaderType = BufferWriterType + (MockIO,)
 
 if TYPE_CHECKING:
     from typing import Callable
 
     from fsspec import AbstractFileSystem as FileSystem
+
+    BufferWriter = Union[BinaryIO, IOBase]
+    BufferReader = Union[BufferWriter, MockIO]
 
 
 @dataclass

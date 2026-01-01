@@ -15,9 +15,9 @@ certifi==2025.11.12       # via requests
 charset-normalizer==3.4.4  # via requests
 click==8.3.1              # via mkdocs
 colorama==0.4.6           # via griffe, mkdocs-material
-coverage==7.13.0          # via pytest-cov
+coverage==7.13.1          # via pytest-cov
 frozenlist==1.8.0         # via aiohttp, aiosignal
-fsspec==2025.12.0         # via s3fs, msglc (pyproject.toml)
+fsspec==2025.12.0         # via s3fs, universal-pathlib
 ghp-import==2.1.0         # via mkdocs
 griffe==1.15.0            # via mkdocstrings-python
 idna==3.11                # via requests, yarl
@@ -46,6 +46,7 @@ numpy==2.4.0              # via msglc (pyproject.toml)
 ormsgpack==1.12.1         # via msglc (pyproject.toml)
 packaging==25.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
+pathlib-abc==0.5.2        # via universal-pathlib
 pathspec==0.12.1          # via mkdocs
 platformdirs==4.5.1       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
@@ -53,7 +54,7 @@ propcache==0.4.1          # via aiohttp, yarl
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pyarrow==22.0.0           # via msglc (pyproject.toml)
 pygments==2.19.2          # via mkdocs-material, pytest
-pymdown-extensions==10.19.1  # via mkdocs-material, mkdocstrings
+pymdown-extensions==10.20  # via mkdocs-material, mkdocstrings
 pyparsing==3.3.1          # via mike
 pytest==9.0.2             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==1.3.0     # via msglc (pyproject.toml)
@@ -67,6 +68,7 @@ ruff==0.14.10             # via msglc (pyproject.toml)
 s3fs==2025.12.0           # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via aiosignal, pytest-asyncio
+universal-pathlib==0.3.7  # via msglc (pyproject.toml)
 urllib3==2.6.2            # via botocore, requests
 verspec==0.1.0            # via mike
 watchdog==6.0.0           # via mkdocs

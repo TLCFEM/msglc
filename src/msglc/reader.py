@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 import msgpack
 from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
+from upath import UPath
 
 from .config import (
     BufferReaderType,
@@ -470,7 +471,7 @@ class LazyDict(LazyItem):
 class LazyReader(LazyItem):
     def __init__(
         self,
-        buffer_or_path: str | BufferReader,
+        buffer_or_path: str | UPath | BufferReader,
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
@@ -493,18 +494,28 @@ class LazyReader(LazyItem):
             ...
         ```
 
+        There are a few different ways to read from a file.
+        1. Provide `buffer_or_path` as a `str` with the path on the **local** filesystem.
+        2. Provide `buffer_or_path` as a `str` with the path on the filesystem defined by `fs`.
+        3. Provide `buffer_or_path` as a `BinaryIO` object that supports `.seek()` and `.read()` methods.
+        4. Provide `buffer_or_path` as a `UPath` object that points to a file, it could be a local file or a remote one.
+
+        It is recommended to simply pass in a `UPath` object that is generic to handle various underlying filesystems.
+
         :param buffer_or_path: the buffer or path to the file
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data
         :param unpacker: the unpacker object for reading the data
         :param fs: `FileSystem` object for reading data from (if applicable)
         """
-        self._buffer_or_path: str | BufferReader = buffer_or_path
+        self._buffer_or_path: str | UPath | BufferReader = buffer_or_path
         self._fs: FileSystem = fs or config.fs or LocalFileSystem()
 
         buffer: BufferReader
         if isinstance(self._buffer_or_path, str):
             buffer = self._fs.open(self._buffer_or_path, "rb", config.read_buffer_size)
+        elif isinstance(self._buffer_or_path, UPath):
+            buffer = self._buffer_or_path.open("rb", config.read_buffer_size)
         elif isinstance(self._buffer_or_path, BufferReaderType):
             buffer = self._buffer_or_path
         else:
@@ -556,7 +567,7 @@ class LazyReader(LazyItem):
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
 
-        if isinstance(self._buffer_or_path, str):
+        if isinstance(self._buffer_or_path, (str, UPath)):
             self._buffer.close()
 
     def __getitem__(self, item):

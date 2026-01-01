@@ -18,6 +18,8 @@ from __future__ import annotations
 from time import sleep
 from typing import TYPE_CHECKING
 
+from upath import UPath
+
 if TYPE_CHECKING:
     from io import BytesIO
 
@@ -25,13 +27,18 @@ if TYPE_CHECKING:
 class MockIO:
     def __init__(
         self,
-        path: str | BytesIO,
+        path: str | UPath | BytesIO,
         mode: str,
         seek_delay: float = 0,
         read_speed: int | list = 1 * 2**20,
     ):
-        self._path = path if isinstance(path, str) else None
-        self._io = open(path, mode) if isinstance(path, str) else path  # noqa: SIM115
+        self._path = path if isinstance(path, (str, UPath)) else None
+        if isinstance(path, str):
+            self._io = open(path, mode)  # noqa: SIM115
+        elif isinstance(path, UPath):
+            self._io = path.open(mode)
+        else:
+            self._io = path
         self._seek_delay: float = seek_delay
         self._read_speed: int | list = read_speed
 
