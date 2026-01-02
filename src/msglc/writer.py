@@ -109,6 +109,10 @@ class LazyWriter:
                 )
         elif isinstance(self._buffer_or_path, UPath):
             self._buffer = self._buffer_or_path.open("wb")
+            if not self._buffer.seekable():
+                raise ValueError(
+                    f"The underlying filesystem of the given UPath ({self._buffer_or_path}) does not support random write."
+                )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
         else:
@@ -210,6 +214,10 @@ class LazyCombiner:
                 if not self._buffer_or_path.exists() or self._mode == "w"
                 else "r+b"
             )
+            if not self._buffer.seekable():
+                raise ValueError(
+                    f"The underlying filesystem of the given UPath ({self._buffer_or_path}) does not support random write."
+                )
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
