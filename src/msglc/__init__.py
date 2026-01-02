@@ -75,7 +75,7 @@ class FileInfo:
             return self.path.exists()
         return True
 
-    def open(self):
+    def _open(self):
         if isinstance(self.path, str):
             return self._fs.open(self.path)
         if isinstance(self.path, UPath):
@@ -86,16 +86,21 @@ class FileInfo:
         if isinstance(self.path, (str, UPath)):
             if not self.exists():
                 raise ValueError(f"File {self.path} does not exist.")
-            with self.open() as _file:
+            with self._open() as _file:
                 if not config.check_compatibility(_file.read(LazyWriter.magic_len())):
                     raise ValueError(f"Invalid file format: {self.path}.")
         else:
-            with self.open() as _file:
+            with self._open() as _file:
                 ini_pos = _file.tell()
                 magic = _file.read(LazyWriter.magic_len())
                 _file.seek(ini_pos)
                 if not config.check_compatibility(magic):
                     raise ValueError("Invalid file format.")
+
+    def chunking(self):
+        with self._open() as _file:
+            while _data := _file.read(config.copy_chunk_size):
+                yield _data
 
 
 def combine(
@@ -135,14 +140,9 @@ def combine(
         for file in files:
             file.validate()
 
-    def _iter(_fp: FileInfo):
-        with _fp.open() as _file:
-            while _data := _file.read(config.copy_chunk_size):
-                yield _data
-
     with LazyCombiner(archive, mode=mode, fs=fs) as combiner:
         for file in files:
-            combiner.write(_iter(file), file.name)
+            combiner.write(file.chunking(), file.name)
 
 
 def append(
