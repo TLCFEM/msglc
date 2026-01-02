@@ -72,15 +72,15 @@ class LazyWriter:
         However, this packer must be compatible with the `msgpack` packer.
 
         The `buffer_or_path` can be
-        1. a plain `str` pointing to a file on local filesystem,
+        1. a plain `str` pointing to a file on local filesystem, or a file on target filesystem if `fs` is provided,
         2. a `UPath` object that points to a file on supported filesystem (either local or remote),
-        3. a `IO` object that has `.tell()`, `.seek()`, `.write()` methods.
+        3. a `IO` object that has `.tell()`, `.seek()`, `.write()` methods, this object must have random write access.
 
         Warning:
-        Not all backend filesystems supported by `UPath` can be used.
-        Some of them only supports sequential write thus cannot be used.
-        One must check if the target filesystem supports random access write.
-        If not, provide a plain string for `buffer_or_path` and explicitly assign a `fs` object.
+        Some of backend filesystems only supports sequential write rather than random write thus not all filesystems
+        supported by `UPath` can be used.
+        One must always check if the target filesystem supports random write access.
+        If not, the most generic approach is to provide a plain string for `buffer_or_path` and explicitly assign a `fs` object.
         In this case, a local cache will be used to temporarily handle the serialization and the binary blob
         will be uploaded to the remote once everything is processed.
 
