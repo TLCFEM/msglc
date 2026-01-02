@@ -79,6 +79,10 @@ class LazyWriter:
         Warning:
         Not all backend filesystems supported by `UPath` can be used.
         Some of them only supports sequential write thus cannot be used.
+        One must check if the target filesystem supports random access write.
+        If not, provide a plain string for `buffer_or_path` and explicitly assign a `fs` object.
+        In this case, a local cache will be used to temporarily handle the serialization and the binary blob
+        will be uploaded to the remote once everything is processed.
 
         :param buffer_or_path: target buffer or file path
         :param packer: packer object to be used for packing the object
