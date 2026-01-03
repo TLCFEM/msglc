@@ -113,6 +113,8 @@ def prepare(tmpdir_factory):
     tmp_prepare = tmpdir_factory.mktemp("prepare")
     with tmp_prepare.as_cwd():
         generate(depth=4, width=4, threshold=25)
+    for file in tmp_prepare.listdir():
+        print(f"{file.basename}: {file.size()} bytes")
     return tmp_prepare
 
 
