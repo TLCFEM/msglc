@@ -12,12 +12,14 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import random
 from collections.abc import Generator, Mapping
 from io import BytesIO
 from itertools import cycle
 
 import pytest
+from fsspec.implementations.zip import ZipFileSystem
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
@@ -32,26 +34,34 @@ from msglc.utility import MockIO
 )
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
-def test_msglc(monkeypatch, tmpdir, json_before, json_after, target, size, cached):
+@pytest.mark.parametrize("fs_cls", [None, ZipFileSystem])
+def test_msglc(
+    monkeypatch, tmpdir, json_before, json_after, target, size, cached, fs_cls
+):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
     with tmpdir.as_cwd():
         if isinstance(target, BytesIO):
             target.seek(0)
 
-        with LazyWriter(target) as writer:
+        fs = fs_cls("archive.zip", "w") if fs_cls else None
+        with LazyWriter(target, fs=fs) as writer:
             writer.write(json_before)
             with pytest.raises(ValueError):
                 writer.write(json_before)
+
+        if fs:
+            fs.close()
 
         stats = LazyStats()
 
         if isinstance(target, BytesIO):
             target.seek(0)
 
+        fs = fs_cls("archive.zip", "r") if fs_cls else None
         with (
-            MockIO(target, "rb", 0, 500 * 2**20) as buffer,
-            LazyReader(buffer, counter=stats, cached=cached) as reader,
+            MockIO(target, "rb", 0, 500 * 2**20, fs=fs) as buffer,
+            LazyReader(buffer, counter=stats, cached=cached, fs=fs) as reader,
         ):
             assert (
                 reader.read(

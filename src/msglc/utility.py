@@ -31,10 +31,14 @@ class MockIO:
         mode: str,
         seek_delay: float = 0,
         read_speed: int | list = 1 * 2**20,
+        fs=None,
     ):
         self._path = path if isinstance(path, (str, UPath)) else None
         if isinstance(path, str):
-            self._io = open(path, mode)  # noqa: SIM115
+            if fs:
+                self._io = fs.open(path, mode)
+            else:
+                self._io = open(path, mode)  # noqa: SIM115
         elif isinstance(path, UPath):
             self._io = path.open(mode)
         else:
