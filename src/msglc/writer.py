@@ -89,7 +89,7 @@ class LazyWriter:
         :param fs: `FileSystem` object to be used for storing
         """
         self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
-        self._packer = packer if packer else Packer()
+        self._packer: Packer = packer or Packer()
         self._fs: FileSystem | None = fs or config.fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore

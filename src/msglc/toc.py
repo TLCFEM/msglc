@@ -36,7 +36,7 @@ except ImportError:
     ndarray = list  # type: ignore
 
 
-@dataclass()
+@dataclass(slots=True)
 class Node:
     t: dict | list | None
     p: dict | list
@@ -55,7 +55,7 @@ class TOC:
         def plain_forward(obj):
             return obj
 
-        self._transform: Callable = transform if transform else plain_forward
+        self._transform: Callable = transform or plain_forward
 
     @property
     def _pos(self) -> int:
