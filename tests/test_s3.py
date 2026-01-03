@@ -60,9 +60,6 @@ def temp_bucket(s3_client):
 
     try:
         if s3_client.exists(bucket_name):
-            files = s3_client.ls(bucket_name)
-            for f in files:
-                s3_client.rm(f)
             s3_client.rmdir(bucket_name)
     except Exception as e:
         print(f"Error cleaning up bucket {bucket_name}: {e}")
@@ -85,7 +82,7 @@ def test_connection(temp_bucket):
 def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory):
     bucket_name, fs = temp_bucket
 
-    target: str | UPath = f"{bucket_name}/{str(uuid.uuid4())}"
+    target: str | UPath = f"{bucket_name}/path/{str(uuid.uuid4())}"
     if in_memory:
         target = UPath(f"memory://{target}")
 
