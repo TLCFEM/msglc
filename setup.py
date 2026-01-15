@@ -13,8 +13,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
-
 from setuptools import setup
 
 try:
@@ -27,6 +25,5 @@ except ImportError:
 
 
 setup(
-    version=datetime.now().strftime("%y%m%d"),
     ext_modules=cythonize("src/msglc/*.py"),
 )
