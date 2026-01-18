@@ -64,11 +64,11 @@ python-dateutil==2.9.0.post0  # via aiobotocore, botocore, ghp-import
 pyyaml==6.0.3             # via mike, mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mike, mkdocs
 requests==2.32.5          # via mkdocs-material
-ruff==0.14.11             # via msglc (pyproject.toml)
+ruff==0.14.13             # via msglc (pyproject.toml)
 s3fs==2026.1.0            # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via aiosignal, pytest-asyncio
-universal-pathlib==0.3.7  # via msglc (pyproject.toml)
+universal-pathlib==0.3.8  # via msglc (pyproject.toml)
 urllib3==2.6.3            # via botocore, requests
 verspec==0.1.0            # via mike
 watchdog==6.0.0           # via mkdocs
