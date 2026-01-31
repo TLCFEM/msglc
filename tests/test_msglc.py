@@ -243,12 +243,15 @@ def test_combine_archives(tmpdir, json_after, target):
             writer.write([x for x in range(30)])
         with LazyWriter("test_dict.msg") as writer:
             writer.write(json_after)
+        with LazyWriter("test_none.msg") as writer:
+            writer.write(None)
 
         combine(
             "combined_a.msg",
             [
                 FileInfo("test_list.msg", "first_inner"),
                 FileInfo("test_dict.msg", "second_inner"),
+                FileInfo("test_none.msg", "invalid"),
             ],
         )
 
@@ -260,6 +263,7 @@ def test_combine_archives(tmpdir, json_after, target):
             [
                 FileInfo("combined_a.msg", "first_outer"),
                 FileInfo("combined_a.msg", "second_outer"),
+                FileInfo("test_none.msg", "invalid"),
             ],
         )
 
@@ -291,6 +295,7 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.visit("second_outer/first_inner/24:2:30") == [24, 26, 28]
             assert reader.visit("second_outer/first_inner/:2:5") == [0, 2, 4]
             assert reader.visit("second_outer/first_inner/24:2:") == [24, 26, 28]
+            assert reader.visit("invalid").to_obj() is None
 
         if isinstance(target, BytesIO):
             target = BytesIO()

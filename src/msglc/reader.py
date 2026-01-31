@@ -188,10 +188,13 @@ class LazyItem:
 
     @property
     def _fast_loading(self):
-        return (
-            config.fast_loading
-            and self._accessed_items < config.fast_loading_threshold * len(self)
-        )
+        try:
+            return (
+                config.fast_loading
+                and self._accessed_items < config.fast_loading_threshold * len(self)
+            )
+        except TypeError:
+            return False
 
     def to_obj(self):
         raise NotImplementedError
