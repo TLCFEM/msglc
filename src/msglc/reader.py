@@ -550,6 +550,7 @@ class LazyReader(LazyItem):
         toc_size: int = self._unpack(header[sep_b:sep_c].lstrip(b"\0"))
 
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))
+        self._raw_data_range = (original_pos, sep_c + toc_start + toc_size)
 
     def __repr__(self):
         file_path: str = ""
@@ -725,3 +726,16 @@ class LazyReader(LazyItem):
         Data returned by this method can leave the `LazyReader` context.
         """
         return to_obj(self._obj)
+
+    def raw_data(self):
+        start, remaining = self._raw_data_range
+        self._buffer.seek(start)
+
+        return self._buffer.read(remaining)
+
+        # while remaining > 0:
+        #     if not (chunk := self._buffer.read(min(config.copy_chunk_size, remaining))):
+        #         break
+        #
+        #     yield chunk
+        #     remaining -= len(chunk)

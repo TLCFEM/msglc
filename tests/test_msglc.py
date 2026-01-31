@@ -297,6 +297,15 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.visit("second_outer/first_inner/24:2:") == [24, 26, 28]
             assert reader.visit("invalid").to_obj() is None
 
+            with open("child.msg", "wb") as f:
+                f.write(reader.visit("second_outer").raw_data())
+
+            with open("combined_a.msg", "rb") as f1, open("child.msg", "rb") as f2:
+                assert f1.read() == f2.read()
+
+            with LazyReader("child.msg") as child:
+                assert child.visit("first_inner/28:") == [28, 29]
+
         if isinstance(target, BytesIO):
             target = BytesIO()
 
