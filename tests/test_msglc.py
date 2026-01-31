@@ -298,7 +298,8 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.visit("invalid").to_obj() is None
 
             with open("child.msg", "wb") as f:
-                f.write(reader.visit("second_outer").raw_data())
+                for data in reader.visit("second_outer").raw_data():
+                    f.write(data)
 
             with open("combined_a.msg", "rb") as f1, open("child.msg", "rb") as f2:
                 assert f1.read() == f2.read()

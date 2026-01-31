@@ -731,11 +731,9 @@ class LazyReader(LazyItem):
         start, remaining = self._raw_data_range
         self._buffer.seek(start)
 
-        return self._buffer.read(remaining)
+        while remaining > 0:
+            if not (chunk := self._buffer.read(min(config.copy_chunk_size, remaining))):
+                break
 
-        # while remaining > 0:
-        #     if not (chunk := self._buffer.read(min(config.copy_chunk_size, remaining))):
-        #         break
-        #
-        #     yield chunk
-        #     remaining -= len(chunk)
+            yield chunk
+            remaining -= len(chunk)
