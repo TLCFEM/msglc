@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-version = "260115"
+version = "260201"
 name = "msglc"
 description = "msgpack with lazy/partial loading containers"
 readme = "README.md"

@@ -22,6 +22,7 @@ from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
 from .config import config
+from .reader import LazyReader
 from .writer import LazyCombiner, LazyWriter
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ class FileInfo:
 
     def __init__(
         self,
-        path: str | UPath | BinaryIO,
+        path: str | UPath | BinaryIO | LazyReader,
         name: str | None = None,
         *,
         fs: FileSystem | None = None,
@@ -80,7 +81,9 @@ class FileInfo:
             return self._fs.open(self.path)
         if isinstance(self.path, UPath):
             return self.path.open("rb")
-        return nullcontext(self.path)
+        if not isinstance(self.path, LazyReader):
+            return nullcontext(self.path)
+        raise RuntimeError
 
     def validate(self):
         if isinstance(self.path, (str, UPath)):
@@ -89,7 +92,7 @@ class FileInfo:
             with self._open() as _file:
                 if not config.check_compatibility(_file.read(LazyWriter.magic_len())):
                     raise ValueError(f"Invalid file format: {self.path}.")
-        else:
+        elif not isinstance(self.path, LazyReader):
             with self._open() as _file:
                 ini_pos = _file.tell()
                 magic = _file.read(LazyWriter.magic_len())
@@ -98,9 +101,12 @@ class FileInfo:
                     raise ValueError("Invalid file format.")
 
     def chunking(self):
-        with self._open() as _file:
-            while _data := _file.read(config.copy_chunk_size):
-                yield _data
+        if isinstance(self.path, LazyReader):
+            yield from self.path.raw_data()
+        else:
+            with self._open() as _file:
+                while _data := _file.read(config.copy_chunk_size):
+                    yield _data
 
 
 def combine(
