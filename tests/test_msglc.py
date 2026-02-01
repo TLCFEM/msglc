@@ -295,7 +295,7 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.visit("second_outer/first_inner/24:2:30") == [24, 26, 28]
             assert reader.visit("second_outer/first_inner/:2:5") == [0, 2, 4]
             assert reader.visit("second_outer/first_inner/24:2:") == [24, 26, 28]
-            assert reader.visit("invalid").to_obj() is None
+            assert reader.visit("invalid") == None  # noqa: E711
 
             with open("child.msg", "wb") as f:
                 for data in reader.visit("second_outer").raw_data():
