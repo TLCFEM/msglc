@@ -42,7 +42,7 @@ msgpack==1.1.2            # via msglc (pyproject.toml)
 msgspec==0.20.0           # via msglc (pyproject.toml)
 multidict==6.7.1          # via aiobotocore, aiohttp, yarl
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
-numpy==2.4.1              # via msglc (pyproject.toml)
+numpy==2.4.2              # via msglc (pyproject.toml)
 ormsgpack==1.12.2         # via msglc (pyproject.toml)
 packaging==26.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
@@ -67,11 +67,12 @@ requests==2.32.5          # via mkdocs-material
 ruff==0.14.14             # via msglc (pyproject.toml)
 s3fs==2026.1.0            # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
-universal-pathlib==0.3.8  # via msglc (pyproject.toml)
+typing-extensions==4.15.0  # via aiosignal, pytest-asyncio
+universal-pathlib==0.3.9  # via msglc (pyproject.toml)
 urllib3==2.6.3            # via botocore, requests
 verspec==0.1.0            # via mike
 watchdog==6.0.0           # via mkdocs
 wcmatch==10.1             # via mkdocs-awesome-pages-plugin
-wrapt==2.0.1              # via aiobotocore
+wrapt==2.1.0              # via aiobotocore
 yarl==1.22.0              # via aiohttp
 zipp==3.23.0              # via importlib-metadata
