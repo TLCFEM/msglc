@@ -27,7 +27,7 @@ BufferWriterType = (BinaryIO, IOBase)
 BufferReaderType = BufferWriterType + (MockIO,)
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from collections.abc import Callable
 
     from fsspec import AbstractFileSystem as FileSystem
 
