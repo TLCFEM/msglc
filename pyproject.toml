@@ -37,7 +37,6 @@ dev = [
     "pytest-benchmark",
     "pytest-asyncio",
     "ruff",
-    "mike",
     "mkdocs-material",
     "mkdocs-awesome-pages-plugin",
     "mkdocstrings[python]",
