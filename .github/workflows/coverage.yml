@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build
-        run: pip install --verbose .[dev,s3fs,pyarrow,msgspec] numpy
+        run: pip install --verbose .[all] numpy
       - name: Test
         run: pytest --cov=msglc tests/
       - name: Upload
