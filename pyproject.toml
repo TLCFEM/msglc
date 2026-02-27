@@ -33,13 +33,13 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest-cov",
-    "pytest-benchmark",
-    "pytest-asyncio",
-    "ruff",
-    "mkdocs-material",
     "mkdocs-awesome-pages-plugin",
+    "mkdocs-material",
     "mkdocstrings[python]",
+    "pytest-asyncio",
+    "pytest-benchmark",
+    "pytest-cov",
+    "ruff",
 ]
 numpy = [
     "numpy",
@@ -55,6 +55,14 @@ s3fs = [
 ]
 pyarrow = [
     "pyarrow"
+]
+all = [
+    "msglc[dev]",
+    "msglc[numpy]",
+    "msglc[msgspec]",
+    "msglc[ormsgpack]",
+    "msglc[s3fs]",
+    "msglc[pyarrow]",
 ]
 
 [project.urls]
