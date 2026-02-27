@@ -19,7 +19,7 @@ import asyncio
 import pickle
 from inspect import isclass
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import msgpack
 from bitarray import bitarray
@@ -196,7 +196,7 @@ class LazyItem:
         except TypeError:
             return False
 
-    def to_obj(self):
+    def to_obj(self) -> Any:
         raise NotImplementedError
 
     def __getitem__(self, key):
