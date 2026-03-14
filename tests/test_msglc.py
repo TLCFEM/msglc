@@ -311,7 +311,12 @@ def test_combine_archives(tmpdir, json_after, target):
             target = BytesIO()
 
         combine(
-            target, [FileInfo("combined_a.msg"), FileInfo(LazyReader("combined_a.msg"))]
+            target,
+            [
+                FileInfo("combined_a.msg"),
+                FileInfo(LazyReader("combined_a.msg")),
+                FileInfo(None, obj={"key": "value"}),
+            ],
         )
 
         if isinstance(target, BytesIO):
@@ -336,6 +341,7 @@ def test_combine_archives(tmpdir, json_after, target):
             assert reader.visit("1/first_inner/24:2:30") == [24, 26, 28]
             assert reader.visit("1/first_inner/:2:5") == [0, 2, 4]
             assert reader.visit("1/first_inner/24:2:") == [24, 26, 28]
+            assert reader.visit("2/key") == "value"
             with LazyReader("test_list.msg") as inner_reader:
                 assert reader[0]["first_inner"] == inner_reader
             with LazyReader("test_dict.msg") as inner_reader:

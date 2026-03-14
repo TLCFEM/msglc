@@ -16,7 +16,10 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
-from typing import TYPE_CHECKING
+from io import IOBase
+from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING, BinaryIO
+from uuid import uuid4
 
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
@@ -27,7 +30,7 @@ from .writer import LazyCombiner, LazyWriter
 
 if TYPE_CHECKING:
     from io import BytesIO
-    from typing import BinaryIO, Literal
+    from typing import Literal
 
     from .config import FileSystem
 
@@ -50,26 +53,35 @@ class FileInfo:
     Wrap the file path or in memory buffer and name into a FileInfo object.
     The `name` is optional and is only used when the file is combined in the dictionary (key-value) mode.
 
+    It is possible to optionally pass in an in-memory object (rather than serialized bytes stream) to be serialized.
+    In this case, `obj` shall be assigned, and `path` must be `None`.
+
     The `fs` can be different for each `FileInfo` object, meaning it is possible to combine files from different sources.
     It is not affected by the global `fs` object stored in `config`.
 
     :param path: a string representing the file path or an in memory buffer
     :param name: key name of the content in the combined dict
     :param fs: `FileSystem` object to read the object from
+    :param obj: the object to be written to the file, when `path` is None, `obj` will be serialized.
     """
 
     def __init__(
         self,
-        path: str | UPath | BinaryIO | LazyReader,
+        path: str | UPath | BinaryIO | LazyReader | None,
         name: str | None = None,
         *,
         fs: FileSystem | None = None,
+        obj=None,
     ):
+        # `path` and `obj` can both be None, but not both assigned at the same time
+        if obj is not None:
+            assert path is None, "When `obj` is assigned, `path` must be None."
         self.path = path
         self.name = name
         self._fs: FileSystem = fs or LocalFileSystem()
+        self._obj = obj
 
-    def exists(self):
+    def _exists(self):
         if isinstance(self.path, str):
             return self._fs.exists(self.path)
         if isinstance(self.path, UPath):
@@ -81,18 +93,18 @@ class FileInfo:
             return self._fs.open(self.path)
         if isinstance(self.path, UPath):
             return self.path.open("rb")
-        if not isinstance(self.path, LazyReader):
+        if isinstance(self.path, IOBase):
             return nullcontext(self.path)
         raise RuntimeError
 
     def validate(self):
         if isinstance(self.path, (str, UPath)):
-            if not self.exists():
+            if not self._exists():
                 raise ValueError(f"File {self.path} does not exist.")
             with self._open() as _file:
                 if not config.check_compatibility(_file.read(LazyWriter.magic_len())):
                     raise ValueError(f"Invalid file format: {self.path}.")
-        elif not isinstance(self.path, LazyReader):
+        elif isinstance(self.path, IOBase):
             with self._open() as _file:
                 ini_pos = _file.tell()
                 magic = _file.read(LazyWriter.magic_len())
@@ -103,6 +115,11 @@ class FileInfo:
     def chunking(self):
         if isinstance(self.path, LazyReader):
             yield from self.path.raw_data()
+        elif self.path is None:
+            with TemporaryDirectory() as _tmp_dir:
+                dump(file_path := UPath(_tmp_dir) / uuid4().hex, self._obj)
+                with LazyReader(file_path) as _tmp_file:
+                    yield from _tmp_file.raw_data()
         else:
             with self._open() as _file:
                 while _data := _file.read(config.copy_chunk_size):
