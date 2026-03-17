@@ -12,10 +12,10 @@ bitarray==3.8.0           # via msglc (pyproject.toml)
 botocore==1.42.61         # via aiobotocore
 bracex==2.6               # via wcmatch
 certifi==2026.2.25        # via requests
-charset-normalizer==3.4.5  # via requests
+charset-normalizer==3.4.6  # via requests
 click==8.3.1              # via mkdocs
 colorama==0.4.6           # via mkdocs-material
-coverage==7.13.4          # via pytest-cov
+coverage==7.13.5          # via pytest-cov
 frozenlist==1.8.0         # via aiohttp, aiosignal
 fsspec==2026.2.0          # via s3fs, universal-pathlib
 ghp-import==2.1.0         # via mkdocs

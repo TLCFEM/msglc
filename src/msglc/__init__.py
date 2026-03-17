@@ -25,7 +25,7 @@ from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
 from .config import config
-from .reader import LazyReader
+from .reader import LazyReader, to_obj
 from .writer import LazyCombiner, LazyWriter
 
 if TYPE_CHECKING:
@@ -117,7 +117,7 @@ class FileInfo:
             yield from self.path.raw_data()
         elif self.path is None:
             with TemporaryDirectory() as _tmp_dir:
-                dump(file_path := UPath(_tmp_dir) / uuid4().hex, self._obj)
+                dump(file_path := UPath(_tmp_dir) / uuid4().hex, to_obj(self._obj))
                 with LazyReader(file_path) as _tmp_file:
                     yield from _tmp_file.raw_data()
         else:
