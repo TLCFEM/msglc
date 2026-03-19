@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import nullcontext
 from io import IOBase
 from tempfile import TemporaryDirectory
@@ -128,7 +129,7 @@ class FileInfo:
 
 def combine(
     archive: str | UPath | BytesIO,
-    files: FileInfo | list[FileInfo],
+    files: FileInfo | list[FileInfo] | Generator[FileInfo, None, None],
     *,
     mode: Literal["a", "w"] = "w",
     validate: bool = True,
@@ -136,32 +137,36 @@ def combine(
 ):
     """
     This function is used to combine the multiple serialized files into a single archive.
-    If `fs` is given, the combined archive will be uploaded to remote.
+    If `fs` is given, the combined archive will be uploaded to the designated file system.
 
     The files to be combined must exist in local filesystem regardless of whether `fs` is given.
     In other words, only local files can be combined.
 
+    If a generator is passed in as `files`, the validation will be skipped regardless of the `validate` flag.
+    It is assumed that the input files are valid.
+
     :param archive: a string representing the file path of the archive
-    :param files: a list of FileInfo objects
+    :param files: a single `FileInfo` object, a list of `FileInfo` objects, or a generator that yields `FileInfo` objects
     :param mode: a string representing the combination mode, 'w' for write and 'a' for append
-    :param validate: switch on to validate the files before combining
+    :param validate: switch on to validate the files before combining, ignored if `files` is a generator.
     :param fs: `FileSystem` object to be used for storing
     :return: None
     """
     if isinstance(files, FileInfo):
         files = [files]
 
-    if 0 < sum(1 for file in files if file.name is not None) < len(files):
-        raise ValueError("Files must either all have names or all not have names.")
+    if not isinstance(files, Generator):
+        if 0 < sum(1 for file in files if file.name is not None) < len(files):
+            raise ValueError("Files must either all have names or all not have names.")
 
-    if len(all_names := {file.name for file in files}) != len(files) and (
-        len(all_names) != 1 or all_names.pop() is not None
-    ):
-        raise ValueError("Files must have unique names.")
+        if len(all_names := {file.name for file in files}) != len(files) and (
+            len(all_names) != 1 or all_names.pop() is not None
+        ):
+            raise ValueError("Files must have unique names.")
 
-    if validate:
-        for file in files:
-            file.validate()
+        if validate:
+            for file in files:
+                file.validate()
 
     with LazyCombiner(archive, mode=mode, fs=fs) as combiner:
         for file in files:
@@ -170,7 +175,7 @@ def combine(
 
 def append(
     archive: str | UPath | BytesIO,
-    files: FileInfo | list[FileInfo],
+    files: FileInfo | list[FileInfo] | Generator[FileInfo, None, None],
     *,
     validate: bool = True,
     fs: FileSystem | None = None,
