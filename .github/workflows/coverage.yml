@@ -47,7 +47,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Build
-        run: pipx run build --sdist
+        run: |
+          sed -i -E 's/^version = "[0-9]{6}"$/version = "'"$(date +%y%m%d)"'"/' pyproject.toml
+          pipx run build --sdist
       - name: Check
         run: pipx run twine check dist/*
       - uses: pypa/gh-action-pypi-publish@release/v1
