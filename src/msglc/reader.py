@@ -741,6 +741,9 @@ class LazyReader(LazyItem):
         start, remaining = self._raw_data_range
         self._buffer.seek(start)
 
+        # because the archive can be recursively combined
+        # it will be wrong to simply consume the buffer till its end
+        # thus we do the math independently by counting the bytes
         while remaining > 0:
             if not (chunk := self._buffer.read(min(config.copy_chunk_size, remaining))):
                 break
