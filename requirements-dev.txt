@@ -2,7 +2,7 @@
 #    uv pip compile --refresh --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 aiobotocore==3.3.0        # via s3fs
 aiohappyeyeballs==2.6.1   # via aiohttp
-aiohttp==3.13.3           # via aiobotocore, s3fs
+aiohttp==3.13.4           # via aiobotocore, s3fs
 aioitertools==0.13.0      # via aiobotocore
 aiosignal==1.4.0          # via aiohttp
 attrs==26.1.0             # via aiohttp
@@ -17,9 +17,9 @@ click==8.3.1              # via mkdocs
 colorama==0.4.6           # via mkdocs-material
 coverage==7.13.5          # via pytest-cov
 frozenlist==1.8.0         # via aiohttp, aiosignal
-fsspec==2026.2.0          # via s3fs, universal-pathlib
+fsspec==2026.3.0          # via s3fs, universal-pathlib
 ghp-import==2.1.0         # via mkdocs
-griffelib==2.0.0          # via mkdocstrings-python
+griffelib==2.0.2          # via mkdocstrings-python
 idna==3.11                # via requests, yarl
 iniconfig==2.3.0          # via pytest
 jinja2==3.1.6             # via mkdocs, mkdocs-material, mkdocstrings
@@ -59,9 +59,9 @@ pytest-cov==7.1.0         # via msglc (pyproject.toml)
 python-dateutil==2.9.0.post0  # via aiobotocore, botocore, ghp-import
 pyyaml==6.0.3             # via mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mkdocs
-requests==2.32.5          # via mkdocs-material
-ruff==0.15.7              # via msglc (pyproject.toml)
-s3fs==2026.2.0            # via msglc (pyproject.toml)
+requests==2.33.0          # via mkdocs-material
+ruff==0.15.8              # via msglc (pyproject.toml)
+s3fs==2026.3.0            # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via aiosignal, pytest-asyncio
 universal-pathlib==0.3.10  # via msglc (pyproject.toml)
