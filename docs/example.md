@@ -81,6 +81,68 @@ with LazyReader("data.msg") as reader:
     b_json = to_obj(b_dict)  # ensure plain dict
 ```
 
+## Raw Data Extraction
+
+It is possible to extract the raw bytes from a `LazyReader`.
+
+### Raw `msgpack` Compatible Data
+
+The serialized binary blob effectively consists of the `msgpack` compatible data and some metadata.
+If for some reason (need to interoperate with plain `msgpack` encoder/decoder, etc.), the vanilla `msgpack` compatible
+data is needed, it can be extracted as follows.
+
+```python
+from msgpack import unpackb
+
+from msglc import dump
+from msglc.reader import LazyReader
+
+dump("data.msg", {"a": [1, 2, 3]})
+
+with LazyReader("data.msg") as reader:
+    msgpack_raw = reader.msgpack_raw_data(chunked=False)
+    # this can be unpacked by any standard msgpack decoder
+    # this prints: {'a': [1, 2, 3]}
+    print(unpackb(msgpack_raw))
+```
+
+### Raw Binary Data
+
+The raw binary data that is recognizable by `msglc` can also be extracted.
+
+```python
+from msglc.reader import LazyReader
+
+with LazyReader("data.msg") as reader:
+    msglc_raw = reader.raw_data(chunked=False)
+```
+
+By design, combining serialized object does not change the underlying data, thus the extracted raw data from a combined
+file can be directly flushed to a separate file without decoding and re-encoding.
+In other words, splitting a combined file is merely plain copying of the raw binary data.
+
+```python
+from msglc import FileInfo, combine, LazyReader
+
+# prepare a combined file
+combine(
+    'combined.msg',
+    [
+        FileInfo(None, "child_dict", obj={'a': 'a', 'b': 'b'}),
+        FileInfo(None, "child_list", obj=[1, 2])
+    ],
+)
+
+# extract the child
+# !!! only binary copying is involved, no decoding and re-encoding, thus very efficient
+with LazyReader("combined.msg") as combined, open("child_dict.msg", "wb") as child_dict:
+    child_dict.write(combined["child_dict"].raw_data(chunked=False))
+
+# this will print {'a': 'a', 'b': 'b'}
+with LazyReader("child_dict.msg") as child_dict:
+    print(child_dict.to_obj())
+```
+
 ## Streaming Data
 
 The data fed to the writer does not need to be fully generated in advance.
