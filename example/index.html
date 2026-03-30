@@ -580,6 +580,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#raw-data-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Data Extraction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raw Data Extraction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-msgpack-compatible-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw msgpack Compatible Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raw-binary-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Binary Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#streaming-data" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -926,6 +965,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#raw-data-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Data Extraction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raw Data Extraction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-msgpack-compatible-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw msgpack Compatible Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raw-binary-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Binary Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#streaming-data" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1067,12 +1145,12 @@ The combined files can be further combined.</p>
 <a id="__codelineno-3-13" name="__codelineno-3-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>  <span class="c1"># c 4, d 5</span>
 <a id="__codelineno-3-14" name="__codelineno-3-14"></a>    <span class="n">b_json</span> <span class="o">=</span> <span class="n">to_obj</span><span class="p">(</span><span class="n">b_dict</span><span class="p">)</span>  <span class="c1"># ensure plain dict</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="streaming-data">Streaming Data</h2>
-<p>The data fed to the writer does not need to be fully generated in advance.
-It is possible to generate data on the fly.</p>
-<p>The writer expects and recognizes <code>collections.abc.Mapping</code> objects.
-It is thus possible to fake a dictionary with items generated from generators.</p>
-<p>The following is a minimum implementation.</p>
+<h2 id="raw-data-extraction">Raw Data Extraction</h2>
+<p>It is possible to extract the raw bytes from a <code>LazyReader</code>.</p>
+<h3 id="raw-msgpack-compatible-data">Raw <code>msgpack</code> Compatible Data</h3>
+<p>The serialized binary blob effectively consists of the <code>msgpack</code> compatible data and some metadata.
+If for some reason (need to interoperate with plain <code>msgpack</code> encoder/decoder, etc.), the vanilla <code>msgpack</code> compatible
+data is needed, it can be extracted as follows.</p>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-4-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-4-3"> 3</a></span>
@@ -1084,36 +1162,117 @@ It is thus possible to fake a dictionary with items generated from generators.</
 <span class="normal"><a href="#__codelineno-4-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-4-10">10</a></span>
 <span class="normal"><a href="#__codelineno-4-11">11</a></span>
-<span class="normal"><a href="#__codelineno-4-12">12</a></span>
-<span class="normal"><a href="#__codelineno-4-13">13</a></span>
-<span class="normal"><a href="#__codelineno-4-14">14</a></span>
-<span class="normal"><a href="#__codelineno-4-15">15</a></span>
-<span class="normal"><a href="#__codelineno-4-16">16</a></span>
-<span class="normal"><a href="#__codelineno-4-17">17</a></span>
-<span class="normal"><a href="#__codelineno-4-18">18</a></span>
-<span class="normal"><a href="#__codelineno-4-19">19</a></span>
-<span class="normal"><a href="#__codelineno-4-20">20</a></span>
-<span class="normal"><a href="#__codelineno-4-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="normal"><a href="#__codelineno-4-12">12</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msgpack</span><span class="w"> </span><span class="kn">import</span> <span class="n">unpackb</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">DictStream</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="n">length</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">generator</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">/</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14"></a>        <span class="c1"># required</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15"></a>        <span class="c1"># note that the length needs to be known in advance</span>
-<a id="__codelineno-4-16" name="__codelineno-4-16"></a>        <span class="c1"># you do not want to get it from the generator as doing so consumes it</span>
-<a id="__codelineno-4-17" name="__codelineno-4-17"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
-<a id="__codelineno-4-18" name="__codelineno-4-18"></a>
-<a id="__codelineno-4-19" name="__codelineno-4-19"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-4-20" name="__codelineno-4-20"></a>        <span class="c1"># required</span>
-<a id="__codelineno-4-21" name="__codelineno-4-21"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9"></a>    <span class="n">msgpack_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">msgpack_raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10"></a>    <span class="c1"># this can be unpacked by any standard msgpack decoder</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11"></a>    <span class="c1"># this prints: {&#39;a&#39;: [1, 2, 3]}</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">unpackb</span><span class="p">(</span><span class="n">msgpack_raw</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="raw-binary-data">Raw Binary Data</h3>
+<p>The raw binary data that is recognizable by <code>msglc</code> can also be extracted.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
+<span class="normal"><a href="#__codelineno-5-2">2</a></span>
+<span class="normal"><a href="#__codelineno-5-3">3</a></span>
+<span class="normal"><a href="#__codelineno-5-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4"></a>    <span class="n">msglc_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>By design, combining serialized object does not change the underlying data, thus the extracted raw data from a combined
+file can be directly flushed to a separate file without decoding and re-encoding.
+In other words, splitting a combined file is merely plain copying of the raw binary data.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-6-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-6-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-6-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-6-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-6-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-6-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-6-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-6-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-6-10">10</a></span>
+<span class="normal"><a href="#__codelineno-6-11">11</a></span>
+<span class="normal"><a href="#__codelineno-6-12">12</a></span>
+<span class="normal"><a href="#__codelineno-6-13">13</a></span>
+<span class="normal"><a href="#__codelineno-6-14">14</a></span>
+<span class="normal"><a href="#__codelineno-6-15">15</a></span>
+<span class="normal"><a href="#__codelineno-6-16">16</a></span>
+<span class="normal"><a href="#__codelineno-6-17">17</a></span>
+<span class="normal"><a href="#__codelineno-6-18">18</a></span>
+<span class="normal"><a href="#__codelineno-6-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileInfo</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">LazyReader</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="c1"># prepare a combined file</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="n">combine</span><span class="p">(</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5"></a>    <span class="s1">&#39;combined.msg&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6"></a>    <span class="p">[</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7"></a>        <span class="n">FileInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child_dict&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">}),</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8"></a>        <span class="n">FileInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child_list&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9"></a>    <span class="p">],</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10"></a><span class="p">)</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11"></a>
+<a id="__codelineno-6-12" name="__codelineno-6-12"></a><span class="c1"># extract the child</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13"></a><span class="c1"># !!! only binary copying is involved, no decoding and re-encoding, thus very efficient</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">combined</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;child_dict.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">child_dict</span><span class="p">:</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15"></a>    <span class="n">child_dict</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">combined</span><span class="p">[</span><span class="s2">&quot;child_dict&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16"></a>
+<a id="__codelineno-6-17" name="__codelineno-6-17"></a><span class="c1"># this will print {&#39;a&#39;: &#39;a&#39;, &#39;b&#39;: &#39;b&#39;}</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;child_dict.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">child_dict</span><span class="p">:</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">child_dict</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="streaming-data">Streaming Data</h2>
+<p>The data fed to the writer does not need to be fully generated in advance.
+It is possible to generate data on the fly.</p>
+<p>The writer expects and recognizes <code>collections.abc.Mapping</code> objects.
+It is thus possible to fake a dictionary with items generated from generators.</p>
+<p>The following is a minimum implementation.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-7-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-7-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-7-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-7-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-7-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-7-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-7-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-7-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-7-10">10</a></span>
+<span class="normal"><a href="#__codelineno-7-11">11</a></span>
+<span class="normal"><a href="#__codelineno-7-12">12</a></span>
+<span class="normal"><a href="#__codelineno-7-13">13</a></span>
+<span class="normal"><a href="#__codelineno-7-14">14</a></span>
+<span class="normal"><a href="#__codelineno-7-15">15</a></span>
+<span class="normal"><a href="#__codelineno-7-16">16</a></span>
+<span class="normal"><a href="#__codelineno-7-17">17</a></span>
+<span class="normal"><a href="#__codelineno-7-18">18</a></span>
+<span class="normal"><a href="#__codelineno-7-19">19</a></span>
+<span class="normal"><a href="#__codelineno-7-20">20</a></span>
+<span class="normal"><a href="#__codelineno-7-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Mapping</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">DictStream</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="n">length</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">generator</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10"></a>
+<a id="__codelineno-7-11" name="__codelineno-7-11"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">/</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14"></a>        <span class="c1"># required</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15"></a>        <span class="c1"># note that the length needs to be known in advance</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16"></a>        <span class="c1"># you do not want to get it from the generator as doing so consumes it</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18"></a>
+<a id="__codelineno-7-19" name="__codelineno-7-19"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20"></a>        <span class="c1"># required</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span>
 </code></pre></div></td></tr></table></div>
 <div class="admonition warning">
 <p class="admonition-title">length requirement</p>
@@ -1122,33 +1281,33 @@ Thus, <code>__len__(self)</code> and <code>items(self)</code> must be properly i
 If the length is <strong>not</strong> known in advance, streaming data is not feasible.</p>
 </div>
 <p>With the above, one can do the following.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-5-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-5-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-5-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-5-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-5-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-5-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-5-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-5-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-5-10">10</a></span>
-<span class="normal"><a href="#__codelineno-5-11">11</a></span>
-<span class="normal"><a href="#__codelineno-5-12">12</a></span>
-<span class="normal"><a href="#__codelineno-5-13">13</a></span>
-<span class="normal"><a href="#__codelineno-5-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">example</span><span class="p">():</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6"></a>    <span class="k">yield</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7"></a>    <span class="k">yield</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="mi">2</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8"></a>
-<a id="__codelineno-5-9" name="__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10"></a><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;example.msg&quot;</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11"></a><span class="n">dump</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">DictSteam</span><span class="p">(</span><span class="n">example</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12"></a>
-<a id="__codelineno-5-13" name="__codelineno-5-13"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14"></a>    <span class="k">assert</span> <span class="n">reader</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-8-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-8-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-8-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-8-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-8-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-8-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-8-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-8-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-8-10">10</a></span>
+<span class="normal"><a href="#__codelineno-8-11">11</a></span>
+<span class="normal"><a href="#__codelineno-8-12">12</a></span>
+<span class="normal"><a href="#__codelineno-8-13">13</a></span>
+<span class="normal"><a href="#__codelineno-8-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">example</span><span class="p">():</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6"></a>    <span class="k">yield</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7"></a>    <span class="k">yield</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="mi">2</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9"></a>
+<a id="__codelineno-8-10" name="__codelineno-8-10"></a><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;example.msg&quot;</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11"></a><span class="n">dump</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">DictSteam</span><span class="p">(</span><span class="n">example</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12"></a>
+<a id="__codelineno-8-13" name="__codelineno-8-13"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14"></a>    <span class="k">assert</span> <span class="n">reader</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 
 
