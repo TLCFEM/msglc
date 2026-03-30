@@ -126,7 +126,7 @@ class LazyItem:
         return self.to_obj().__str__()
 
     # noinspection SpellCheckingInspection
-    def _readb(self, start: int, end: int):
+    def _readb(self, start: int, end: int) -> bytes:
         if self._buffer.closed:
             raise ValueError("File is closed.")
 
@@ -135,6 +135,19 @@ class LazyItem:
             self._counter += size
         self._buffer.seek(start + self._offset)
         return self._buffer.read(size)
+
+    def _chunked_readb(self, start: int, size: int):
+        """
+        Read `size` bytes in chunked fashion.
+        """
+        self._buffer.seek(start + self._offset)
+
+        while size > 0:
+            if not (chunk := self._buffer.read(min(config.copy_chunk_size, size))):
+                break
+
+            yield chunk
+            size -= len(chunk)
 
     def _unpack(self, data: bytes):
         return self._unpacker.decode(data)
@@ -550,7 +563,15 @@ class LazyReader(LazyItem):
         toc_size: int = self._unpack(header[sep_b:sep_c].lstrip(b"\0"))
 
         self._obj = self._child(self._read(toc_start, toc_start + toc_size))
-        self._raw_data_range = (original_pos, sep_c + toc_start + toc_size)
+
+        # start, header size, data size, toc size, total size
+        self._raw_data_range = (
+            original_pos,
+            sep_c,
+            toc_start,
+            toc_size,
+            sep_c + toc_start + toc_size,
+        )
 
     def __repr__(self):
         file_path: str = ""
@@ -738,15 +759,23 @@ class LazyReader(LazyItem):
                 assert f.read() == b''.join(reader.raw_data())
         ```
         """
-        start, remaining = self._raw_data_range
-        self._buffer.seek(start)
+        _, header_size, _, _, remaining = self._raw_data_range
 
         # because the archive can be recursively combined
         # it will be wrong to simply consume the buffer till its end
         # thus we do the math independently by counting the bytes
-        while remaining > 0:
-            if not (chunk := self._buffer.read(min(config.copy_chunk_size, remaining))):
-                break
+        yield from self._chunked_readb(-header_size, remaining)
 
-            yield chunk
-            remaining -= len(chunk)
+    def msgpack_raw_data(self, chunked: bool = False):
+        """
+        Reads the msgpack data out as bytes.
+        The data shall be fully compatible with the msgpack specification thus can be decoded by any msgpack decoders.
+
+        If `chunked=True`, returns a generator that can be consumed.
+        """
+        data_size = self._raw_data_range[2]
+
+        if not chunked:
+            return self._readb(0, data_size)
+
+        return self._chunked_readb(0, data_size)

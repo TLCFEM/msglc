@@ -20,6 +20,7 @@ from itertools import cycle
 
 import pytest
 from fsspec.implementations.zip import ZipFileSystem
+from msgpack import packb, unpackb
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
@@ -89,6 +90,11 @@ def test_msglc(
             for x in list_container:
                 assert x in ["GML", "XML"]
             assert set(list_container) == {"GML", "XML"}
+            assert unpackb(reader.msgpack_raw_data()) == reader.to_obj()
+            assert (
+                unpackb(b"".join(reader.msgpack_raw_data(chunked=True)))
+                == reader.to_obj()
+            )
 
         str(stats)
 
