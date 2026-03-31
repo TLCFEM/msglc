@@ -20,7 +20,7 @@ from itertools import cycle
 
 import pytest
 from fsspec.implementations.zip import ZipFileSystem
-from msgpack import packb, unpackb
+from msgpack import unpackb
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
