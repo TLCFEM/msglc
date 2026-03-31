@@ -19,7 +19,7 @@ import gc
 from dataclasses import dataclass
 from io import IOBase
 from threading import Lock
-from typing import TYPE_CHECKING, BinaryIO, Union
+from typing import TYPE_CHECKING, BinaryIO
 
 from msglc.utility import MockIO
 
@@ -28,11 +28,12 @@ BufferReaderType = BufferWriterType + (MockIO,)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from typing import TypeAlias
 
     from fsspec import AbstractFileSystem as FileSystem
 
-    BufferWriter = Union[BinaryIO, IOBase]
-    BufferReader = Union[BufferWriter, MockIO]
+    BufferWriter: TypeAlias = BinaryIO | IOBase
+    BufferReader: TypeAlias = BufferWriter | MockIO
 
 
 @dataclass

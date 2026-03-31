@@ -16,7 +16,6 @@ jobs:
         image: rustfs/rustfs:latest
         ports:
           - 9000:9000
-          - 9001:9001
     strategy:
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
@@ -28,9 +27,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Build
-        run: pip install --verbose .[all] numpy
-      - name: Test
-        run: pytest --cov=msglc tests/
+        run: |
+          pip install --verbose .[all] numpy
+          ruff check --statistics .
+          pytest --cov=msglc tests/
       - name: Upload
         uses: codecov/codecov-action@v6
         with:
