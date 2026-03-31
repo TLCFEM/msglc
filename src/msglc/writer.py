@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from .config import BufferReader, BufferWriter, FileSystem
 
 
-def _upsert(source: BufferReader, target: str, fs):
+def _upsert(source: BufferReader, target: str, fs: FileSystem | None):
     if not fs:
         return
 
