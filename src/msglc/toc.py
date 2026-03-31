@@ -23,10 +23,11 @@ from .config import config
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from io import BytesIO
-    from typing import BinaryIO
+    from tempfile import TemporaryFile
 
-    from msgpack import Packer  # type: ignore
+    from msgpack import Packer
+
+    from .config import BufferWriter
 
 try:
     import numpy  # type: ignore
@@ -45,9 +46,13 @@ class Node:
 
 class TOC:
     def __init__(
-        self, *, packer: Packer, buffer: BytesIO | BinaryIO, transform: Callable = None
+        self,
+        *,
+        packer: Packer,
+        buffer: BufferWriter | TemporaryFile,
+        transform: Callable = None,
     ):
-        self._buffer: BytesIO | BinaryIO = buffer
+        self._buffer: BufferWriter | TemporaryFile = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
         self._in_numpy_array: bool = False

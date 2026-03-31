@@ -20,7 +20,7 @@ from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 
-from msgpack import Packer, packb, unpackb  # type: ignore
+from msgpack import Packer, packb, unpackb
 from upath import UPath
 
 from .config import (
