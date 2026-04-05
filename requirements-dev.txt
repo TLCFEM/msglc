@@ -2,18 +2,18 @@
 #    uv pip compile --refresh --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 aiobotocore==3.3.0        # via s3fs
 aiohappyeyeballs==2.6.1   # via aiohttp
-aiohttp==3.13.4           # via aiobotocore, s3fs
+aiohttp==3.13.5           # via aiobotocore, s3fs
 aioitertools==0.13.0      # via aiobotocore
 aiosignal==1.4.0          # via aiohttp
 attrs==26.1.0             # via aiohttp
 babel==2.18.0             # via mkdocs-material
 backrefs==6.2             # via mkdocs-material
-bitarray==3.8.0           # via msglc (pyproject.toml)
+bitarray==3.8.1           # via msglc (pyproject.toml)
 botocore==1.42.70         # via aiobotocore
 bracex==2.6               # via wcmatch
 certifi==2026.2.25        # via requests
-charset-normalizer==3.4.6  # via requests
-click==8.3.1              # via mkdocs
+charset-normalizer==3.4.7  # via requests
+click==8.3.2              # via mkdocs
 colorama==0.4.6           # via mkdocs-material
 coverage==7.13.5          # via pytest-cov
 frozenlist==1.8.0         # via aiohttp, aiosignal
@@ -39,7 +39,7 @@ msgpack==1.1.2            # via msglc (pyproject.toml)
 msgspec==0.20.0           # via msglc (pyproject.toml)
 multidict==6.7.1          # via aiobotocore, aiohttp, yarl
 natsort==8.4.0            # via mkdocs-awesome-pages-plugin
-numpy==2.4.3              # via msglc (pyproject.toml)
+numpy==2.4.4              # via msglc (pyproject.toml)
 ormsgpack==1.12.2         # via msglc (pyproject.toml)
 packaging==26.0           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
@@ -50,8 +50,8 @@ pluggy==1.6.0             # via pytest, pytest-cov
 propcache==0.4.1          # via aiohttp, yarl
 py-cpuinfo==9.0.0         # via pytest-benchmark
 pyarrow==23.0.1           # via msglc (pyproject.toml)
-pygments==2.19.2          # via mkdocs-material, pytest
-pymdown-extensions==10.21  # via mkdocs-material, mkdocstrings
+pygments==2.20.0          # via mkdocs-material, pytest
+pymdown-extensions==10.21.2  # via mkdocs-material, mkdocstrings
 pytest==9.0.2             # via pytest-asyncio, pytest-benchmark, pytest-cov
 pytest-asyncio==1.3.0     # via msglc (pyproject.toml)
 pytest-benchmark==5.2.3   # via msglc (pyproject.toml)
@@ -59,8 +59,8 @@ pytest-cov==7.1.0         # via msglc (pyproject.toml)
 python-dateutil==2.9.0.post0  # via aiobotocore, botocore, ghp-import
 pyyaml==6.0.3             # via mkdocs, mkdocs-get-deps, pymdown-extensions, pyyaml-env-tag
 pyyaml-env-tag==1.1       # via mkdocs
-requests==2.33.0          # via mkdocs-material
-ruff==0.15.8              # via msglc (pyproject.toml)
+requests==2.33.1          # via mkdocs-material
+ruff==0.15.9              # via msglc (pyproject.toml)
 s3fs==2026.3.0            # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
 typing-extensions==4.15.0  # via aiosignal, pytest-asyncio
