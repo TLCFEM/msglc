@@ -1587,7 +1587,9 @@ It is assumed that the input files are valid.</p>
 <span class="normal"><a href="#__codelineno-0-170">170</a></span>
 <span class="normal"><a href="#__codelineno-0-171">171</a></span>
 <span class="normal"><a href="#__codelineno-0-172">172</a></span>
-<span class="normal"><a href="#__codelineno-0-173">173</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="k">def</span><span class="w"> </span><span class="nf">combine</span><span class="p">(</span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="k">def</span><span class="w"> </span><span class="nf">combine</span><span class="p">(</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">UPath</span> <span class="o">|</span> <span class="n">BytesIO</span><span class="p">,</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="n">files</span><span class="p">:</span> <span class="n">FileInfo</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">]</span> <span class="o">|</span> <span class="n">Generator</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133"></a>    <span class="o">*</span><span class="p">,</span>
@@ -1615,22 +1617,24 @@ It is assumed that the input files are valid.</p>
 <a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">FileInfo</span><span class="p">):</span>
 <a id="__codelineno-0-156" name="__codelineno-0-156"></a>        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">files</span><span class="p">]</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159"></a>        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Files must either all have names or all not have names.&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_names</span> <span class="o">:=</span> <span class="p">{</span><span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">})</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163"></a>            <span class="nb">len</span><span class="p">(</span><span class="n">all_names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">all_names</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="p">):</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Files must have unique names.&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169"></a>                <span class="n">file</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171"></a>    <span class="k">with</span> <span class="n">LazyCombiner</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">combiner</span><span class="p">:</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a>        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a>            <span class="n">combiner</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunking</span><span class="p">(),</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">Generator</span><span class="p">)</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">Generator</span><span class="p">):</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Files must either all have names or all not have names.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_names</span> <span class="o">:=</span> <span class="p">{</span><span class="n">file</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">})</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>            <span class="nb">len</span><span class="p">(</span><span class="n">all_names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">all_names</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="p">):</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Files must have unique names.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>                <span class="n">file</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="k">with</span> <span class="n">LazyCombiner</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">combiner</span><span class="p">:</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>            <span class="n">combiner</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunking</span><span class="p">(),</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1754,9 +1758,7 @@ The final archive will be uploaded to remote.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/msglc/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-176">176</a></span>
-<span class="normal"><a href="#__codelineno-0-177">177</a></span>
-<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-178">178</a></span>
 <span class="normal"><a href="#__codelineno-0-179">179</a></span>
 <span class="normal"><a href="#__codelineno-0-180">180</a></span>
 <span class="normal"><a href="#__codelineno-0-181">181</a></span>
@@ -1774,27 +1776,29 @@ The final archive will be uploaded to remote.</p>
 <span class="normal"><a href="#__codelineno-0-193">193</a></span>
 <span class="normal"><a href="#__codelineno-0-194">194</a></span>
 <span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">UPath</span> <span class="o">|</span> <span class="n">BytesIO</span><span class="p">,</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="n">files</span><span class="p">:</span> <span class="n">FileInfo</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">]</span> <span class="o">|</span> <span class="n">Generator</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="o">*</span><span class="p">,</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="p">):</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="sd">    This function is used to append the multiple serialized files to an existing single archive.</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">    If `fs` is given, the target will be downloaded first if it exists in the remote.</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">    The final archive will be uploaded to remote.</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    The files to be appended must exist in local filesystem regardless of whether `fs` is given.</span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="n">archive</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">UPath</span> <span class="o">|</span> <span class="n">BytesIO</span><span class="p">,</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="n">files</span><span class="p">:</span> <span class="n">FileInfo</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">]</span> <span class="o">|</span> <span class="n">Generator</span><span class="p">[</span><span class="n">FileInfo</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="n">fs</span><span class="p">:</span> <span class="n">FileSystem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="p">):</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">    This function is used to append the multiple serialized files to an existing single archive.</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="sd">    If `fs` is given, the target will be downloaded first if it exists in the remote.</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a><span class="sd">    The final archive will be uploaded to remote.</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="sd">    :param archive: a string representing the file path of the archive</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="sd">    :param files: a list of FileInfo objects</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="sd">    :param validate: switch on to validate the files before combining</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">    :param fs: `FileSystem` object to be used for storing</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">    :return: None</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="n">combine</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="sd">    The files to be appended must exist in local filesystem regardless of whether `fs` is given.</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a><span class="sd">    :param archive: a string representing the file path of the archive</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="sd">    :param files: a list of FileInfo objects</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="sd">    :param validate: switch on to validate the files before combining</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="sd">    :param fs: `FileSystem` object to be used for storing</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">    :return: None</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="n">combine</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
