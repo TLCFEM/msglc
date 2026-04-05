@@ -155,6 +155,8 @@ def combine(
     if isinstance(files, FileInfo):
         files = [files]
 
+    assert isinstance(files, list | Generator)
+
     if not isinstance(files, Generator):
         if 0 < sum(1 for file in files if file.name is not None) < len(files):
             raise ValueError("Files must either all have names or all not have names.")
