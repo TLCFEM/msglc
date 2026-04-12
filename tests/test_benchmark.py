@@ -135,7 +135,7 @@ def test_serialize_large_json(tmpdir, benchmark, repo_data):
 
 
 def test_random_huge_json(tmpdir, benchmark):
-    data = {"id": generate_random_json(6, 9)}
+    data = {"id": generate_random_json(6, 8)}
     with tmpdir.as_cwd():
         benchmark(dump, "data.msg", data)
 

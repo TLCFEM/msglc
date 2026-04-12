@@ -7,7 +7,7 @@ jobs:
   benchmark:
     name: Benchmark
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 30
     steps:
       - name: Clone
         uses: actions/checkout@v6
