@@ -63,7 +63,6 @@ requests==2.33.1          # via mkdocs-material
 ruff==0.15.10             # via msglc (pyproject.toml)
 s3fs==2026.3.0            # via msglc (pyproject.toml)
 six==1.17.0               # via python-dateutil
-typing-extensions==4.15.0  # via aiosignal, pytest-asyncio
 universal-pathlib==0.3.10  # via msglc (pyproject.toml)
 urllib3==2.6.3            # via botocore, requests
 watchdog==6.0.0           # via mkdocs
