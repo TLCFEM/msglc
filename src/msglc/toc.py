@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
 from .config import config
@@ -37,13 +36,6 @@ except ImportError:
     ndarray = list  # type: ignore
 
 
-@dataclass(slots=True)
-class Node:
-    t: dict | list | None
-    p: dict | list
-    s: bool = False
-
-
 class TOC:
     def __init__(
         self,
@@ -55,6 +47,7 @@ class TOC:
         self._buffer: BufferWriter | TemporaryFile = buffer
         self._packer: Packer = packer
         self._initial_pos = self._buffer.tell()
+        self._pos: int = 0
         self._in_numpy_array: bool = False
 
         def plain_forward(obj):
@@ -62,24 +55,18 @@ class TOC:
 
         self._transform: Callable = transform or plain_forward
 
-    @property
-    def _pos(self) -> int:
-        return self._buffer.tell() - self._initial_pos
+    # noinspection SpellCheckingInspection
+    def _writeb(self, data: bytes):
+        self._buffer.write(data)
+        self._pos += len(data)
 
-    def _pack(self, obj) -> Node:
-        def _pack_bin(_obj: bytes) -> None:
-            self._buffer.write(_obj)
-
-        def _pack_obj(_obj) -> None:
-            self._buffer.write(self._packer.pack(_obj))
-
-        def _generate(_start: int) -> Node:
-            _end = self._pos
-            return Node(None, [_start, _end], _end <= _start + config.trivial_size)
+    def _pack(self, obj) -> tuple:
+        def _generate(_start: int) -> tuple:
+            return None, [_start, self._pos], self._pos <= _start + config.trivial_size
 
         if not isinstance(obj, (Mapping, list, set, tuple, ndarray)):
             start_pos = self._pos
-            _pack_obj(obj)
+            self._writeb(self._packer.pack(obj))
             return _generate(start_pos)
 
         current_level_is_numpy_array: bool = False
@@ -96,7 +83,7 @@ class TOC:
         elif ndarray is not list and isinstance(obj, ndarray):
             if config.numpy_encoder:
                 start_pos = self._pos
-                _pack_obj(obj.dumps())
+                self._writeb(self._packer.pack(obj.dumps()))
                 return _generate(start_pos)
 
             obj = obj.tolist()
@@ -109,14 +96,14 @@ class TOC:
         obj_toc: dict | list
         all_small_obj: bool
         if isinstance(obj, Mapping):
-            _pack_bin(self._packer.pack_map_header(len(obj)))
+            self._writeb(self._packer.pack_map_header(len(obj)))
             obj_toc = {}
-            for k, v in self._transform(obj.items()):  # type: ignore
-                _pack_obj(k)
+            for k, v in self._transform(obj.items()):
+                self._writeb(self._packer.pack(k))
                 obj_toc[k] = self._pack(v)
-            all_small_obj = all(v.s for v in obj_toc.values())
+            all_small_obj = all(v[2] for v in obj_toc.values())
         elif isinstance(obj, list):
-            _pack_bin(self._packer.pack_array_header(len(obj)))
+            self._writeb(self._packer.pack_array_header(len(obj)))
 
             if (
                 self._in_numpy_array
@@ -129,7 +116,7 @@ class TOC:
                 list_start: int = self._pos
 
                 for v in obj:
-                    _pack_obj(v)
+                    self._writeb(self._packer.pack(v))
 
                 if self._pos < start_pos + config.small_obj_optimization_threshold:
                     return _resume_flag(_generate(start_pos))
@@ -159,12 +146,13 @@ class TOC:
 
                     assert current_pos == self._pos
 
-                    return _resume_flag(Node(None, numpy_groups))
+                    return _resume_flag((None, numpy_groups, False))
 
                 self._buffer.seek(start_pos)
+                self._pos = start_pos - self._initial_pos
 
-            obj_toc = [self._pack(v) for v in self._transform(obj)]  # type: ignore
-            all_small_obj = all(v.s for v in obj_toc)
+            obj_toc = [self._pack(v) for v in self._transform(obj)]
+            all_small_obj = all(v[2] for v in obj_toc)
         else:
             raise ValueError(f"Expecting dict or list, got {obj.__class__}.")
 
@@ -180,25 +168,31 @@ class TOC:
             accu_size: int = 0
             for v in obj_toc:
                 accu_list.append(v)
-                accu_size += v.p[1] - v.p[0]
+                accu_size += v[1][1] - v[1][0]
                 if accu_size > config.small_obj_optimization_threshold:
                     groups.append(
-                        (len(accu_list), accu_list[0].p[0], accu_list[-1].p[1])
+                        (len(accu_list), accu_list[0][1][0], accu_list[-1][1][1])
                     )
                     accu_list = []
                     accu_size = 0
 
             if accu_list:
-                groups.append((len(accu_list), accu_list[0].p[0], accu_list[-1].p[1]))
+                groups.append((len(accu_list), accu_list[0][1][0], accu_list[-1][1][1]))
 
             return _resume_flag(
-                Node(None, groups) if len(groups) > 1 else _generate(start_pos)
+                (None, groups, False) if len(groups) > 1 else _generate(start_pos)
             )
 
-        return _resume_flag(Node(obj_toc, [start_pos, self._pos]))
+        return _resume_flag((obj_toc, [start_pos, self._pos], False))
 
     def pack(self, obj) -> dict:
-        def _factory(_obj) -> dict:
-            return {k: v for k, v in _obj if v and k != "s"}
+        def _serialize(tree):
+            t, p, _ = tree
+            result = {"p": p}
+            if isinstance(t, list):
+                result["t"] = [_serialize(v) for v in t]
+            elif isinstance(t, dict):
+                result["t"] = {k: _serialize(v) for k, v in t.items()}
+            return result
 
-        return asdict(self._pack(obj), dict_factory=_factory)
+        return _serialize(self._pack(obj))
