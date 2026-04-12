@@ -126,5 +126,19 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
         benchmark(compare, 1, size, total, unpacker)
 
 
+def test_serialize_large_json(tmpdir, benchmark, repo_data):
+    def serialize_large_json():
+        dump("repo_data.msg", repo_data)
+
+    with tmpdir.as_cwd():
+        benchmark(serialize_large_json)
+
+
+def test_random_huge_json(tmpdir, benchmark):
+    data = {"id": generate_random_json(6, 9)}
+    with tmpdir.as_cwd():
+        benchmark(dump, "data.msg", data)
+
+
 if __name__ == "__main__":
     pass

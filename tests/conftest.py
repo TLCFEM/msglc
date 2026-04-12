@@ -12,6 +12,9 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import random
+from json import loads
+from urllib.request import urlopen
 
 import pytest
 
@@ -58,3 +61,16 @@ def json_after(json_base):
         "some_tuple": [1, 2, 3],
         "some_set": [1, 2, 3],
     }
+
+
+@pytest.fixture(scope="module")
+def repo_data():
+    with urlopen(
+        "https://conda.anaconda.org/conda-forge/noarch/repodata.json"
+    ) as response:
+        return loads(response.read().decode("utf-8"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def global_random_seed():
+    random.seed(62352)

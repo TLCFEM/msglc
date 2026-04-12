@@ -94,7 +94,9 @@ def plot_memory_usage(write_memory: dict):
 
 
 if __name__ == "__main__":
-    os.chdir(Path(__file__).parent / "../../.dirty")
+    target = Path(__file__).parent / "../../.dirty"
+    target.mkdir(parents=True, exist_ok=True)
+    os.chdir(target)
 
     collect = {}
 
