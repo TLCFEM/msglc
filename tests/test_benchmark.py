@@ -119,7 +119,9 @@ def prepare(tmpdir_factory):
 
 @pytest.mark.parametrize("size", [x for x in range(13, 25)])
 @pytest.mark.parametrize("total", [0, 1, 2, 3, 4])
-@pytest.mark.parametrize("unpacker", [MsgpackUnpacker(), MsgspecUnpacker()])
+@pytest.mark.parametrize(
+    "unpacker", [MsgpackUnpacker(), MsgspecUnpacker()], ids=["vanilla", "msgspec"]
+)
 def test_matrix(prepare, benchmark, size, total, unpacker):
     with prepare.as_cwd():
         benchmark(compare, 1, size, total, unpacker)
