@@ -12,11 +12,13 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import random
 from json import loads
 from urllib.request import urlopen
 
 import pytest
+from generate import generate_random_json
 
 
 @pytest.fixture(scope="function")
@@ -63,7 +65,7 @@ def json_after(json_base):
     }
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def repo_data():
     with urlopen(
         "https://conda.anaconda.org/conda-forge/noarch/repodata.json"
@@ -74,3 +76,13 @@ def repo_data():
 @pytest.fixture(scope="session", autouse=True)
 def global_random_seed():
     random.seed(62352)
+
+
+@pytest.fixture(scope="session")
+def random_huge_data():
+    return {"id": generate_random_json(6, 8)}
+
+
+@pytest.fixture(scope="session")
+def random_medium_data():
+    return {"id": generate_random_json(5, 10)}

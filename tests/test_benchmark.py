@@ -15,12 +15,12 @@
 
 import random
 
+import msgpack
 import pytest
 from generate import (
     compare,
     find_all_paths,
     generate,
-    generate_random_json,
     goto_path,
 )
 
@@ -29,23 +29,22 @@ from msglc.reader import LazyReader, LazyStats
 from msglc.unpacker import MsgpackUnpacker, MsgspecUnpacker
 
 
-def test_random_benchmark(monkeypatch, tmpdir):
+def test_random_benchmark(monkeypatch, tmpdir, random_medium_data):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 8192)
 
-    archive = {"id": generate_random_json(5, 10)}
-    path = find_all_paths(archive)
+    path = find_all_paths(random_medium_data)
     random.shuffle(path)
 
     with tmpdir.as_cwd():
-        dump("archive.msg", archive)
+        dump("archive.msg", random_medium_data)
 
         counter = LazyStats()
 
         with LazyReader("archive.msg", counter=counter) as reader:
             for i in path[: min(1000, len(path))]:
-                assert goto_path(archive, i) == reader.read(i)
+                assert goto_path(random_medium_data, i) == reader.read(i)
                 counter()
-            assert archive == reader
+            assert random_medium_data == reader
 
         counter.bytes_per_call()
 
@@ -134,10 +133,19 @@ def test_serialize_large_json(tmpdir, benchmark, repo_data):
         benchmark(serialize_large_json)
 
 
-def test_random_huge_json(tmpdir, benchmark):
-    data = {"id": generate_random_json(6, 8)}
+def test_random_huge_json(tmpdir, benchmark, random_huge_data):
     with tmpdir.as_cwd():
-        benchmark(dump, "data.msg", data)
+        benchmark(dump, "data.msg", random_huge_data)
+
+
+def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data):
+    with tmpdir.as_cwd():
+
+        def msgpack_dump():
+            with open("data.msgpack", "wb") as f:
+                msgpack.dump(random_huge_data, f)
+
+        benchmark(msgpack_dump)
 
 
 if __name__ == "__main__":
