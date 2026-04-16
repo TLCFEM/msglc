@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import struct
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
@@ -54,6 +55,26 @@ class TOC:
             return obj
 
         self._transform: Callable = transform or plain_forward
+
+    def _write_array_header(self, n):
+        if n <= 0x0F:
+            self._writeb(struct.pack("B", 0x90 + n))
+        elif n <= 0xFFFF:
+            self._writeb(struct.pack(">BH", 0xDC, n))
+        elif n <= 0xFFFFFFFF:
+            self._writeb(struct.pack(">BI", 0xDD, n))
+        else:
+            raise ValueError("Array is too large")
+
+    def _write_map_header(self, n):
+        if n <= 0x0F:
+            self._writeb(struct.pack("B", 0x80 + n))
+        elif n <= 0xFFFF:
+            self._writeb(struct.pack(">BH", 0xDE, n))
+        elif n <= 0xFFFFFFFF:
+            self._writeb(struct.pack(">BI", 0xDF, n))
+        else:
+            raise ValueError("Dict is too large")
 
     # noinspection SpellCheckingInspection
     def _writeb(self, data: bytes):
@@ -96,14 +117,14 @@ class TOC:
         obj_toc: dict | list
         all_small_obj: bool
         if isinstance(obj, Mapping):
-            self._writeb(self._packer.pack_map_header(len(obj)))
+            self._write_map_header(len(obj))
             obj_toc = {}
             for k, v in self._transform(obj.items()):
                 self._writeb(self._packer.pack(k))
                 obj_toc[k] = self._pack(v)
             all_small_obj = all(v[2] for v in obj_toc.values())
         elif isinstance(obj, list):
-            self._writeb(self._packer.pack_array_header(len(obj)))
+            self._write_array_header(len(obj))
 
             if (
                 self._in_numpy_array
