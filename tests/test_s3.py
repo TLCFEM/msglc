@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
+from importlib.util import find_spec
 from io import BytesIO
 
 import pytest
@@ -26,16 +27,7 @@ from msglc.reader import LazyReader, LazyStats
 
 @pytest.fixture(scope="session", params=["s3fs", "pyarrow"])
 def s3_client(request):
-    if request.param == "s3fs":
-        from s3fs import S3FileSystem
-
-        yield S3FileSystem(
-            key="rustfsadmin",
-            secret="rustfsadmin",
-            client_kwargs={"endpoint_url": "http://localhost:9000"},
-        )
-
-    elif request.param == "pyarrow":
+    if request.param == "pyarrow" and find_spec("pyarrow"):
         from pyarrow.fs import S3FileSystem
 
         yield ArrowFSWrapper(
@@ -47,6 +39,14 @@ def s3_client(request):
                 allow_bucket_creation=True,
                 allow_bucket_deletion=True,
             )
+        )
+    else:
+        from s3fs import S3FileSystem
+
+        yield S3FileSystem(
+            key="rustfsadmin",
+            secret="rustfsadmin",
+            client_kwargs={"endpoint_url": "http://localhost:9000"},
         )
 
 
