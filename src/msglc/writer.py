@@ -66,6 +66,7 @@ class LazyWriter:
         packer: Packer = None,
         *,
         fs: FileSystem | None = None,
+        toc_cls: type[TOC] | None = None,
     ):
         """
         It is possible to provide a custom packer object to be used for packing the object.
@@ -75,6 +76,13 @@ class LazyWriter:
         1. a plain `str` pointing to a file on local filesystem, or a file on target filesystem if `fs` is provided,
         2. a `UPath` object that points to a file on supported filesystem (either local or remote),
         3. a `IO` object that has `.tell()`, `.seek()`, `.write()` methods, this object must have random write access.
+
+        It is possible to provide a customized TOC packer via the `toc_cls` parameter to customize how TOC is generated.
+        It will be initialized with two keyword arguments: `packer=self._packer, buffer=self._buffer`
+        where `packer` is the packer object to be used for encoding `msgpack` data and
+        `buffer` is a file-like `IO` object where serialized data will be written to.
+        It needs to have a public method `def pack(self, obj) -> dict: ...` that will be called by the writer.
+        See the implementation of `TOC` class for further details.
 
         Warning:
         Some of backend filesystems only supports sequential write rather than random write thus not all filesystems
@@ -87,6 +95,7 @@ class LazyWriter:
         :param buffer_or_path: target buffer or file path
         :param packer: packer object to be used for packing the object
         :param fs: `FileSystem` object to be used for storing
+        :param toc_cls: a `TOC` packer class
         """
         self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._packer: Packer = packer or Packer()
@@ -94,6 +103,7 @@ class LazyWriter:
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._toc_packer: TOC = None  # type: ignore
+        self._toc_cls = toc_cls or TOC
         self._header_start: int = 0
         self._file_start: int = 0
         self._no_more_writes: bool = False
@@ -127,7 +137,7 @@ class LazyWriter:
         self._buffer.write(b"\0" * 20)
         self._file_start = self._buffer.tell()
 
-        self._toc_packer = TOC(packer=self._packer, buffer=self._buffer)
+        self._toc_packer = self._toc_cls(packer=self._packer, buffer=self._buffer)
 
         return self
 
