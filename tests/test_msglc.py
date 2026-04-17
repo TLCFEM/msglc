@@ -496,3 +496,15 @@ def test_gc_counter_increment():
 def test_gc_counter_decrement():
     initial_counter = increment_gc_counter()
     assert decrement_gc_counter() == initial_counter - 1
+
+
+def test_rust_identical_bytes(tmpdir, random_medium_data):
+    with tmpdir.as_cwd():
+        dump("data-python.msg", random_medium_data, backend="python")
+        dump("data-rust.msg", random_medium_data, backend="rust")
+        with (
+            open("data-rust.msg", "rb") as f_rust,
+            open("data-python.msg", "rb") as f_python,
+        ):
+            while (d_rust := f_rust.read(4096)) and (d_python := f_python.read(4096)):
+                assert d_rust == d_python
