@@ -187,18 +187,19 @@ class TOC:
             return _resume_flag(_generate(start_pos))
 
         groups: list = []
-        accu_list: list = []
-        accu_size: int = 0
+        group_size: int = 0
+        group_start: int = obj_toc[0][1][0]
+        group_end: int = obj_toc[0][1][1]
         for v in obj_toc:
-            accu_list.append(v)
-            accu_size += v[1][1] - v[1][0]
-            if accu_size > config.small_obj_optimization_threshold:
-                groups.append((len(accu_list), accu_list[0][1][0], accu_list[-1][1][1]))
-                accu_list = []
-                accu_size = 0
+            group_size += 1
+            group_end = v[1][1]
+            if group_end >= group_start + config.small_obj_optimization_threshold:
+                groups.append((group_size, group_start, group_end))
+                group_start = group_end
+                group_size = 0
 
-        if accu_list:
-            groups.append((len(accu_list), accu_list[0][1][0], accu_list[-1][1][1]))
+        if group_size:
+            groups.append((group_size, group_start, group_end))
 
         return _resume_flag(
             (None, groups, False) if len(groups) > 1 else _generate(start_pos)
