@@ -49,7 +49,6 @@ class Config:
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
     numpy_fast_int_pack: bool = False
-    writer_engine: str = "python"
     fs: FileSystem | None = None
     compatibility_check: Callable[[bytes], bool] | None = None
 
@@ -80,7 +79,6 @@ def configure(
     copy_chunk_size: int | None = None,
     numpy_encoder: bool | None = None,
     numpy_fast_int_pack: bool | None = None,
-    writer_engine: str | None = None,
     magic: bytes | None = None,
     fs: FileSystem | None = None,
     compatibility_check: Callable[[bytes], bool] | None = None,
@@ -124,8 +122,6 @@ def configure(
             This improves the performance of packing by avoiding the overhead of checking the size of each element.
             However, depending on the backend, for example, `messagepack` C implementation packs unsigned long long or long long.
             But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).
-    :param writer_engine:
-            The engine to use for writing. Options: "python", "native_toc".
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
     :param fs:
@@ -177,9 +173,6 @@ def configure(
 
     if isinstance(numpy_fast_int_pack, bool):
         config.numpy_fast_int_pack = numpy_fast_int_pack
-
-    if isinstance(writer_engine, str):
-        config.writer_engine = writer_engine
 
     config.fs = fs
 

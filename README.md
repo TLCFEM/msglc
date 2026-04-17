@@ -160,44 +160,6 @@ from msglc.config import configure
 configure(copy_chunk_size=2 ** 24)  # 16 MB
 ```
 
-### High Performance Rust Backend
-
-`msglc` now includes a high-performance Rust engine for faster serialization and Table of Contents (TOC) generation. This backend is particularly useful for very large datasets where Python's overhead becomes a bottleneck.
-
-The Rust backend is opt-in and can be enabled via configuration:
-
-```python
-from msglc.config import configure
-
-# Enable the high-performance Rust TOC engine
-configure(writer_engine="native_toc")
-```
-
-By default, the Python-based engine is used for maximum compatibility.
-
-#### Installation from Source
-
-If you are installing `msglc` from source, you will need the Rust toolchain installed on your system. The build process uses `maturin` to compile the native extension.
-
-After installing the dependencies (e.g., via `pip install -r requirements-dev.txt`), you can compile and install the Rust extension in development mode using:
-
-```bash
-maturin develop
-```
-
-> [!TIP]
-> **For benchmarking and production use**, always compile with the `--release` flag to enable Rust optimizations:
-> ```bash
-> maturin develop --release
-> ```
-
-Or, if you are using `uv`:
-
-```bash
-uv run maturin develop --release
-```
-
-
 ### Table of Contents
 
 There are two types of containers in json objects: array and object.

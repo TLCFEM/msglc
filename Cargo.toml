@@ -1,16 +1,14 @@
 [package]
 name = "msglc"
-version = "0.26.319"
 edition = "2021"
 
 [lib]
-name = "_msglc"
+name = "msglc_rust"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { version = "0.28" }
-rmp = "0.8"
-numpy = "0.28"
+pyo3 = "*"
+rmp = "*"
 
 [features]
 extension-module = ["pyo3/extension-module"]

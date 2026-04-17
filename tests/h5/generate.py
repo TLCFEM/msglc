@@ -12,13 +12,9 @@ from msglc.config import configure
 
 
 @timeit
-def generate_msg(mat: np.ndarray, block: int, writer_engine: str = "python"):
-    configure(
-        small_obj_optimization_threshold=2**block,
-        numpy_encoder=False,
-        writer_engine=writer_engine,
-    )
-    dump(f"data-{block}{'-rust' if writer_engine == 'native_toc' else '-py'}.msg", mat)
+def generate_msg(mat: np.ndarray, block: int):
+    configure(small_obj_optimization_threshold=2**block, numpy_encoder=False)  # 16KB
+    dump(f"data-{block}.msg", mat)
 
 
 def h5_name(block: int, **kwargs):
@@ -113,8 +109,7 @@ if __name__ == "__main__":
         collect[h5_name(i, compression="gzip", compression_opts=9)] = generate_h5(
             mat, i, compression="gzip", compression_opts=9
         )
-        collect[f"data-{i}-py.msg"] = generate_msg(mat, i, writer_engine="python")
-        collect[f"data-{i}-rust.msg"] = generate_msg(mat, i, writer_engine="native_toc")
+        collect[f"data-{i}.msg"] = generate_msg(mat, i)
 
     plot_write_time({k: v[0] for k, v in collect.items()})
     plot_file_size(collect)

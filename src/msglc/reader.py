@@ -285,9 +285,7 @@ class LazyList(LazyItem):
                 low = mid
 
     def _all(self, start: int, end: int) -> list:
-        return list(
-            msgpack.Unpacker(BytesIO(self._readb(start, end)), strict_map_key=False)
-        )
+        return list(msgpack.Unpacker(BytesIO(self._readb(start, end))))
 
     def __getitem__(self, index):
         index_range: list | range

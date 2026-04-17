@@ -18,12 +18,9 @@ jobs:
         with:
           python-version: 3.11
           enable-cache: true
-      - name: Build
-        run: |
-          uv pip install ".[dev,all]" matplotlib h5py psutil
-          uv run maturin develop --release
       - name: Test
         run: |
+          uv pip install ".[all]" matplotlib h5py psutil
           uv run python3 ./tests/h5/generate.py
           uv run python3 ./tests/h5/read.py
           tar czf benchmark.tar.gz .dirty/*.pdf

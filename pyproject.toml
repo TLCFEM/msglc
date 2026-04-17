@@ -1,10 +1,10 @@
 [build-system]
-requires = ["maturin>=1.5,<2.0"]
+requires = ["maturin>=1"]
 build-backend = "maturin"
 
 [tool.maturin]
 python-source = "src"
-module-name = "msglc._msglc"
+module-name = "msglc.msglc_rust"
 
 [project]
 version = "260319"
@@ -40,12 +40,10 @@ dev = [
     "mkdocs-awesome-pages-plugin",
     "mkdocs-material",
     "mkdocstrings[python]",
-    "pytest",
     "pytest-asyncio",
     "pytest-benchmark",
     "pytest-cov",
     "ruff",
-    "maturin>=1.13.1",
 ]
 numpy = [
     "numpy",
@@ -83,4 +81,3 @@ ignore = ["B008", "E501"]
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
-

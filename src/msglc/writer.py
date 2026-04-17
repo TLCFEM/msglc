@@ -144,10 +144,10 @@ class LazyWriter:
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
 
-        if isinstance(self._buffer_or_path, str) and self._buffer is not None:
+        if isinstance(self._buffer_or_path, str):
             _upsert(self._buffer, self._buffer_or_path, self._fs)
 
-        if isinstance(self._buffer_or_path, (str, UPath)) and self._buffer is not None:
+        if isinstance(self._buffer_or_path, (str, UPath)):
             self._buffer.close()
 
     def write(self, obj) -> None:

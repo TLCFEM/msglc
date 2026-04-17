@@ -18,15 +18,15 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import nullcontext
 from io import IOBase
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkstemp
 from typing import TYPE_CHECKING, BinaryIO
 from uuid import uuid4
 
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
-from ._msglc import dump_native_impl
 from .config import config
+from .msglc_rust import dump_rust_impl
 from .reader import LazyReader, to_obj
 from .writer import LazyCombiner, LazyWriter
 
@@ -37,28 +37,49 @@ if TYPE_CHECKING:
     from .config import FileSystem
 
 
-def dump(file: str | UPath | BytesIO, obj, **kwargs):
+def dump(
+    file: str | UPath | BytesIO,
+    obj,
+    *,
+    backend: Literal["python", "rust"] = "python",
+    **kwargs,
+):
     """
     This function is used to write the object to the file.
 
     :param file: a string representing the file path
     :param obj: the object to be written to the file
+    :param backend: the backend to be used for writing, only used when `file` is a `str` or `UPath`:
+        'python' for the pure Python implementation;
+        'rust' for the Rust implementation.
     :param kwargs: additional keyword arguments to be passed to the `LazyWriter`
     :return: None
     """
-    if (
-        config.writer_engine == "native_toc"
-        and isinstance(file, str)
-        and isinstance(config.fs, (type(None), LocalFileSystem))
-        and kwargs.get("fs") is None
-        and kwargs.get("packer") is None
-        and kwargs.get("toc_cls") is None
-    ):
-        dump_native_impl(file, obj)
+    if backend == "python" or not isinstance(file, (str, UPath)):
+        with LazyWriter(file, **kwargs) as msglc_writer:
+            msglc_writer.write(obj)
         return
 
-    with LazyWriter(file, **kwargs) as msglc_writer:
-        msglc_writer.write(obj)
+    if isinstance(file, UPath):
+        target_path = file.path
+        target_fs = file.fs
+    else:
+        target_path = file
+        target_fs = kwargs.get("fs", config.fs) or LocalFileSystem()
+
+    if isinstance(target_fs, LocalFileSystem):
+        dump_rust_impl(target_path, obj)
+        return
+
+    # rust implementation on remote file
+    _, tmp_path = mkstemp()
+    try:
+        dump_rust_impl(tmp_path, obj)
+        target_fs.put(tmp_path, target_path)
+    except Exception:
+        raise
+    finally:
+        UPath(tmp_path).unlink()
 
 
 class FileInfo:

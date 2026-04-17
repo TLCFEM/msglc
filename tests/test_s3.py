@@ -21,18 +21,8 @@ import pytest
 from fsspec.implementations.arrow import ArrowFSWrapper
 from upath import UPath
 
-from msglc import FileInfo, LazyWriter, append, combine, dump
-from msglc.config import config, configure
+from msglc import FileInfo, LazyWriter, append, combine
 from msglc.reader import LazyReader, LazyStats
-
-
-@pytest.fixture(autouse=True)
-def reset_writer_engine():
-    original_engine = config.writer_engine
-    try:
-        yield
-    finally:
-        configure(writer_engine=original_engine)
 
 
 @pytest.fixture(scope="session", params=["s3fs", "pyarrow"])
@@ -138,32 +128,6 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
         for x in list_container:
             assert x in ["GML", "XML"]
         assert set(list_container) == {"GML", "XML"}
-
-    str(stats)
-
-
-@pytest.mark.parametrize("is_upath", [True, False])
-def test_s3_write_read_native_toc(temp_bucket, json_before, json_after, is_upath):
-    configure(writer_engine="native_toc")
-
-    bucket_name, fs = temp_bucket
-    target: str | UPath = f"{bucket_name}/path/{str(uuid.uuid4())}"
-
-    dump(target, json_before, fs=fs)
-
-    stats = LazyStats()
-    if is_upath:
-        target = UPath(
-            f"s3://{target}",
-            endpoint_url="http://localhost:9000",
-            key="rustfsadmin",
-            secret="rustfsadmin",
-        )
-
-    with LazyReader(target, counter=stats, fs=fs) as reader:
-        assert reader.read() == json_after
-        assert reader.read("glossary/empty_list") == []
-        assert reader.read("glossary/none_list/0") is None
 
     str(stats)
 
