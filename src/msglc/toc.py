@@ -37,6 +37,29 @@ except ImportError:
     ndarray = list  # type: ignore
 
 
+def _group_into_batches(
+    starts: list[int], ends: list[int], threshold: int
+) -> list[tuple[int, int, int]]:
+    groups: list[tuple[int, int, int]] = []
+
+    group_size: int = 0
+    group_start: int = starts[0]
+    group_end: int = ends[0]
+
+    for i in range(len(starts)):
+        group_size += 1
+        group_end = ends[i]
+        if group_end >= group_start + threshold:
+            groups.append((group_size, group_start, group_end))
+            group_start = group_end
+            group_size = 0
+
+    if group_size:
+        groups.append((group_size, group_start, group_end))
+
+    return groups
+
+
 class TOC:
     def __init__(
         self,
@@ -186,20 +209,11 @@ class TOC:
         if isinstance(obj, Mapping) or len(obj) == 0:
             return _resume_flag(_generate(start_pos))
 
-        groups: list = []
-        group_size: int = 0
-        group_start: int = obj_toc[0][1][0]
-        group_end: int = obj_toc[0][1][1]
-        for v in obj_toc:
-            group_size += 1
-            group_end = v[1][1]
-            if group_end >= group_start + config.small_obj_optimization_threshold:
-                groups.append((group_size, group_start, group_end))
-                group_start = group_end
-                group_size = 0
-
-        if group_size:
-            groups.append((group_size, group_start, group_end))
+        groups = _group_into_batches(
+            [v[1][0] for v in obj_toc],
+            [v[1][1] for v in obj_toc],
+            config.small_obj_optimization_threshold,
+        )
 
         return _resume_flag(
             (None, groups, False) if len(groups) > 1 else _generate(start_pos)
