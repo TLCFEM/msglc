@@ -27,7 +27,9 @@ def timeit(func):
 
 
 def get_color(input: str):
-    if "msg" in input:
+    if "rust" in input:
+        return "orange"
+    if "py.msg" in input or ("msg" in input and "rust" not in input):
         return "red"
     if "compressed" in input:
         return "blue"

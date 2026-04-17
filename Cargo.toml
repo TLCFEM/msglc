@@ -1,0 +1,17 @@
+[package]
+name = "msglc"
+version = "0.26.319"
+edition = "2021"
+
+[lib]
+name = "_msglc"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.28" }
+rmp = "0.8"
+numpy = "0.28"
+
+[features]
+extension-module = ["pyo3/extension-module"]
+default = ["extension-module"]

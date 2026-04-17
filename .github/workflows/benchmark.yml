@@ -11,16 +11,21 @@ jobs:
     steps:
       - name: Clone
         uses: actions/checkout@v6
-      - name: Python
-        uses: actions/setup-python@v6
+      - name: Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: 3.11
+          enable-cache: true
       - name: Build
-        run: pip install .[all] matplotlib h5py psutil
+        run: |
+          uv pip install ".[dev,all]" matplotlib h5py psutil
+          uv run maturin develop --release
       - name: Test
         run: |
-          python3 ./tests/h5/generate.py
-          python3 ./tests/h5/read.py
+          uv run python3 ./tests/h5/generate.py
+          uv run python3 ./tests/h5/read.py
           tar czf benchmark.tar.gz .dirty/*.pdf
       - name: Upload
         uses: actions/upload-artifact@v7
