@@ -180,31 +180,29 @@ class TOC:
         if self._pos < start_pos + config.small_obj_optimization_threshold:
             return _resume_flag(_generate(start_pos))
 
-        if all_small_obj:
-            if isinstance(obj, Mapping) or len(obj) == 0:
-                return _resume_flag(_generate(start_pos))
+        if not all_small_obj:
+            return _resume_flag((obj_toc, [start_pos, self._pos], False))
 
-            groups: list = []
-            accu_list: list = []
-            accu_size: int = 0
-            for v in obj_toc:
-                accu_list.append(v)
-                accu_size += v[1][1] - v[1][0]
-                if accu_size > config.small_obj_optimization_threshold:
-                    groups.append(
-                        (len(accu_list), accu_list[0][1][0], accu_list[-1][1][1])
-                    )
-                    accu_list = []
-                    accu_size = 0
+        if isinstance(obj, Mapping) or len(obj) == 0:
+            return _resume_flag(_generate(start_pos))
 
-            if accu_list:
+        groups: list = []
+        accu_list: list = []
+        accu_size: int = 0
+        for v in obj_toc:
+            accu_list.append(v)
+            accu_size += v[1][1] - v[1][0]
+            if accu_size > config.small_obj_optimization_threshold:
                 groups.append((len(accu_list), accu_list[0][1][0], accu_list[-1][1][1]))
+                accu_list = []
+                accu_size = 0
 
-            return _resume_flag(
-                (None, groups, False) if len(groups) > 1 else _generate(start_pos)
-            )
+        if accu_list:
+            groups.append((len(accu_list), accu_list[0][1][0], accu_list[-1][1][1]))
 
-        return _resume_flag((obj_toc, [start_pos, self._pos], False))
+        return _resume_flag(
+            (None, groups, False) if len(groups) > 1 else _generate(start_pos)
+        )
 
     def pack(self, obj) -> dict:
         def _serialize(tree):
