@@ -21,7 +21,7 @@ import pytest
 from fsspec.implementations.arrow import ArrowFSWrapper
 from upath import UPath
 
-from msglc import FileInfo, LazyWriter, append, combine
+from msglc import FileInfo, LazyWriter, append, combine, dump
 from msglc.config import config, configure
 from msglc.reader import LazyReader, LazyStats
 
@@ -149,8 +149,7 @@ def test_s3_write_read_native_toc(temp_bucket, json_before, json_after, is_upath
     bucket_name, fs = temp_bucket
     target: str | UPath = f"{bucket_name}/path/{str(uuid.uuid4())}"
 
-    with LazyWriter(target, fs=fs) as writer:
-        writer.write(json_before)
+    dump(target, json_before, fs=fs)
 
     stats = LazyStats()
     if is_upath:

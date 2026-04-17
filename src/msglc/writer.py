@@ -20,11 +20,8 @@ from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 
-from fsspec.implementations.local import LocalFileSystem
 from msgpack import Packer, packb, unpackb
 from upath import UPath
-
-from msglc._msglc import NativeWriter as TOC_v2
 
 from .config import (
     config,
@@ -50,15 +47,6 @@ def _upsert(source: BufferReader, target: str, fs: FileSystem | None):
         source.seek(0)
         while chunk := source.read(config.write_buffer_size):
             s3_file.write(chunk)
-
-
-def _upload_file(local_path: str, target: str, fs: FileSystem):
-    with (
-        open(local_path, "rb", buffering=config.write_buffer_size) as source,
-        fs.open(target, "wb", block_size=config.write_buffer_size) as sink,
-    ):
-        while chunk := source.read(config.write_buffer_size):
-            sink.write(chunk)
 
 
 class LazyWriter:
@@ -120,25 +108,8 @@ class LazyWriter:
         self._file_start: int = 0
         self._no_more_writes: bool = False
 
-    def _can_stream_native(self) -> bool:
-        if config.writer_engine != "native_toc":
-            return False
-
-        if isinstance(self._buffer_or_path, str):
-            return True
-
-        if isinstance(self._buffer_or_path, UPath):
-            # Keep parity with the existing Python path:
-            # when an explicit fs is supplied with UPath, UPath.open() semantics win.
-            return self._fs is None
-
-        return False
-
     def __enter__(self):
         increment_gc_counter()
-
-        if self._can_stream_native():
-            return self
 
         if isinstance(self._buffer_or_path, str):
             if self._fs:
@@ -193,35 +164,6 @@ class LazyWriter:
             raise ValueError("No more writes allowed.")
 
         self._no_more_writes = True
-
-        if self._can_stream_native():
-            path = str(self._buffer_or_path)
-
-            # Determine if we are writing to a remote filesystem
-            is_remote = False
-            effective_fs = self._fs
-            if effective_fs:
-                is_remote = not isinstance(effective_fs, LocalFileSystem)
-            elif isinstance(self._buffer_or_path, UPath):
-                # If it's a UPath without an explicit fs, check its protocol
-                is_remote = self._buffer_or_path.protocol != "file"
-                effective_fs = self._buffer_or_path.fs
-
-            if is_remote and effective_fs:
-                import tempfile
-
-                # Create a local temp file for Rust to write to
-                with tempfile.NamedTemporaryFile(suffix=".msglc", delete=False) as tmp:
-                    temp_path = tmp.name
-                try:
-                    TOC_v2().dump_to_file_streaming(obj, temp_path)
-                    _upload_file(temp_path, path, effective_fs)
-                finally:
-                    if os.path.exists(temp_path):
-                        os.remove(temp_path)
-            else:
-                TOC_v2().dump_to_file_streaming(obj, path)
-            return
 
         toc: dict = self._toc_packer.pack(obj)
         toc_start: int = self._buffer.tell() - self._file_start

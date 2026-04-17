@@ -396,6 +396,59 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
 #[pyclass]
 struct NativeWriter;
 
+fn dump_to_file_streaming_impl(py: Python<'_>, obj: Bound<'_, PyAny>, path: String) -> PyResult<()> {
+    let cfg = load_encoding_config(py)?;
+    let file = File::create(&path).map_err(to_py_err)?;
+    let mut file = BufWriter::with_capacity(STREAM_WRITE_BUFFER_BYTES, file);
+
+    // Write magic bytes and reserve space for the header.
+    file.write_all(&cfg.magic).map_err(to_py_err)?;
+    let header_start = file.stream_position().map_err(to_py_err)?;
+    file.write_all(&[0u8; HEADER_TOTAL_LEN]).map_err(to_py_err)?;
+    let data_start = file.stream_position().map_err(to_py_err)?;
+
+    let mut builder = StreamTocBuilder::new(
+        py,
+        file,
+        data_start,
+        cfg.trivial_size,
+        cfg.small_obj_threshold,
+        cfg.numpy_encoder,
+    )?;
+
+    let toc = builder.pack(&obj)?;
+    builder.flush_scratch()?;
+
+    // Serialize the TOC and append it after the data.
+    let mut toc_bytes = Vec::with_capacity(1024 * 1024);
+    toc.encode_msgpack(py, &builder.python_packer, &mut toc_bytes)?;
+
+    let toc_start = builder.rel_pos();
+    builder
+        .writer_mut()
+        .write_all(&toc_bytes)
+        .map_err(to_py_err)?;
+
+    // Seek back and fill in the header with TOC position and length.
+    let toc_start_header = encode_header_value(toc_start)?;
+    let toc_len_header = encode_header_value(toc_bytes.len())?;
+
+    builder
+        .writer_mut()
+        .seek(SeekFrom::Start(header_start))
+        .map_err(to_py_err)?;
+    builder
+        .writer_mut()
+        .write_all(&toc_start_header)
+        .map_err(to_py_err)?;
+    builder
+        .writer_mut()
+        .write_all(&toc_len_header)
+        .map_err(to_py_err)?;
+    builder.writer_mut().flush().map_err(to_py_err)?;
+    Ok(())
+}
+
 #[pymethods]
 impl NativeWriter {
     #[new]
@@ -411,58 +464,13 @@ impl NativeWriter {
         obj: Bound<'_, PyAny>,
         path: String,
     ) -> PyResult<()> {
-        let cfg = load_encoding_config(py)?;
-        let file = File::create(&path).map_err(to_py_err)?;
-        let mut file = BufWriter::with_capacity(STREAM_WRITE_BUFFER_BYTES, file);
-
-        // Write magic bytes and reserve space for the header.
-        file.write_all(&cfg.magic).map_err(to_py_err)?;
-        let header_start = file.stream_position().map_err(to_py_err)?;
-        file.write_all(&[0u8; HEADER_TOTAL_LEN])
-            .map_err(to_py_err)?;
-        let data_start = file.stream_position().map_err(to_py_err)?;
-
-        let mut builder = StreamTocBuilder::new(
-            py,
-            file,
-            data_start,
-            cfg.trivial_size,
-            cfg.small_obj_threshold,
-            cfg.numpy_encoder,
-        )?;
-
-        let toc = builder.pack(&obj)?;
-        builder.flush_scratch()?;
-
-        // Serialize the TOC and append it after the data.
-        let mut toc_bytes = Vec::with_capacity(1024 * 1024);
-        toc.encode_msgpack(py, &builder.python_packer, &mut toc_bytes)?;
-
-        let toc_start = builder.rel_pos();
-        builder
-            .writer_mut()
-            .write_all(&toc_bytes)
-            .map_err(to_py_err)?;
-
-        // Seek back and fill in the header with TOC position and length.
-        let toc_start_header = encode_header_value(toc_start)?;
-        let toc_len_header = encode_header_value(toc_bytes.len())?;
-
-        builder
-            .writer_mut()
-            .seek(SeekFrom::Start(header_start))
-            .map_err(to_py_err)?;
-        builder
-            .writer_mut()
-            .write_all(&toc_start_header)
-            .map_err(to_py_err)?;
-        builder
-            .writer_mut()
-            .write_all(&toc_len_header)
-            .map_err(to_py_err)?;
-        builder.writer_mut().flush().map_err(to_py_err)?;
-        Ok(())
+        dump_to_file_streaming_impl(py, obj, path)
     }
+}
+
+#[pyfunction]
+fn dump_native_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResult<()> {
+    dump_to_file_streaming_impl(py, obj, path)
 }
 
 // ---------------------------------------------------------------------------
@@ -472,5 +480,6 @@ impl NativeWriter {
 #[pymodule]
 fn _msglc(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<NativeWriter>()?;
+    m.add_function(wrap_pyfunction!(dump_native_impl, m)?)?;
     Ok(())
 }
