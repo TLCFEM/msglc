@@ -1,12 +1,3 @@
-//! Python extension module for high-performance msgpack serialization with
-//! lazy Table of Contents (TOC) generation.
-//!
-//! Provides [`NativeWriter`], exposed to Python as `_msglc.NativeWriter`,
-//! which streams packed msgpack data directly to a file.
-
-mod core;
-
-use crate::core::{build_container_node, encode_header_value, to_py_err, TocChildren, TocNode};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
 use pyo3::{exceptions::PyOverflowError, ffi};
@@ -14,56 +5,223 @@ use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::os::raw::c_int;
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/// Total byte length of the file header (two fixed-width fields).
+const HEADER_FIELD_LEN: usize = 10;
 const HEADER_TOTAL_LEN: usize = 20;
-
-/// Buffer size for the [`BufWriter`] wrapping the output file.
 const STREAM_WRITE_BUFFER_BYTES: usize = 8 * 1024 * 1024;
-
-/// Threshold at which the scratch buffer is flushed to the underlying writer.
 const STREAM_SCRATCH_FLUSH_BYTES: usize = 256 * 1024;
 
-// ---------------------------------------------------------------------------
-// Encoding configuration (loaded from Python at runtime)
-// ---------------------------------------------------------------------------
+pub enum TocNode {
+    Leaf {
+        pos: [usize; 2],
+    },
+    Blocked {
+        blocks: Vec<(usize, usize, usize)>,
+    },
+    Branch {
+        pos: [usize; 2],
+        children: TocChildren,
+    },
+}
 
-/// Runtime configuration sourced from `msglc.config.config` and
-/// `msglc.writer.LazyWriter.magic`.
-struct EncodingConfig {
-    trivial_size: usize,
+pub enum TocChildren {
+    Map(Vec<(Py<PyAny>, TocNode)>),
+    Array(Vec<TocNode>),
+}
+
+impl TocNode {
+    pub fn is_trivial(&self, threshold: usize) -> bool {
+        matches!(self, TocNode::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
+    }
+
+    pub fn encode_msgpack(
+        &self,
+        py: Python<'_>,
+        packer: &Py<PyAny>,
+        out: &mut Vec<u8>,
+    ) -> PyResult<()> {
+        match self {
+            TocNode::Leaf { pos } => {
+                rmp::encode::write_map_len(out, 1).map_err(to_py_err)?;
+                rmp::encode::write_str(out, "p").map_err(to_py_err)?;
+                write_position(out, pos)?;
+            }
+            TocNode::Blocked { blocks } => {
+                rmp::encode::write_map_len(out, 1).map_err(to_py_err)?;
+                rmp::encode::write_str(out, "p").map_err(to_py_err)?;
+                rmp::encode::write_array_len(out, blocks.len() as u32).map_err(to_py_err)?;
+                for &(count, start, end) in blocks {
+                    rmp::encode::write_array_len(out, 3).map_err(to_py_err)?;
+                    rmp::encode::write_uint(out, count as u64).map_err(to_py_err)?;
+                    rmp::encode::write_uint(out, start as u64).map_err(to_py_err)?;
+                    rmp::encode::write_uint(out, end as u64).map_err(to_py_err)?;
+                }
+            }
+            TocNode::Branch { pos, children } => {
+                rmp::encode::write_map_len(out, 2).map_err(to_py_err)?;
+                rmp::encode::write_str(out, "p").map_err(to_py_err)?;
+                write_position(out, pos)?;
+                rmp::encode::write_str(out, "t").map_err(to_py_err)?;
+                match children {
+                    TocChildren::Map(entries) => {
+                        rmp::encode::write_map_len(out, entries.len() as u32).map_err(to_py_err)?;
+                        for (key, child) in entries {
+                            write_native_or_python_packed(py, packer, key.bind(py), out)?;
+                            child.encode_msgpack(py, packer, out)?;
+                        }
+                    }
+                    TocChildren::Array(items) => {
+                        rmp::encode::write_array_len(out, items.len() as u32).map_err(to_py_err)?;
+                        for child in items {
+                            child.encode_msgpack(py, packer, out)?;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+pub fn to_py_err(e: impl std::fmt::Display) -> PyErr {
+    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+}
+
+fn write_with_python_packer<W: Write>(
+    py: Python<'_>,
+    packer: &Py<PyAny>,
+    obj: &Bound<'_, PyAny>,
+    out: &mut W,
+) -> PyResult<()> {
+    let packed = packer
+        .bind(py)
+        .call_method1("pack", (obj,))?
+        .cast_into::<PyBytes>()?;
+    out.write_all(packed.as_bytes()).map_err(to_py_err)?;
+    Ok(())
+}
+
+fn write_native_or_python_packed<W: Write>(
+    py: Python<'_>,
+    packer: &Py<PyAny>,
+    obj: &Bound<'_, PyAny>,
+    out: &mut W,
+) -> PyResult<()> {
+    if obj.is_none() {
+        rmp::encode::write_nil(out).map_err(to_py_err)?;
+        return Ok(());
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyBool>() {
+        let value: bool = obj.extract()?;
+        rmp::encode::write_bool(out, value).map_err(to_py_err)?;
+        return Ok(());
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyInt>() {
+        if let Ok(value) = obj.extract::<i64>() {
+            rmp::encode::write_sint(out, value).map_err(to_py_err)?;
+            return Ok(());
+        }
+        if let Ok(value) = obj.extract::<u64>() {
+            rmp::encode::write_uint(out, value).map_err(to_py_err)?;
+            return Ok(());
+        }
+    }
+
+    if let Ok(s) = obj.cast::<pyo3::types::PyString>() {
+        rmp::encode::write_str(out, s.to_str()?).map_err(to_py_err)?;
+        return Ok(());
+    }
+
+    write_with_python_packer(py, packer, obj, out)
+}
+
+fn write_position<W: Write>(out: &mut W, pos: &[usize; 2]) -> PyResult<()> {
+    rmp::encode::write_array_len(out, 2).map_err(to_py_err)?;
+    rmp::encode::write_uint(out, pos[0] as u64).map_err(to_py_err)?;
+    rmp::encode::write_uint(out, pos[1] as u64).map_err(to_py_err)?;
+    Ok(())
+}
+
+pub fn encode_header_value(value: usize) -> PyResult<[u8; HEADER_FIELD_LEN]> {
+    let mut encoded = Vec::new();
+    rmp::encode::write_uint(&mut encoded, value as u64).map_err(to_py_err)?;
+
+    if encoded.len() > HEADER_FIELD_LEN {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "Header value overflow.",
+        ));
+    }
+
+    let mut out = [0u8; HEADER_FIELD_LEN];
+    let start = HEADER_FIELD_LEN - encoded.len();
+    out[start..].copy_from_slice(&encoded);
+    Ok(out)
+}
+
+pub fn build_container_node(
+    start_pos: usize,
+    end_pos: usize,
+    all_trivial: bool,
+    children: TocChildren,
     small_obj_threshold: usize,
-    numpy_encoder: bool,
-    magic: Vec<u8>,
+) -> TocNode {
+    let size = end_pos - start_pos;
+    if size <= small_obj_threshold {
+        return TocNode::Leaf {
+            pos: [start_pos, end_pos],
+        };
+    }
+
+    if all_trivial {
+        if let TocChildren::Array(ref kids) = children {
+            if let Some(blocked) = try_build_blocked_node(kids, small_obj_threshold) {
+                return blocked;
+            }
+        }
+        return TocNode::Leaf {
+            pos: [start_pos, end_pos],
+        };
+    }
+
+    TocNode::Branch {
+        pos: [start_pos, end_pos],
+        children,
+    }
 }
 
-fn load_encoding_config(py: Python<'_>) -> PyResult<EncodingConfig> {
-    let config = py.import("msglc.config")?.getattr("config")?;
-    let magic: Vec<u8> = py
-        .import("msglc.writer")?
-        .getattr("LazyWriter")?
-        .getattr("magic")?
-        .extract()?;
+fn try_build_blocked_node(kids: &[TocNode], threshold: usize) -> Option<TocNode> {
+    if kids.is_empty() {
+        return None;
+    }
 
-    Ok(EncodingConfig {
-        trivial_size: config.getattr("trivial_size")?.extract()?,
-        small_obj_threshold: config
-            .getattr("small_obj_optimization_threshold")?
-            .extract()?,
-        numpy_encoder: config.getattr("numpy_encoder")?.extract()?,
-        magic,
-    })
+    let mut blocks = Vec::new();
+    let mut count = 0usize;
+    let mut size = 0usize;
+    let mut block_start = 0usize;
+
+    for (i, kid) in kids.iter().enumerate() {
+        if let TocNode::Leaf { pos } = kid {
+            if count == 0 {
+                block_start = pos[0];
+            }
+            count += 1;
+            size += pos[1] - pos[0];
+            if size > threshold || i == kids.len() - 1 {
+                blocks.push((count, block_start, pos[1]));
+                count = 0;
+                size = 0;
+            }
+        }
+    }
+
+    if blocks.len() > 1 {
+        Some(TocNode::Blocked { blocks })
+    } else {
+        None
+    }
 }
 
-// ---------------------------------------------------------------------------
-// Counting writer (tracks stream position without extra syscalls)
-// ---------------------------------------------------------------------------
-
-/// A [`Write`] + [`Seek`] wrapper that tracks the current stream position
-/// in-process, avoiding repeated `stream_position()` calls.
 struct CountingWriter<W: Write + Seek> {
     inner: W,
     pos: u64,
@@ -96,12 +254,6 @@ impl<W: Write + Seek> Seek for CountingWriter<W> {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Streaming TOC builder
-// ---------------------------------------------------------------------------
-
-/// Packs a Python object graph directly to a seekable writer (file) while
-/// building the TOC.  Uses a small scratch buffer to batch tiny writes.
 struct StreamTocBuilder<'py, W: Write + Seek> {
     py: Python<'py>,
     python_packer: Py<PyAny>,
@@ -143,14 +295,10 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         })
     }
 
-    // -- Position / flush --------------------------------------------------
-
-    /// Returns the current write position relative to `data_start`.
     fn rel_pos(&self) -> usize {
         (self.writer.pos + self.scratch.len() as u64 - self.data_start) as usize
     }
 
-    /// Drains the scratch buffer into the underlying writer.
     fn flush_scratch(&mut self) -> PyResult<()> {
         if !self.scratch.is_empty() {
             self.writer.write_all(&self.scratch).map_err(to_py_err)?;
@@ -159,8 +307,6 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         Ok(())
     }
 
-    /// Appends data to the scratch buffer via `encode`, flushing if the
-    /// buffer exceeds [`STREAM_SCRATCH_FLUSH_BYTES`].
     fn write_to_scratch<F, E>(&mut self, encode: F) -> PyResult<()>
     where
         F: FnOnce(&mut Vec<u8>) -> Result<(), E>,
@@ -173,7 +319,6 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         Ok(())
     }
 
-    /// Appends raw bytes to the scratch buffer, flushing if needed.
     fn write_bytes_to_scratch(&mut self, bytes: &[u8]) -> PyResult<()> {
         self.scratch.extend_from_slice(bytes);
         if self.scratch.len() >= STREAM_SCRATCH_FLUSH_BYTES {
@@ -181,13 +326,6 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         }
         Ok(())
     }
-
-    /// Provides mutable access to the underlying writer (for header fixups).
-    fn writer_mut(&mut self) -> &mut CountingWriter<W> {
-        &mut self.writer
-    }
-
-    // -- Primitive encoding ------------------------------------------------
 
     fn append_with_python_packer(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<()> {
         let packed = self
@@ -273,8 +411,6 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         self.append_with_python_packer(obj)
     }
 
-    // -- NumPy handling ----------------------------------------------------
-
     fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<TocNode>> {
         let Some(ndarray_type) = &self.numpy_ndarray_type else {
             return Ok(None);
@@ -300,8 +436,6 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         let as_list = obj.call_method0("tolist")?;
         self.pack(as_list.as_any()).map(Some)
     }
-
-    // -- Recursive packing -------------------------------------------------
 
     fn pack_dict(&mut self, start_pos: usize, dict: &Bound<'py, PyDict>) -> PyResult<TocNode> {
         self.write_to_scratch(|b| rmp::encode::write_map_len(b, dict.len() as u32).map(|_| ()))?;
@@ -387,99 +521,69 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Python-exposed writer
-// ---------------------------------------------------------------------------
+#[pyfunction]
+fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResult<()> {
+    let magic: Vec<u8> = py
+        .import("msglc.writer")?
+        .getattr("LazyWriter")?
+        .getattr("magic")?
+        .extract()?;
+    let config = py.import("msglc.config")?.getattr("config")?;
+    let trivial_size = config.getattr("trivial_size")?.extract()?;
+    let small_obj_threshold = config
+        .getattr("small_obj_optimization_threshold")?
+        .extract()?;
+    let numpy_encoder = config.getattr("numpy_encoder")?.extract()?;
 
-/// Native (Rust) writer exposed to Python for high-performance msgpack
-/// serialization with TOC generation.
-#[pyclass]
-struct NativeWriter;
-
-fn dump_to_file_streaming_impl(py: Python<'_>, obj: Bound<'_, PyAny>, path: String) -> PyResult<()> {
-    let cfg = load_encoding_config(py)?;
     let file = File::create(&path).map_err(to_py_err)?;
-    let mut file = BufWriter::with_capacity(STREAM_WRITE_BUFFER_BYTES, file);
+    let mut buffer = BufWriter::with_capacity(STREAM_WRITE_BUFFER_BYTES, file);
 
-    // Write magic bytes and reserve space for the header.
-    file.write_all(&cfg.magic).map_err(to_py_err)?;
-    let header_start = file.stream_position().map_err(to_py_err)?;
-    file.write_all(&[0u8; HEADER_TOTAL_LEN]).map_err(to_py_err)?;
-    let data_start = file.stream_position().map_err(to_py_err)?;
+    buffer.write_all(&magic).map_err(to_py_err)?;
+    let header_start = buffer.stream_position().map_err(to_py_err)?;
+    buffer
+        .write_all(&[0u8; HEADER_TOTAL_LEN])
+        .map_err(to_py_err)?;
+    let data_start = buffer.stream_position().map_err(to_py_err)?;
 
     let mut builder = StreamTocBuilder::new(
         py,
-        file,
+        buffer,
         data_start,
-        cfg.trivial_size,
-        cfg.small_obj_threshold,
-        cfg.numpy_encoder,
+        trivial_size,
+        small_obj_threshold,
+        numpy_encoder,
     )?;
 
     let toc = builder.pack(&obj)?;
     builder.flush_scratch()?;
 
-    // Serialize the TOC and append it after the data.
     let mut toc_bytes = Vec::with_capacity(1024 * 1024);
     toc.encode_msgpack(py, &builder.python_packer, &mut toc_bytes)?;
 
     let toc_start = builder.rel_pos();
-    builder
-        .writer_mut()
-        .write_all(&toc_bytes)
-        .map_err(to_py_err)?;
+    builder.writer.write_all(&toc_bytes).map_err(to_py_err)?;
 
-    // Seek back and fill in the header with TOC position and length.
     let toc_start_header = encode_header_value(toc_start)?;
     let toc_len_header = encode_header_value(toc_bytes.len())?;
 
     builder
-        .writer_mut()
+        .writer
         .seek(SeekFrom::Start(header_start))
         .map_err(to_py_err)?;
     builder
-        .writer_mut()
+        .writer
         .write_all(&toc_start_header)
         .map_err(to_py_err)?;
     builder
-        .writer_mut()
+        .writer
         .write_all(&toc_len_header)
         .map_err(to_py_err)?;
-    builder.writer_mut().flush().map_err(to_py_err)?;
+    builder.writer.flush().map_err(to_py_err)?;
     Ok(())
 }
 
-#[pymethods]
-impl NativeWriter {
-    #[new]
-    fn new() -> Self {
-        Self
-    }
-
-    /// Streams `obj` directly to `path` as a complete `.msglc` file, including
-    /// magic header, TOC, and data payload.
-    fn dump_to_file_streaming(
-        &self,
-        py: Python<'_>,
-        obj: Bound<'_, PyAny>,
-        path: String,
-    ) -> PyResult<()> {
-        dump_to_file_streaming_impl(py, obj, path)
-    }
-}
-
-#[pyfunction]
-fn dump_native_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResult<()> {
-    dump_to_file_streaming_impl(py, obj, path)
-}
-
-// ---------------------------------------------------------------------------
-// Module registration
-// ---------------------------------------------------------------------------
-
 #[pymodule]
-fn _msglc(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<NativeWriter>()?;
-    m.add_function(wrap_pyfunction!(dump_native_impl, m)?)?;
+fn msglc_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(dump_rust_impl, m)?)?;
     Ok(())
 }
