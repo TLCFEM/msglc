@@ -25,6 +25,7 @@ from uuid import uuid4
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
+from ._msglc import dump_native_impl
 from .config import config
 from .reader import LazyReader, to_obj
 from .writer import LazyCombiner, LazyWriter
@@ -45,6 +46,17 @@ def dump(file: str | UPath | BytesIO, obj, **kwargs):
     :param kwargs: additional keyword arguments to be passed to the `LazyWriter`
     :return: None
     """
+    if (
+        config.writer_engine == "native_toc"
+        and isinstance(file, str)
+        and isinstance(config.fs, (type(None), LocalFileSystem))
+        and kwargs.get("fs") is None
+        and kwargs.get("packer") is None
+        and kwargs.get("toc_cls") is None
+    ):
+        dump_native_impl(file, obj)
+        return
+
     with LazyWriter(file, **kwargs) as msglc_writer:
         msglc_writer.write(obj)
 

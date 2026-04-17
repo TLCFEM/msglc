@@ -6,3 +6,4 @@
 site
 src/msglc/*.c
 src/msglc/*.so
+target/

@@ -27,7 +27,7 @@ class Unpacker(ABC):
 
 class MsgpackUnpacker(Unpacker):
     def __init__(self):
-        self._unpacker = msgpack.Unpacker()
+        self._unpacker = msgpack.Unpacker(strict_map_key=False)
 
     def decode(self, data):
         self._unpacker.feed(data)

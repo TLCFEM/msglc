@@ -20,6 +20,8 @@ from urllib.request import urlopen
 import pytest
 from generate import generate_random_json
 
+from msglc.config import configure
+
 
 @pytest.fixture(scope="function")
 def json_base():
@@ -76,6 +78,15 @@ def repo_data():
 @pytest.fixture(scope="session", autouse=True)
 def global_random_seed():
     random.seed(62352)
+
+
+@pytest.fixture(autouse=True)
+def reset_writer_engine():
+    configure(writer_engine="python")
+    try:
+        yield
+    finally:
+        configure(writer_engine="python")
 
 
 @pytest.fixture(scope="session")
