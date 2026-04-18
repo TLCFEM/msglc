@@ -27,20 +27,29 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
+      - name: Coverage
+        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
+        uses: taiki-e/install-action@cargo-llvm-cov
       - name: Build
         run: |
           if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
             uv pip install ".[dev,numpy,s3fs]"
           else
+            source <(cargo llvm-cov show-env --export-prefix)
+            export CARGO_TARGET_DIR=$CARGO_LLVM_COV_TARGET_DIR
             uv pip install ".[all]"
           fi
           uv run ruff check --statistics .
           uv run pytest --cov=msglc tests/
+      - name: Report
+        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
+        run: cargo llvm-cov report --lcov --output-path coverage-rust.lcov
       - name: Upload
         uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          plugins: pycoverage
+          files: coverage.xml,coverage-rust.lcov
+          plugins: pycoverage,gcov
   linux:
     name: Wheels (linux)
     runs-on: ubuntu-latest
