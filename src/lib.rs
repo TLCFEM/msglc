@@ -10,7 +10,7 @@ fn to_py(e: impl std::fmt::Display) -> PyErr {
     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
 }
 
-enum TOC {
+enum LazyTOC {
     Leaf {
         pos: [u64; 2],
     },
@@ -19,13 +19,13 @@ enum TOC {
     },
     Normal {
         pos: [u64; 2],
-        container: TOCContainer,
+        container: LazyContainer,
     },
 }
 
-enum TOCContainer {
-    Map(Vec<(Py<PyAny>, TOC)>),
-    Array(Vec<TOC>),
+enum LazyContainer {
+    Map(Vec<(Py<PyAny>, LazyTOC)>),
+    Array(Vec<LazyTOC>),
 }
 
 fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
@@ -82,21 +82,21 @@ fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()
     ))
 }
 
-impl TOC {
+impl LazyTOC {
     fn is_trivial(&self, threshold: u64) -> bool {
-        matches!(self, TOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
+        matches!(self, LazyTOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
     }
 
     fn encode<W: Write>(&self, py: Python<'_>, out: &mut W) -> PyResult<()> {
         match self {
-            TOC::Leaf { pos } => {
+            LazyTOC::Leaf { pos } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py)?;
                 rmp::encode::write_str(out, "p").map_err(to_py)?;
                 rmp::encode::write_array_len(out, 2).map_err(to_py)?;
                 rmp::encode::write_uint(out, pos[0]).map_err(to_py)?;
                 rmp::encode::write_uint(out, pos[1]).map_err(to_py)?;
             }
-            TOC::Blocked { blocks } => {
+            LazyTOC::Blocked { blocks } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py)?;
                 rmp::encode::write_str(out, "p").map_err(to_py)?;
                 rmp::encode::write_array_len(out, blocks.len() as u32).map_err(to_py)?;
@@ -107,7 +107,7 @@ impl TOC {
                     rmp::encode::write_uint(out, end).map_err(to_py)?;
                 }
             }
-            TOC::Normal { pos, container } => {
+            LazyTOC::Normal { pos, container } => {
                 rmp::encode::write_map_len(out, 2).map_err(to_py)?;
                 rmp::encode::write_str(out, "p").map_err(to_py)?;
                 rmp::encode::write_array_len(out, 2).map_err(to_py)?;
@@ -115,14 +115,14 @@ impl TOC {
                 rmp::encode::write_uint(out, pos[1]).map_err(to_py)?;
                 rmp::encode::write_str(out, "t").map_err(to_py)?;
                 match container {
-                    TOCContainer::Map(items) => {
+                    LazyContainer::Map(items) => {
                         rmp::encode::write_map_len(out, items.len() as u32).map_err(to_py)?;
                         for (key, child) in items {
                             write_primitive(key.bind(py), out)?;
                             child.encode(py, out)?;
                         }
                     }
-                    TOCContainer::Array(items) => {
+                    LazyContainer::Array(items) => {
                         rmp::encode::write_array_len(out, items.len() as u32).map_err(to_py)?;
                         for child in items {
                             child.encode(py, out)?;
@@ -139,32 +139,32 @@ fn build_tree(
     start_pos: u64,
     end_pos: u64,
     all_trivial: bool,
-    children: TOCContainer,
+    children: LazyContainer,
     small_obj_threshold: u64,
-) -> TOC {
+) -> LazyTOC {
     let size = end_pos - start_pos;
 
     if size <= small_obj_threshold {
-        return TOC::Leaf {
+        return LazyTOC::Leaf {
             pos: [start_pos, end_pos],
         };
     }
 
     if !all_trivial {
-        return TOC::Normal {
+        return LazyTOC::Normal {
             pos: [start_pos, end_pos],
             container: children,
         };
     }
 
-    if let TOCContainer::Array(ref items) = children {
+    if let LazyContainer::Array(ref items) = children {
         let mut blocks = Vec::new();
         let mut count = 0u64;
         let mut size = 0u64;
         let mut block_start = 0u64;
 
         for (index, item) in items.iter().enumerate() {
-            if let TOC::Leaf { pos } = item {
+            if let LazyTOC::Leaf { pos } = item {
                 if count == 0 {
                     block_start = pos[0];
                 }
@@ -179,11 +179,11 @@ fn build_tree(
         }
 
         if blocks.len() > 1 {
-            return TOC::Blocked { blocks };
+            return LazyTOC::Blocked { blocks };
         }
     }
 
-    TOC::Leaf {
+    LazyTOC::Leaf {
         pos: [start_pos, end_pos],
     }
 }
@@ -266,7 +266,7 @@ impl<'py> LazyWriter<'py> {
         self.buffer.current_pos - self.buffer.initial_pos
     }
 
-    fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<TOC>> {
+    fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<LazyTOC>> {
         let Some(ndarray_type) = &self.ndarray_type else {
             return Ok(None);
         };
@@ -286,12 +286,12 @@ impl<'py> LazyWriter<'py> {
         rmp::encode::write_bin_len(&mut self.buffer, value.len() as u32).map_err(to_py)?;
         self.buffer.write_all(value).map_err(to_py)?;
 
-        Ok(Some(TOC::Leaf {
+        Ok(Some(LazyTOC::Leaf {
             pos: [start_pos, self.offset()],
         }))
     }
 
-    fn pack_map(&mut self, value: &Bound<'py, PyDict>) -> PyResult<TOC> {
+    fn pack_map(&mut self, value: &Bound<'py, PyDict>) -> PyResult<LazyTOC> {
         let start_pos = self.offset();
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(value.len());
@@ -311,7 +311,7 @@ impl<'py> LazyWriter<'py> {
             start_pos,
             self.offset(),
             all_trivial,
-            TOCContainer::Map(items),
+            LazyContainer::Map(items),
             self.small_obj_threshold,
         ))
     }
@@ -320,7 +320,7 @@ impl<'py> LazyWriter<'py> {
         &mut self,
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
         len: usize,
-    ) -> PyResult<TOC> {
+    ) -> PyResult<LazyTOC> {
         let start_pos = self.offset();
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
@@ -339,12 +339,12 @@ impl<'py> LazyWriter<'py> {
             start_pos,
             self.offset(),
             all_trivial,
-            TOCContainer::Array(items),
+            LazyContainer::Array(items),
             self.small_obj_threshold,
         ))
     }
 
-    fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<TOC> {
+    fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
         if let Ok(value) = obj.cast::<PyDict>() {
             return self.pack_map(value);
         }
@@ -370,7 +370,7 @@ impl<'py> LazyWriter<'py> {
 
         write_primitive(obj, &mut self.buffer)?;
 
-        Ok(TOC::Leaf {
+        Ok(LazyTOC::Leaf {
             pos: [start_pos, self.offset()],
         })
     }
