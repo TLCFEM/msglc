@@ -163,6 +163,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
+      - name: Delete
+        uses: strumwolf/delete-deployment-environment@v3
+        with:
+          token: ${{ secrets.ALL }}
+          environment: github-pages
       - name: Clone
         uses: actions/checkout@v6
       - name: Rust

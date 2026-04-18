@@ -14,7 +14,7 @@ from msglc.config import configure
 @timeit
 def generate_msg(mat: np.ndarray, block: int):
     configure(small_obj_optimization_threshold=2**block, numpy_encoder=False)  # 16KB
-    dump(f"data-{block}.msg", mat)
+    dump(f"data-{block}.msg", mat, backend="rust")
 
 
 def h5_name(block: int, **kwargs):
