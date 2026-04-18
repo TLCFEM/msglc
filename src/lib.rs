@@ -449,14 +449,15 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
         .getattr("magic")?
         .extract()?;
     let config = py.import("msglc.config")?.getattr("config")?;
-    let trivial_size = config.getattr("trivial_size")?.extract()?;
     let small_obj_threshold = config
         .getattr("small_obj_optimization_threshold")?
         .extract()?;
+    let write_buffer_size = config.getattr("write_buffer_size")?.extract()?;
+    let trivial_size = config.getattr("trivial_size")?.extract()?;
     let numpy_encoder = config.getattr("numpy_encoder")?.extract()?;
 
     let file = File::create(&path).map_err(to_py)?;
-    let mut buffer = BufWriter::new(file);
+    let mut buffer = BufWriter::with_capacity(write_buffer_size, file);
 
     buffer.write_all(&magic).map_err(to_py)?;
     buffer.write_all(&[0u8; HEADER_TOTAL_LEN]).map_err(to_py)?;
