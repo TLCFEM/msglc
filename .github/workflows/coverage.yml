@@ -27,12 +27,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-      - name: Coverage
-        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
-        uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Setup
-        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
-        run: cargo llvm-cov show-env --export-prefix >> $GITHUB_ENV
       - name: Build
         run: |
           if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
@@ -42,15 +36,11 @@ jobs:
           fi
           uv run ruff check --statistics .
           uv run pytest --cov=msglc tests/
-          if [[ "${{ matrix.python-version }}" != "pypy"* ]]; then
-            cargo llvm-cov report --lcov --output-path coverage-rust.lcov
-          fi
       - name: Upload
         uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml,coverage-rust.lcov
-          plugins: pycoverage,gcov
+          plugins: pycoverage
   linux:
     name: Wheels (linux)
     runs-on: ubuntu-latest
