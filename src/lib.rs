@@ -189,16 +189,15 @@ fn build_tree(
 struct LazyBuffer<W: Write + Seek> {
     buffer: W,
     current_pos: u64,
-    initial_pos: u64,
+    initial_pos: u64, // always len(magic) + 20
 }
 
 impl<W: Write + Seek> LazyBuffer<W> {
-    fn new(mut buffer: W) -> std::io::Result<Self> {
-        let pos = buffer.stream_position()?;
+    fn new(buffer: W, initial_pos: u64) -> std::io::Result<Self> {
         Ok(Self {
             buffer,
-            current_pos: pos,
-            initial_pos: pos,
+            current_pos: 0,
+            initial_pos,
         })
     }
 }
@@ -233,27 +232,29 @@ struct LazyWriter<'py> {
 }
 
 impl<'py> LazyWriter<'py> {
-    fn new(
-        py: Python<'py>,
-        buffer: BufWriter<File>,
-        trivial_size: u64,
-        small_obj_threshold: u64,
-        numpy_encoder: bool,
-    ) -> PyResult<Self> {
-        let buffer = LazyBuffer::new(buffer).map_err(to_py)?;
-        let ndarray_type = py
-            .import("numpy")
-            .ok()
-            .and_then(|m| m.getattr("ndarray").ok())
-            .map(Bound::unbind);
+    fn new(py: Python<'py>, path: &str, magic_len: usize) -> PyResult<Self> {
+        let config = py.import("msglc.config")?.getattr("config")?;
 
         Ok(Self {
             py,
-            buffer,
-            ndarray_type,
-            trivial_size,
-            small_obj_threshold,
-            numpy_encoder,
+            buffer: LazyBuffer::new(
+                BufWriter::with_capacity(
+                    config.getattr("write_buffer_size")?.extract()?,
+                    File::create(path).map_err(to_py)?,
+                ),
+                (magic_len + HEADER_TOTAL_LEN) as u64,
+            )
+            .map_err(to_py)?,
+            ndarray_type: py
+                .import("numpy")
+                .ok()
+                .and_then(|m| m.getattr("ndarray").ok())
+                .map(Bound::unbind),
+            trivial_size: config.getattr("trivial_size")?.extract()?,
+            small_obj_threshold: config
+                .getattr("small_obj_optimization_threshold")?
+                .extract()?,
+            numpy_encoder: config.getattr("numpy_encoder")?.extract()?,
         })
     }
 
@@ -387,21 +388,13 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
         .getattr("LazyWriter")?
         .getattr("magic")?
         .extract()?;
-    let config = py.import("msglc.config")?.getattr("config")?;
-    let small_obj_threshold = config
-        .getattr("small_obj_optimization_threshold")?
-        .extract()?;
-    let write_buffer_size = config.getattr("write_buffer_size")?.extract()?;
-    let trivial_size = config.getattr("trivial_size")?.extract()?;
-    let numpy_encoder = config.getattr("numpy_encoder")?.extract()?;
 
-    let file = File::create(&path).map_err(to_py)?;
-    let mut buffer = BufWriter::with_capacity(write_buffer_size, file);
-
-    buffer.write_all(&magic).map_err(to_py)?;
-    buffer.write_all(&[0u8; HEADER_TOTAL_LEN]).map_err(to_py)?;
-
-    let mut writer = LazyWriter::new(py, buffer, trivial_size, small_obj_threshold, numpy_encoder)?;
+    let mut writer = LazyWriter::new(py, &path, magic.len())?;
+    writer.buffer.write_all(&magic).map_err(to_py)?;
+    writer
+        .buffer
+        .write_all(&[0u8; HEADER_TOTAL_LEN])
+        .map_err(to_py)?;
 
     let toc = writer.pack(&obj)?;
     let toc_start = encode_header(writer.offset())?;
