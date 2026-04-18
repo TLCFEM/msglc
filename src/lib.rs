@@ -85,7 +85,7 @@ impl TOC {
         matches!(self, TOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
     }
 
-    fn encode(&self, py: Python<'_>, out: &mut Vec<u8>) -> PyResult<()> {
+    fn encode<W: Write>(&self, py: Python<'_>, out: &mut W) -> PyResult<()> {
         match self {
             TOC::Leaf { pos } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py)?;
@@ -258,7 +258,7 @@ impl<'py> LazyWriter<'py> {
         })
     }
 
-    fn offset(&mut self) -> u64 {
+    fn offset(&self) -> u64 {
         self.buffer.current_pos - self.buffer.initial_pos
     }
 
@@ -398,16 +398,16 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
         .map_err(to_py)?;
 
     let toc = writer.pack(&obj)?;
-    let toc_start = encode_header(writer.offset())?;
-    let mut toc_bytes = Vec::new();
-    toc.encode(py, &mut toc_bytes)?;
-    writer.buffer.write_all(&toc_bytes).map_err(to_py)?;
-    let toc_size = encode_header(toc_bytes.len() as u64)?;
+    let toc_start_pos = writer.offset();
+    toc.encode(py, &mut writer.buffer)?;
+    let toc_end_pos = writer.offset();
 
     writer
         .buffer
         .seek(SeekFrom::Start(magic.len() as u64))
         .map_err(to_py)?;
+    let toc_start = encode_header(toc_start_pos)?;
+    let toc_size = encode_header(toc_end_pos - toc_start_pos)?;
     writer.buffer.write_all(&toc_start).map_err(to_py)?;
     writer.buffer.write_all(&toc_size).map_err(to_py)?;
     writer.buffer.flush().map_err(to_py)?;
