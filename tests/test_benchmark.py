@@ -127,17 +127,19 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
         benchmark(compare, 1, size, total, unpacker)
 
 
-def test_serialize_large_json(tmpdir, benchmark, repo_data):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_serialize_large_json(tmpdir, benchmark, repo_data, backend):
     def serialize_large_json():
-        dump("repo_data.msg", repo_data)
+        dump("repo_data.msg", repo_data, backend=backend)
 
     with tmpdir.as_cwd():
         benchmark(serialize_large_json)
 
 
-def test_random_huge_json(tmpdir, benchmark, random_huge_data):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_random_huge_json(tmpdir, benchmark, random_huge_data, backend):
     with tmpdir.as_cwd():
-        benchmark(dump, "data.msg", random_huge_data)
+        benchmark(dump, "data.msg", random_huge_data, backend=backend)
 
 
 def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data):
