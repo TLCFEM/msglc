@@ -473,14 +473,13 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     let mut buffer = BufWriter::new(file);
 
     buffer.write_all(&magic).map_err(to_py)?;
-    let header_start = buffer.stream_position().map_err(to_py)?;
     buffer.write_all(&[0u8; HEADER_TOTAL_LEN]).map_err(to_py)?;
 
     let mut writer = LazyWriter::new(py, buffer, trivial_size, small_obj_threshold, numpy_encoder)?;
 
     let toc = writer.pack(&obj)?;
 
-    let mut toc_bytes = Vec::with_capacity(1024 * 1024);
+    let mut toc_bytes = Vec::new();
     toc.encode(py, &mut toc_bytes)?;
 
     let toc_start = writer.offset();
@@ -491,7 +490,7 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
 
     writer
         .buffer
-        .seek(SeekFrom::Start(header_start))
+        .seek(SeekFrom::Start(magic.len() as u64))
         .map_err(to_py)?;
     writer.buffer.write_all(&toc_start_header).map_err(to_py)?;
     writer.buffer.write_all(&toc_len_header).map_err(to_py)?;
