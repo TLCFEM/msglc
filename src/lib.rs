@@ -224,7 +224,7 @@ struct LazyWriter<'py> {
     py: Python<'py>,
     python_packer: Py<PyAny>,
     numpy_ndarray_type: Option<Py<PyAny>>,
-    writer: BufWriter<File>,
+    buffer: BufWriter<File>,
     initial_pos: u64,
     trivial_size: usize,
     small_obj_threshold: usize,
@@ -234,7 +234,7 @@ struct LazyWriter<'py> {
 impl<'py> LazyWriter<'py> {
     fn new(
         py: Python<'py>,
-        mut writer: BufWriter<File>,
+        mut buffer: BufWriter<File>,
         trivial_size: usize,
         small_obj_threshold: usize,
         numpy_encoder: bool,
@@ -245,13 +245,13 @@ impl<'py> LazyWriter<'py> {
             .ok()
             .and_then(|m| m.getattr("ndarray").ok())
             .map(Bound::unbind);
-        let data_start = writer.stream_position().map_err(to_py_err)?;
+        let data_start = buffer.stream_position().map_err(to_py_err)?;
 
         Ok(Self {
             py,
             python_packer,
             numpy_ndarray_type,
-            writer,
+            buffer,
             initial_pos: data_start,
             trivial_size,
             small_obj_threshold,
@@ -260,7 +260,7 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn rel_pos(&mut self) -> usize {
-        (self.writer.stream_position().unwrap() - self.initial_pos) as usize
+        (self.buffer.stream_position().unwrap() - self.initial_pos) as usize
     }
 
     fn append_with_python_packer(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<()> {
@@ -269,7 +269,7 @@ impl<'py> LazyWriter<'py> {
             .bind(self.py)
             .call_method1("pack", (obj,))?
             .cast_into::<PyBytes>()?;
-        self.writer
+        self.buffer
             .write_all(packed.as_bytes())
             .map_err(to_py_err)?;
         Ok(())
@@ -283,7 +283,7 @@ impl<'py> LazyWriter<'py> {
             if unsafe { !ffi::PyErr_Occurred().is_null() } {
                 return Err(PyErr::fetch(self.py));
             }
-            rmp::encode::write_sint(&mut self.writer, signed).map_err(to_py_err)?;
+            rmp::encode::write_sint(&mut self.buffer, signed).map_err(to_py_err)?;
             return Ok(true);
         }
 
@@ -296,7 +296,7 @@ impl<'py> LazyWriter<'py> {
                 }
                 return Err(err);
             }
-            rmp::encode::write_uint(&mut self.writer, unsigned).map_err(to_py_err)?;
+            rmp::encode::write_uint(&mut self.buffer, unsigned).map_err(to_py_err)?;
             return Ok(true);
         }
 
@@ -305,12 +305,12 @@ impl<'py> LazyWriter<'py> {
 
     fn try_append_native(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
         if obj.is_none() {
-            rmp::encode::write_nil(&mut self.writer).map_err(to_py_err)?;
+            rmp::encode::write_nil(&mut self.buffer).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyBool>() {
             let value: bool = obj.extract()?;
-            rmp::encode::write_bool(&mut self.writer, value).map_err(to_py_err)?;
+            rmp::encode::write_bool(&mut self.buffer, value).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyInt>() {
@@ -318,23 +318,23 @@ impl<'py> LazyWriter<'py> {
         }
         if let Ok(s) = obj.cast::<pyo3::types::PyString>() {
             let value = s.to_str()?;
-            rmp::encode::write_str(&mut self.writer, value).map_err(to_py_err)?;
+            rmp::encode::write_str(&mut self.buffer, value).map_err(to_py_err)?;
             return Ok(true);
         }
         if let Ok(b) = obj.cast::<PyBytes>() {
-            rmp::encode::write_bin(&mut self.writer, b.as_bytes()).map_err(to_py_err)?;
+            rmp::encode::write_bin(&mut self.buffer, b.as_bytes()).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyByteArray>()
             || obj.is_instance_of::<pyo3::types::PyMemoryView>()
         {
             let bytes = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
-            rmp::encode::write_bin(&mut self.writer, bytes.as_bytes()).map_err(to_py_err)?;
+            rmp::encode::write_bin(&mut self.buffer, bytes.as_bytes()).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyFloat>() {
             let value: f64 = obj.extract()?;
-            rmp::encode::write_f64(&mut self.writer, value).map_err(to_py_err)?;
+            rmp::encode::write_f64(&mut self.buffer, value).map_err(to_py_err)?;
             return Ok(true);
         }
 
@@ -359,9 +359,9 @@ impl<'py> LazyWriter<'py> {
         if self.numpy_encoder {
             let start = self.rel_pos();
             let dumped = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
-            rmp::encode::write_bin_len(&mut self.writer, dumped.as_bytes().len() as u32)
+            rmp::encode::write_bin_len(&mut self.buffer, dumped.as_bytes().len() as u32)
                 .map_err(to_py_err)?;
-            self.writer
+            self.buffer
                 .write_all(dumped.as_bytes())
                 .map_err(to_py_err)?;
             return Ok(Some(TocNode::Leaf {
@@ -374,7 +374,7 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn pack_dict(&mut self, start_pos: usize, dict: &Bound<'py, PyDict>) -> PyResult<TocNode> {
-        rmp::encode::write_map_len(&mut self.writer, dict.len() as u32).map_err(to_py_err)?;
+        rmp::encode::write_map_len(&mut self.buffer, dict.len() as u32).map_err(to_py_err)?;
         let mut all_trivial = true;
         let mut entries = Vec::with_capacity(dict.len());
 
@@ -403,7 +403,7 @@ impl<'py> LazyWriter<'py> {
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
         len: usize,
     ) -> PyResult<TocNode> {
-        rmp::encode::write_array_len(&mut self.writer, len as u32).map_err(to_py_err)?;
+        rmp::encode::write_array_len(&mut self.buffer, len as u32).map_err(to_py_err)?;
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
 
@@ -480,33 +480,33 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
         .write_all(&[0u8; HEADER_TOTAL_LEN])
         .map_err(to_py_err)?;
 
-    let mut builder =
-        LazyWriter::new(py, buffer, trivial_size, small_obj_threshold, numpy_encoder)?;
+    let mut writer = LazyWriter::new(py, buffer, trivial_size, small_obj_threshold, numpy_encoder)?;
 
-    let toc = builder.pack(&obj)?;
+    let toc = writer.pack(&obj)?;
 
     let mut toc_bytes = Vec::with_capacity(1024 * 1024);
-    toc.encode_msgpack(py, &builder.python_packer, &mut toc_bytes)?;
+    toc.encode_msgpack(py, &writer.python_packer, &mut toc_bytes)?;
 
-    let toc_start = builder.rel_pos();
-    builder.writer.write_all(&toc_bytes).map_err(to_py_err)?;
+    let toc_start = writer.rel_pos();
+    writer.buffer.write_all(&toc_bytes).map_err(to_py_err)?;
 
     let toc_start_header = encode_header_value(toc_start)?;
     let toc_len_header = encode_header_value(toc_bytes.len())?;
 
-    builder
-        .writer
+    writer
+        .buffer
         .seek(SeekFrom::Start(header_start))
         .map_err(to_py_err)?;
-    builder
-        .writer
+    writer
+        .buffer
         .write_all(&toc_start_header)
         .map_err(to_py_err)?;
-    builder
-        .writer
+    writer
+        .buffer
         .write_all(&toc_len_header)
         .map_err(to_py_err)?;
-    builder.writer.flush().map_err(to_py_err)?;
+    writer.buffer.flush().map_err(to_py_err)?;
+
     Ok(())
 }
 
