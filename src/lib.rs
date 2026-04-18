@@ -1,9 +1,7 @@
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
-use pyo3::{exceptions::PyOverflowError, ffi};
 use std::fs::File;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
-use std::os::raw::c_int;
 
 const HEADER_FIELD_LEN: usize = 10;
 const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
@@ -30,7 +28,7 @@ enum TOCContainer {
     Array(Vec<TOC>),
 }
 
-fn write_map_key<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
+fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
     if obj.is_none() {
         rmp::encode::write_nil(out).map_err(to_py)?;
         return Ok(());
@@ -39,6 +37,12 @@ fn write_map_key<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> 
     if obj.is_instance_of::<pyo3::types::PyBool>() {
         let value: bool = obj.extract()?;
         rmp::encode::write_bool(out, value).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyFloat>() {
+        let value: f64 = obj.extract()?;
+        rmp::encode::write_f64(out, value).map_err(to_py)?;
         return Ok(());
     }
 
@@ -51,12 +55,6 @@ fn write_map_key<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> 
             rmp::encode::write_uint(out, value).map_err(to_py)?;
             return Ok(());
         }
-    }
-
-    if obj.is_instance_of::<pyo3::types::PyFloat>() {
-        let value: f64 = obj.extract()?;
-        rmp::encode::write_f64(out, value).map_err(to_py)?;
-        return Ok(());
     }
 
     if obj.is_instance_of::<pyo3::types::PyByteArray>()
@@ -78,7 +76,7 @@ fn write_map_key<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> 
     }
 
     Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-        "Unsupported key type.",
+        "Unsupported type.",
     ))
 }
 
@@ -118,7 +116,7 @@ impl TOC {
                     TOCContainer::Map(items) => {
                         rmp::encode::write_map_len(out, items.len() as u32).map_err(to_py)?;
                         for (key, child) in items {
-                            write_map_key(key.bind(py), out)?;
+                            write_primitive(key.bind(py), out)?;
                             child.encode(py, out)?;
                         }
                     }
@@ -263,68 +261,6 @@ impl<'py> LazyWriter<'py> {
         self.buffer.current_pos - self.buffer.initial_pos
     }
 
-    fn try_append_native(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
-        if obj.is_none() {
-            rmp::encode::write_nil(&mut self.buffer).map_err(to_py)?;
-            return Ok(true);
-        }
-        if obj.is_instance_of::<pyo3::types::PyBool>() {
-            let value: bool = obj.extract()?;
-            rmp::encode::write_bool(&mut self.buffer, value).map_err(to_py)?;
-            return Ok(true);
-        }
-        if obj.is_instance_of::<pyo3::types::PyInt>() {
-            let mut overflow: c_int = 0;
-            let signed = unsafe { ffi::PyLong_AsLongLongAndOverflow(obj.as_ptr(), &mut overflow) };
-
-            if overflow == 0 {
-                if unsafe { !ffi::PyErr_Occurred().is_null() } {
-                    return Err(PyErr::fetch(self.py));
-                }
-                rmp::encode::write_sint(&mut self.buffer, signed).map_err(to_py)?;
-                return Ok(true);
-            }
-
-            if overflow > 0 {
-                let unsigned = unsafe { ffi::PyLong_AsUnsignedLongLong(obj.as_ptr()) };
-                if unsafe { !ffi::PyErr_Occurred().is_null() } {
-                    let err = PyErr::fetch(self.py);
-                    if err.is_instance_of::<PyOverflowError>(self.py) {
-                        return Ok(false);
-                    }
-                    return Err(err);
-                }
-                rmp::encode::write_uint(&mut self.buffer, unsigned).map_err(to_py)?;
-                return Ok(true);
-            }
-
-            return Ok(false);
-        }
-        if let Ok(s) = obj.cast::<pyo3::types::PyString>() {
-            let value = s.to_str()?;
-            rmp::encode::write_str(&mut self.buffer, value).map_err(to_py)?;
-            return Ok(true);
-        }
-        if let Ok(b) = obj.cast::<PyBytes>() {
-            rmp::encode::write_bin(&mut self.buffer, b.as_bytes()).map_err(to_py)?;
-            return Ok(true);
-        }
-        if obj.is_instance_of::<pyo3::types::PyByteArray>()
-            || obj.is_instance_of::<pyo3::types::PyMemoryView>()
-        {
-            let bytes = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
-            rmp::encode::write_bin(&mut self.buffer, bytes.as_bytes()).map_err(to_py)?;
-            return Ok(true);
-        }
-        if obj.is_instance_of::<pyo3::types::PyFloat>() {
-            let value: f64 = obj.extract()?;
-            rmp::encode::write_f64(&mut self.buffer, value).map_err(to_py)?;
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-
     fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<TOC>> {
         let Some(ndarray_type) = &self.ndarray_type else {
             return Ok(None);
@@ -354,7 +290,7 @@ impl<'py> LazyWriter<'py> {
         let mut entries = Vec::with_capacity(dict.len());
 
         for (k, v) in dict.iter() {
-            write_map_key(&k, &mut self.buffer)?;
+            write_primitive(&k, &mut self.buffer)?;
             let node = self.pack(&v)?;
             if !node.is_trivial(self.trivial_size) {
                 all_trivial = false;
@@ -425,7 +361,8 @@ impl<'py> LazyWriter<'py> {
             return Ok(node);
         }
 
-        self.try_append_native(obj)?;
+        write_primitive(obj, &mut self.buffer)?;
+
         Ok(TOC::Leaf {
             pos: [start_pos, self.offset()],
         })
