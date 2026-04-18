@@ -135,7 +135,7 @@ impl TOC {
     }
 }
 
-fn build_container_node(
+fn build_tree(
     start_pos: u64,
     end_pos: u64,
     all_trivial: bool,
@@ -263,34 +263,6 @@ impl<'py> LazyWriter<'py> {
         self.buffer.current_pos - self.buffer.initial_pos
     }
 
-    fn try_append_fast_int(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
-        let mut overflow: c_int = 0;
-        let signed = unsafe { ffi::PyLong_AsLongLongAndOverflow(obj.as_ptr(), &mut overflow) };
-
-        if overflow == 0 {
-            if unsafe { !ffi::PyErr_Occurred().is_null() } {
-                return Err(PyErr::fetch(self.py));
-            }
-            rmp::encode::write_sint(&mut self.buffer, signed).map_err(to_py)?;
-            return Ok(true);
-        }
-
-        if overflow > 0 {
-            let unsigned = unsafe { ffi::PyLong_AsUnsignedLongLong(obj.as_ptr()) };
-            if unsafe { !ffi::PyErr_Occurred().is_null() } {
-                let err = PyErr::fetch(self.py);
-                if err.is_instance_of::<PyOverflowError>(self.py) {
-                    return Ok(false);
-                }
-                return Err(err);
-            }
-            rmp::encode::write_uint(&mut self.buffer, unsigned).map_err(to_py)?;
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-
     fn try_append_native(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
         if obj.is_none() {
             rmp::encode::write_nil(&mut self.buffer).map_err(to_py)?;
@@ -302,7 +274,31 @@ impl<'py> LazyWriter<'py> {
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyInt>() {
-            return self.try_append_fast_int(obj);
+            let mut overflow: c_int = 0;
+            let signed = unsafe { ffi::PyLong_AsLongLongAndOverflow(obj.as_ptr(), &mut overflow) };
+
+            if overflow == 0 {
+                if unsafe { !ffi::PyErr_Occurred().is_null() } {
+                    return Err(PyErr::fetch(self.py));
+                }
+                rmp::encode::write_sint(&mut self.buffer, signed).map_err(to_py)?;
+                return Ok(true);
+            }
+
+            if overflow > 0 {
+                let unsigned = unsafe { ffi::PyLong_AsUnsignedLongLong(obj.as_ptr()) };
+                if unsafe { !ffi::PyErr_Occurred().is_null() } {
+                    let err = PyErr::fetch(self.py);
+                    if err.is_instance_of::<PyOverflowError>(self.py) {
+                        return Ok(false);
+                    }
+                    return Err(err);
+                }
+                rmp::encode::write_uint(&mut self.buffer, unsigned).map_err(to_py)?;
+                return Ok(true);
+            }
+
+            return Ok(false);
         }
         if let Ok(s) = obj.cast::<pyo3::types::PyString>() {
             let value = s.to_str()?;
@@ -367,7 +363,7 @@ impl<'py> LazyWriter<'py> {
         }
 
         let end_pos = self.offset();
-        Ok(build_container_node(
+        Ok(build_tree(
             start_pos,
             end_pos,
             all_trivial,
@@ -395,7 +391,7 @@ impl<'py> LazyWriter<'py> {
         }
 
         let end_pos = self.offset();
-        Ok(build_container_node(
+        Ok(build_tree(
             start_pos,
             end_pos,
             all_trivial,
