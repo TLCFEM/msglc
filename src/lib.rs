@@ -116,15 +116,6 @@ fn write_native_or_python_packed<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) 
     ))
 }
 
-fn encode_header_value(value: u64) -> PyResult<[u8; HEADER_FIELD_LEN]> {
-    let mut encoded = Vec::new();
-    rmp::encode::write_uint(&mut encoded, value).map_err(to_py)?;
-    let mut out = [0u8; HEADER_FIELD_LEN];
-    let start = HEADER_FIELD_LEN - encoded.len();
-    out[start..].copy_from_slice(&encoded);
-    Ok(out)
-}
-
 fn build_container_node(
     start_pos: u64,
     end_pos: u64,
@@ -401,6 +392,15 @@ impl<'py> LazyWriter<'py> {
     }
 }
 
+fn encode_header(value: u64) -> PyResult<[u8; HEADER_FIELD_LEN]> {
+    let mut encoded = Vec::new();
+    rmp::encode::write_uint(&mut encoded, value).map_err(to_py)?;
+    let mut out = [0u8; HEADER_FIELD_LEN];
+    let start = HEADER_FIELD_LEN - encoded.len();
+    out[start..].copy_from_slice(&encoded);
+    Ok(out)
+}
+
 #[pyfunction]
 fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResult<()> {
     let magic: Vec<u8> = py
@@ -432,8 +432,8 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     let toc_start = writer.offset();
     writer.buffer.write_all(&toc_bytes).map_err(to_py)?;
 
-    let toc_start_header = encode_header_value(toc_start)?;
-    let toc_len_header = encode_header_value(toc_bytes.len() as u64)?;
+    let toc_start_header = encode_header(toc_start)?;
+    let toc_len_header = encode_header(toc_bytes.len() as u64)?;
 
     writer
         .buffer
