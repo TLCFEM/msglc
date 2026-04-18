@@ -281,6 +281,7 @@ impl<'py> LazyWriter<'py> {
         let value = bytes.as_bytes();
         rmp::encode::write_bin_len(&mut self.buffer, value.len() as u32).map_err(to_py)?;
         self.buffer.write_all(value).map_err(to_py)?;
+
         Ok(Some(TOC::Leaf {
             pos: [start_pos, self.offset()],
         }))
