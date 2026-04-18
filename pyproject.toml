@@ -1,6 +1,10 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1"]
+build-backend = "maturin"
+
+[tool.maturin]
+python-source = "src"
+module-name = "msglc.msglc_rust"
 
 [project]
 version = "260319"
@@ -58,11 +62,11 @@ pyarrow = [
 ]
 all = [
     "msglc[dev]",
-    "msglc[numpy]",
-    "msglc[msgspec]",
-    "msglc[ormsgpack]",
-    "msglc[s3fs]",
-    "msglc[pyarrow]",
+    "numpy",
+    "msgspec",
+    "ormsgpack",
+    "s3fs",
+    "pyarrow",
 ]
 
 [project.urls]

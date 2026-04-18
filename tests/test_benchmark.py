@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
+from typing import Literal
 
 import msgpack
 import pytest
@@ -29,14 +30,17 @@ from msglc.reader import LazyReader, LazyStats
 from msglc.unpacker import MsgpackUnpacker, MsgspecUnpacker
 
 
-def test_random_benchmark(monkeypatch, tmpdir, random_medium_data):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_random_benchmark(
+    monkeypatch, tmpdir, random_medium_data, backend: Literal["python", "rust"]
+):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 8192)
 
     path = find_all_paths(random_medium_data)
     random.shuffle(path)
 
     with tmpdir.as_cwd():
-        dump("archive.msg", random_medium_data)
+        dump("archive.msg", random_medium_data, backend=backend)
 
         counter = LazyStats()
 
@@ -51,7 +55,7 @@ def test_random_benchmark(monkeypatch, tmpdir, random_medium_data):
         counter.clear()
 
 
-def pack(array):
+def pack(array, backend: Literal["python", "rust"]):
     dump(
         "large_array.msg",
         {
@@ -68,19 +72,22 @@ def pack(array):
             "repo_entry": {"chemical_formula": "H2"},
             "large_list": array,
         },
+        backend=backend,
     )
 
 
-def test_pack_large_array(tmpdir, benchmark):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_pack_large_array(tmpdir, benchmark, backend: Literal["python", "rust"]):
     def pack_large_array(_tmpdir):
         with _tmpdir.as_cwd():
-            pack([float(x) for x in range(20000)])
+            pack([float(x) for x in range(20000)], backend)
 
     benchmark(pack_large_array, tmpdir)
 
 
+@pytest.mark.parametrize("backend", ["python", "rust"])
 @pytest.mark.parametrize("encoder", [True, False])
-def test_numpy_array(monkeypatch, tmpdir, encoder):
+def test_numpy_array(monkeypatch, tmpdir, encoder, backend: Literal["python", "rust"]):
     monkeypatch.setattr(config, "numpy_encoder", encoder)
 
     try:
@@ -88,7 +95,7 @@ def test_numpy_array(monkeypatch, tmpdir, encoder):
             import numpy
 
             numpy_array = numpy.random.random((10, 11, 12000))
-            pack(numpy_array)
+            pack(numpy_array, backend)
 
             with LazyReader("large_array.msg") as reader:
                 for _ in range(100000):
@@ -127,17 +134,21 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
         benchmark(compare, 1, size, total, unpacker)
 
 
-def test_serialize_large_json(tmpdir, benchmark, repo_data):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_serialize_large_json(
+    tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
+):
     def serialize_large_json():
-        dump("repo_data.msg", repo_data)
+        dump("repo_data.msg", repo_data, backend=backend)
 
     with tmpdir.as_cwd():
         benchmark(serialize_large_json)
 
 
-def test_random_huge_json(tmpdir, benchmark, random_huge_data):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_random_huge_json(tmpdir, benchmark, random_huge_data, backend):
     with tmpdir.as_cwd():
-        benchmark(dump, "data.msg", random_huge_data)
+        benchmark(dump, "data.msg", random_huge_data, backend=backend)
 
 
 def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data):

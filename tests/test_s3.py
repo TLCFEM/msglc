@@ -21,7 +21,7 @@ import pytest
 from fsspec.implementations.arrow import ArrowFSWrapper
 from upath import UPath
 
-from msglc import FileInfo, LazyWriter, append, combine
+from msglc import FileInfo, LazyWriter, append, combine, dump
 from msglc.reader import LazyReader, LazyStats
 
 
@@ -90,6 +90,12 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
         writer.write(json_before)
         with pytest.raises(ValueError):
             writer.write(json_before)
+
+    from s3fs import S3FileSystem
+
+    # pyarrow is buggy handling path, skip it
+    if isinstance(fs, S3FileSystem):
+        dump(target, json_after, fs=fs, backend="rust")
 
     stats = LazyStats()
 

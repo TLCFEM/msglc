@@ -496,3 +496,32 @@ def test_gc_counter_increment():
 def test_gc_counter_decrement():
     initial_counter = increment_gc_counter()
     assert decrement_gc_counter() == initial_counter - 1
+
+
+def assert_identical_bytes(data):
+    dump("data-python.msg", data, backend="python")
+    dump("data-rust.msg", data, backend="rust")
+    with (
+        open("data-rust.msg", "rb") as f_rust,
+        open("data-python.msg", "rb") as f_python,
+    ):
+        while (d_rust := f_rust.read(4096)) and (d_python := f_python.read(4096)):
+            assert d_rust == d_python
+
+
+def test_rust_identical_bytes(tmpdir, random_medium_data):
+    with tmpdir.as_cwd():
+        assert_identical_bytes(random_medium_data)
+
+
+@pytest.mark.parametrize("encoder", [True, False])
+def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
+    monkeypatch.setattr(config, "numpy_encoder", encoder)
+
+    try:
+        with tmpdir.as_cwd():
+            import numpy
+
+            assert_identical_bytes({"array": numpy.random.random((10, 11, 12000))})
+    except ImportError:
+        pass
