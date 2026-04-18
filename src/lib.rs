@@ -1,3 +1,18 @@
+//  Copyright (C) 2026 Theodore Chang
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
 use std::fs::File;
@@ -131,6 +146,7 @@ impl LazyTOC {
                 }
             }
         }
+
         Ok(())
     }
 }
@@ -190,7 +206,7 @@ fn build_tree(
 
 struct LazyBuffer<W: Write + Seek> {
     buffer: W,
-    current_pos: u64,
+    current_pos: u64, // do not use `stream_position` to reduce syscalls
     initial_pos: u64, // always len(magic) + 20
 }
 
@@ -262,8 +278,15 @@ impl<'py> LazyWriter<'py> {
         })
     }
 
-    fn offset(&self) -> u64 {
-        self.buffer.current_pos - self.buffer.initial_pos
+    // this method shall only be called when packing the data
+    fn offset(&self) -> PyResult<u64> {
+        if self.buffer.current_pos < self.buffer.initial_pos {
+            return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+                "Buffer position is before the initial position.",
+            ));
+        }
+
+        Ok(self.buffer.current_pos - self.buffer.initial_pos)
     }
 
     fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<LazyTOC>> {
@@ -280,19 +303,19 @@ impl<'py> LazyWriter<'py> {
             return self.pack(value.as_any()).map(Some);
         }
 
-        let start_pos = self.offset();
+        let start_pos = self.offset()?;
         let bytes = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
         let value = bytes.as_bytes();
         rmp::encode::write_bin_len(&mut self.buffer, value.len() as u32).map_err(to_py)?;
         self.buffer.write_all(value).map_err(to_py)?;
 
         Ok(Some(LazyTOC::Leaf {
-            pos: [start_pos, self.offset()],
+            pos: [start_pos, self.offset()?],
         }))
     }
 
     fn pack_map(&mut self, value: &Bound<'py, PyDict>) -> PyResult<LazyTOC> {
-        let start_pos = self.offset();
+        let start_pos = self.offset()?;
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(value.len());
 
@@ -309,7 +332,7 @@ impl<'py> LazyWriter<'py> {
 
         Ok(build_tree(
             start_pos,
-            self.offset(),
+            self.offset()?,
             all_trivial,
             LazyContainer::Map(items),
             self.small_obj_threshold,
@@ -321,7 +344,7 @@ impl<'py> LazyWriter<'py> {
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
         len: usize,
     ) -> PyResult<LazyTOC> {
-        let start_pos = self.offset();
+        let start_pos = self.offset()?;
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
 
@@ -337,7 +360,7 @@ impl<'py> LazyWriter<'py> {
 
         Ok(build_tree(
             start_pos,
-            self.offset(),
+            self.offset()?,
             all_trivial,
             LazyContainer::Array(items),
             self.small_obj_threshold,
@@ -366,12 +389,12 @@ impl<'py> LazyWriter<'py> {
             return Ok(node);
         }
 
-        let start_pos = self.offset();
+        let start_pos = self.offset()?;
 
         write_primitive(obj, &mut self.buffer)?;
 
         Ok(LazyTOC::Leaf {
-            pos: [start_pos, self.offset()],
+            pos: [start_pos, self.offset()?],
         })
     }
 }
@@ -402,9 +425,9 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
         .map_err(to_py)?;
 
     let toc = writer.pack(&obj)?;
-    let toc_start_pos = writer.offset();
+    let toc_start_pos = writer.offset()?;
     toc.encode(py, &mut writer.buffer)?;
-    let toc_end_pos = writer.offset();
+    let toc_end_pos = writer.offset()?;
 
     writer.buffer.seek(header_pos).map_err(to_py)?;
     let toc_start = encode_header(toc_start_pos)?;
