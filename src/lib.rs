@@ -198,11 +198,47 @@ fn try_build_blocked_node(kids: &[TOC], threshold: u64) -> Option<TOC> {
     }
 }
 
+struct LazyBuffer<W: Write + Seek> {
+    buffer: W,
+    current_pos: u64,
+    initial_pos: u64,
+}
+
+impl<W: Write + Seek> LazyBuffer<W> {
+    fn new(mut buffer: W) -> std::io::Result<Self> {
+        let pos = buffer.stream_position()?;
+        Ok(Self {
+            buffer,
+            current_pos: pos,
+            initial_pos: pos,
+        })
+    }
+}
+
+impl<W: Write + Seek> Write for LazyBuffer<W> {
+    fn write(&mut self, data: &[u8]) -> std::io::Result<usize> {
+        let size = self.buffer.write(data)?;
+        self.current_pos += size as u64;
+        Ok(size)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.buffer.flush()
+    }
+}
+
+impl<W: Write + Seek> Seek for LazyBuffer<W> {
+    fn seek(&mut self, in_pos: SeekFrom) -> std::io::Result<u64> {
+        let pos = self.buffer.seek(in_pos)?;
+        self.current_pos = pos;
+        Ok(pos)
+    }
+}
+
 struct LazyWriter<'py> {
     py: Python<'py>,
-    buffer: BufWriter<File>,
+    buffer: LazyBuffer<BufWriter<File>>,
     ndarray_type: Option<Py<PyAny>>,
-    initial_pos: u64,
     trivial_size: u64,
     small_obj_threshold: u64,
     numpy_encoder: bool,
@@ -211,23 +247,22 @@ struct LazyWriter<'py> {
 impl<'py> LazyWriter<'py> {
     fn new(
         py: Python<'py>,
-        mut buffer: BufWriter<File>,
+        buffer: BufWriter<File>,
         trivial_size: u64,
         small_obj_threshold: u64,
         numpy_encoder: bool,
     ) -> PyResult<Self> {
+        let buffer = LazyBuffer::new(buffer).map_err(to_py)?;
         let ndarray_type = py
             .import("numpy")
             .ok()
             .and_then(|m| m.getattr("ndarray").ok())
             .map(Bound::unbind);
-        let initial_pos = buffer.stream_position().map_err(to_py)?;
 
         Ok(Self {
             py,
             buffer,
             ndarray_type,
-            initial_pos,
             trivial_size,
             small_obj_threshold,
             numpy_encoder,
@@ -235,7 +270,7 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn offset(&mut self) -> u64 {
-        self.buffer.stream_position().unwrap() - self.initial_pos
+        self.buffer.current_pos - self.buffer.initial_pos
     }
 
     fn try_append_fast_int(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
