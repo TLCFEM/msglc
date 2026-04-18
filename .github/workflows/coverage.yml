@@ -30,13 +30,14 @@ jobs:
       - name: Coverage
         if: ${{ !startsWith(matrix.python-version, 'pypy') }}
         uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Setup
+        if: ${{ !startsWith(matrix.python-version, 'pypy') }}
+        run: cargo llvm-cov show-env --export-prefix >> $GITHUB_ENV
       - name: Build
         run: |
           if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
             uv pip install ".[dev,numpy,s3fs]"
           else
-            source <(cargo llvm-cov show-env --export-prefix)
-            export CARGO_TARGET_DIR=$CARGO_LLVM_COV_TARGET_DIR
             uv pip install ".[all]"
           fi
           uv run ruff check --statistics .
