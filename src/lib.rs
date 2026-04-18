@@ -464,14 +464,10 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     let mut writer = LazyWriter::new(py, buffer, trivial_size, small_obj_threshold, numpy_encoder)?;
 
     let toc = writer.pack(&obj)?;
-
+    let toc_start_header = encode_header(writer.offset())?;
     let mut toc_bytes = Vec::new();
     toc.encode(py, &mut toc_bytes)?;
-
-    let toc_start = writer.offset();
     writer.buffer.write_all(&toc_bytes).map_err(to_py)?;
-
-    let toc_start_header = encode_header(toc_start)?;
     let toc_len_header = encode_header(toc_bytes.len() as u64)?;
 
     writer
