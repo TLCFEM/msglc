@@ -34,15 +34,13 @@ fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()
         return Ok(());
     }
 
-    if obj.is_instance_of::<pyo3::types::PyBool>() {
-        let value: bool = obj.extract()?;
-        rmp::encode::write_bool(out, value).map_err(to_py)?;
+    if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
+        rmp::encode::write_bool(out, value.is_true()).map_err(to_py)?;
         return Ok(());
     }
 
-    if obj.is_instance_of::<pyo3::types::PyFloat>() {
-        let value: f64 = obj.extract()?;
-        rmp::encode::write_f64(out, value).map_err(to_py)?;
+    if let Ok(value) = obj.cast::<pyo3::types::PyFloat>() {
+        rmp::encode::write_f64(out, value.value()).map_err(to_py)?;
         return Ok(());
     }
 
@@ -57,15 +55,19 @@ fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()
         }
     }
 
-    if obj.is_instance_of::<pyo3::types::PyByteArray>()
-        || obj.is_instance_of::<pyo3::types::PyMemoryView>()
-    {
-        let value = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
+    if let Ok(value) = obj.cast::<PyBytes>() {
         rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
         return Ok(());
     }
 
-    if let Ok(value) = obj.cast::<PyBytes>() {
+    if let Ok(value) = obj.cast::<pyo3::types::PyByteArray>() {
+        let bytes = value.to_vec();
+        rmp::encode::write_bin(out, &bytes).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if let Ok(_) = obj.cast::<pyo3::types::PyMemoryView>() {
+        let value = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
         rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
         return Ok(());
     }
