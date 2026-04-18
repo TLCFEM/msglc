@@ -31,12 +31,7 @@ impl TocNode {
         matches!(self, TocNode::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
     }
 
-    pub fn encode_msgpack(
-        &self,
-        py: Python<'_>,
-        packer: &Py<PyAny>,
-        out: &mut Vec<u8>,
-    ) -> PyResult<()> {
+    pub fn encode_msgpack(&self, py: Python<'_>, out: &mut Vec<u8>) -> PyResult<()> {
         match self {
             TocNode::Leaf { pos } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py_err)?;
@@ -63,14 +58,14 @@ impl TocNode {
                     TocChildren::Map(entries) => {
                         rmp::encode::write_map_len(out, entries.len() as u32).map_err(to_py_err)?;
                         for (key, child) in entries {
-                            write_native_or_python_packed(py, packer, key.bind(py), out)?;
-                            child.encode_msgpack(py, packer, out)?;
+                            write_native_or_python_packed(key.bind(py), out)?;
+                            child.encode_msgpack(py, out)?;
                         }
                     }
                     TocChildren::Array(items) => {
                         rmp::encode::write_array_len(out, items.len() as u32).map_err(to_py_err)?;
                         for child in items {
-                            child.encode_msgpack(py, packer, out)?;
+                            child.encode_msgpack(py, out)?;
                         }
                     }
                 }
@@ -84,26 +79,7 @@ pub fn to_py_err(e: impl std::fmt::Display) -> PyErr {
     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
 }
 
-fn write_with_python_packer<W: Write>(
-    py: Python<'_>,
-    packer: &Py<PyAny>,
-    obj: &Bound<'_, PyAny>,
-    out: &mut W,
-) -> PyResult<()> {
-    let packed = packer
-        .bind(py)
-        .call_method1("pack", (obj,))?
-        .cast_into::<PyBytes>()?;
-    out.write_all(packed.as_bytes()).map_err(to_py_err)?;
-    Ok(())
-}
-
-fn write_native_or_python_packed<W: Write>(
-    py: Python<'_>,
-    packer: &Py<PyAny>,
-    obj: &Bound<'_, PyAny>,
-    out: &mut W,
-) -> PyResult<()> {
+fn write_native_or_python_packed<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
     if obj.is_none() {
         rmp::encode::write_nil(out).map_err(to_py_err)?;
         return Ok(());
@@ -131,7 +107,9 @@ fn write_native_or_python_packed<W: Write>(
         return Ok(());
     }
 
-    write_with_python_packer(py, packer, obj, out)
+    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+        "Unsupported key type.",
+    ))
 }
 
 fn write_position<W: Write>(out: &mut W, pos: &[usize; 2]) -> PyResult<()> {
@@ -222,9 +200,8 @@ fn try_build_blocked_node(kids: &[TocNode], threshold: usize) -> Option<TocNode>
 
 struct LazyWriter<'py> {
     py: Python<'py>,
-    python_packer: Py<PyAny>,
-    numpy_ndarray_type: Option<Py<PyAny>>,
     buffer: BufWriter<File>,
+    ndarray_type: Option<Py<PyAny>>,
     initial_pos: u64,
     trivial_size: usize,
     small_obj_threshold: usize,
@@ -239,7 +216,6 @@ impl<'py> LazyWriter<'py> {
         small_obj_threshold: usize,
         numpy_encoder: bool,
     ) -> PyResult<Self> {
-        let python_packer = py.import("msgpack")?.getattr("Packer")?.call0()?.unbind();
         let numpy_ndarray_type = py
             .import("numpy")
             .ok()
@@ -249,9 +225,8 @@ impl<'py> LazyWriter<'py> {
 
         Ok(Self {
             py,
-            python_packer,
-            numpy_ndarray_type,
             buffer,
+            ndarray_type: numpy_ndarray_type,
             initial_pos: data_start,
             trivial_size,
             small_obj_threshold,
@@ -261,18 +236,6 @@ impl<'py> LazyWriter<'py> {
 
     fn rel_pos(&mut self) -> usize {
         (self.buffer.stream_position().unwrap() - self.initial_pos) as usize
-    }
-
-    fn append_with_python_packer(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<()> {
-        let packed = self
-            .python_packer
-            .bind(self.py)
-            .call_method1("pack", (obj,))?
-            .cast_into::<PyBytes>()?;
-        self.buffer
-            .write_all(packed.as_bytes())
-            .map_err(to_py_err)?;
-        Ok(())
     }
 
     fn try_append_fast_int(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
@@ -341,15 +304,8 @@ impl<'py> LazyWriter<'py> {
         Ok(false)
     }
 
-    fn append_packed(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<()> {
-        if self.try_append_native(obj)? {
-            return Ok(());
-        }
-        self.append_with_python_packer(obj)
-    }
-
     fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<TocNode>> {
-        let Some(ndarray_type) = &self.numpy_ndarray_type else {
+        let Some(ndarray_type) = &self.ndarray_type else {
             return Ok(None);
         };
         if !obj.is_instance(ndarray_type.bind(self.py))? {
@@ -379,7 +335,7 @@ impl<'py> LazyWriter<'py> {
         let mut entries = Vec::with_capacity(dict.len());
 
         for (k, v) in dict.iter() {
-            self.append_packed(&k)?;
+            self.try_append_native(&k)?;
             let node = self.pack(&v)?;
             if !node.is_trivial(self.trivial_size) {
                 all_trivial = false;
@@ -450,7 +406,7 @@ impl<'py> LazyWriter<'py> {
             return Ok(node);
         }
 
-        self.append_packed(obj)?;
+        self.try_append_native(obj)?;
         Ok(TocNode::Leaf {
             pos: [start_pos, self.rel_pos()],
         })
@@ -485,7 +441,7 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     let toc = writer.pack(&obj)?;
 
     let mut toc_bytes = Vec::with_capacity(1024 * 1024);
-    toc.encode_msgpack(py, &writer.python_packer, &mut toc_bytes)?;
+    toc.encode_msgpack(py, &mut toc_bytes)?;
 
     let toc_start = writer.rel_pos();
     writer.buffer.write_all(&toc_bytes).map_err(to_py_err)?;
