@@ -294,3 +294,23 @@ class Config:
     simple_repr: bool = True
     copy_chunk_size: int = 2 ** 24  # 16MB
 ```
+
+## Development Environment
+
+A working `rust` environment is required.
+Install it following the official guide [here](https://rust-lang.org/tools/install/).
+
+Once `rust` is installed, run the following command inside a Python environment.
+
+```bash
+pip install maturin
+maturin develop
+```
+
+Alternatively, use the following.
+
+```bash
+pip install -e ".[all]"
+```
+
+Not all optional dependencies are universally available, some may not be available on platforms other than `CPython`.

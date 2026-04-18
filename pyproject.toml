@@ -62,11 +62,11 @@ pyarrow = [
 ]
 all = [
     "msglc[dev]",
-    "msglc[numpy]",
-    "msglc[msgspec]",
-    "msglc[ormsgpack]",
-    "msglc[s3fs]",
-    "msglc[pyarrow]",
+    "numpy",
+    "msgspec",
+    "ormsgpack",
+    "s3fs",
+    "pyarrow",
 ]
 
 [project.urls]
