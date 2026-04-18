@@ -392,6 +392,7 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
         .getattr("LazyWriter")?
         .getattr("magic")?
         .extract()?;
+    let header_pos = SeekFrom::Start(magic.len() as u64);
 
     let mut writer = LazyWriter::new(py, &path, magic.len())?;
     writer.buffer.write_all(&magic).map_err(to_py)?;
@@ -405,10 +406,7 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     toc.encode(py, &mut writer.buffer)?;
     let toc_end_pos = writer.offset();
 
-    writer
-        .buffer
-        .seek(SeekFrom::Start(magic.len() as u64))
-        .map_err(to_py)?;
+    writer.buffer.seek(header_pos).map_err(to_py)?;
     let toc_start = encode_header(toc_start_pos)?;
     let toc_size = encode_header(toc_end_pos - toc_start_pos)?;
     writer.buffer.write_all(&toc_start).map_err(to_py)?;
