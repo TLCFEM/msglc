@@ -8,61 +8,61 @@ use std::os::raw::c_int;
 const HEADER_FIELD_LEN: usize = 10;
 const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
 
-pub enum TocNode {
+enum TOC {
     Leaf {
-        pos: [usize; 2],
+        pos: [u64; 2],
     },
     Blocked {
-        blocks: Vec<(usize, usize, usize)>,
+        blocks: Vec<(u64, u64, u64)>,
     },
-    Branch {
-        pos: [usize; 2],
-        children: TocChildren,
+    Normal {
+        pos: [u64; 2],
+        children: TOCContainer,
     },
 }
 
-pub enum TocChildren {
-    Map(Vec<(Py<PyAny>, TocNode)>),
-    Array(Vec<TocNode>),
+enum TOCContainer {
+    Map(Vec<(Py<PyAny>, TOC)>),
+    Array(Vec<TOC>),
 }
 
-impl TocNode {
-    pub fn is_trivial(&self, threshold: usize) -> bool {
-        matches!(self, TocNode::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
+impl TOC {
+    fn is_trivial(&self, threshold: u64) -> bool {
+        matches!(self, TOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
     }
 
-    pub fn encode_msgpack(&self, py: Python<'_>, out: &mut Vec<u8>) -> PyResult<()> {
+    fn encode_msgpack(&self, py: Python<'_>, out: &mut Vec<u8>) -> PyResult<()> {
         match self {
-            TocNode::Leaf { pos } => {
+            TOC::Leaf { pos } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py_err)?;
                 rmp::encode::write_str(out, "p").map_err(to_py_err)?;
                 write_position(out, pos)?;
             }
-            TocNode::Blocked { blocks } => {
+            TOC::Blocked { blocks } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py_err)?;
                 rmp::encode::write_str(out, "p").map_err(to_py_err)?;
                 rmp::encode::write_array_len(out, blocks.len() as u32).map_err(to_py_err)?;
                 for &(count, start, end) in blocks {
                     rmp::encode::write_array_len(out, 3).map_err(to_py_err)?;
-                    rmp::encode::write_uint(out, count as u64).map_err(to_py_err)?;
-                    rmp::encode::write_uint(out, start as u64).map_err(to_py_err)?;
-                    rmp::encode::write_uint(out, end as u64).map_err(to_py_err)?;
+                    rmp::encode::write_uint(out, count).map_err(to_py_err)?;
+                    rmp::encode::write_uint(out, start).map_err(to_py_err)?;
+                    rmp::encode::write_uint(out, end).map_err(to_py_err)?;
                 }
             }
-            TocNode::Branch { pos, children } => {
+            TOC::Normal { pos, children } => {
                 rmp::encode::write_map_len(out, 2).map_err(to_py_err)?;
                 rmp::encode::write_str(out, "p").map_err(to_py_err)?;
                 write_position(out, pos)?;
                 rmp::encode::write_str(out, "t").map_err(to_py_err)?;
                 match children {
-                    TocChildren::Map(entries) => {
+                    TOCContainer::Map(entries) => {
                         rmp::encode::write_map_len(out, entries.len() as u32).map_err(to_py_err)?;
                         for (key, child) in entries {
                             write_native_or_python_packed(key.bind(py), out)?;
                             child.encode_msgpack(py, out)?;
                         }
                     }
-                    TocChildren::Array(items) => {
+                    TOCContainer::Array(items) => {
                         rmp::encode::write_array_len(out, items.len() as u32).map_err(to_py_err)?;
                         for child in items {
                             child.encode_msgpack(py, out)?;
@@ -75,7 +75,7 @@ impl TocNode {
     }
 }
 
-pub fn to_py_err(e: impl std::fmt::Display) -> PyErr {
+fn to_py_err(e: impl std::fmt::Display) -> PyErr {
     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
 }
 
@@ -112,16 +112,16 @@ fn write_native_or_python_packed<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) 
     ))
 }
 
-fn write_position<W: Write>(out: &mut W, pos: &[usize; 2]) -> PyResult<()> {
+fn write_position<W: Write>(out: &mut W, pos: &[u64; 2]) -> PyResult<()> {
     rmp::encode::write_array_len(out, 2).map_err(to_py_err)?;
-    rmp::encode::write_uint(out, pos[0] as u64).map_err(to_py_err)?;
-    rmp::encode::write_uint(out, pos[1] as u64).map_err(to_py_err)?;
+    rmp::encode::write_uint(out, pos[0]).map_err(to_py_err)?;
+    rmp::encode::write_uint(out, pos[1]).map_err(to_py_err)?;
     Ok(())
 }
 
-pub fn encode_header_value(value: usize) -> PyResult<[u8; HEADER_FIELD_LEN]> {
+fn encode_header_value(value: u64) -> PyResult<[u8; HEADER_FIELD_LEN]> {
     let mut encoded = Vec::new();
-    rmp::encode::write_uint(&mut encoded, value as u64).map_err(to_py_err)?;
+    rmp::encode::write_uint(&mut encoded, value).map_err(to_py_err)?;
 
     if encoded.len() > HEADER_FIELD_LEN {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
@@ -135,49 +135,49 @@ pub fn encode_header_value(value: usize) -> PyResult<[u8; HEADER_FIELD_LEN]> {
     Ok(out)
 }
 
-pub fn build_container_node(
-    start_pos: usize,
-    end_pos: usize,
+fn build_container_node(
+    start_pos: u64,
+    end_pos: u64,
     all_trivial: bool,
-    children: TocChildren,
-    small_obj_threshold: usize,
-) -> TocNode {
+    children: TOCContainer,
+    small_obj_threshold: u64,
+) -> TOC {
     let size = end_pos - start_pos;
     if size <= small_obj_threshold {
-        return TocNode::Leaf {
+        return TOC::Leaf {
             pos: [start_pos, end_pos],
         };
     }
 
     if all_trivial {
-        if let TocChildren::Array(ref kids) = children {
+        if let TOCContainer::Array(ref kids) = children {
             if let Some(blocked) = try_build_blocked_node(kids, small_obj_threshold) {
                 return blocked;
             }
         }
-        return TocNode::Leaf {
+        return TOC::Leaf {
             pos: [start_pos, end_pos],
         };
     }
 
-    TocNode::Branch {
+    TOC::Normal {
         pos: [start_pos, end_pos],
         children,
     }
 }
 
-fn try_build_blocked_node(kids: &[TocNode], threshold: usize) -> Option<TocNode> {
+fn try_build_blocked_node(kids: &[TOC], threshold: u64) -> Option<TOC> {
     if kids.is_empty() {
         return None;
     }
 
     let mut blocks = Vec::new();
-    let mut count = 0usize;
-    let mut size = 0usize;
-    let mut block_start = 0usize;
+    let mut count = 0u64;
+    let mut size = 0u64;
+    let mut block_start = 0u64;
 
     for (i, kid) in kids.iter().enumerate() {
-        if let TocNode::Leaf { pos } = kid {
+        if let TOC::Leaf { pos } = kid {
             if count == 0 {
                 block_start = pos[0];
             }
@@ -192,7 +192,7 @@ fn try_build_blocked_node(kids: &[TocNode], threshold: usize) -> Option<TocNode>
     }
 
     if blocks.len() > 1 {
-        Some(TocNode::Blocked { blocks })
+        Some(TOC::Blocked { blocks })
     } else {
         None
     }
@@ -203,8 +203,8 @@ struct LazyWriter<'py> {
     buffer: BufWriter<File>,
     ndarray_type: Option<Py<PyAny>>,
     initial_pos: u64,
-    trivial_size: usize,
-    small_obj_threshold: usize,
+    trivial_size: u64,
+    small_obj_threshold: u64,
     numpy_encoder: bool,
 }
 
@@ -212,30 +212,30 @@ impl<'py> LazyWriter<'py> {
     fn new(
         py: Python<'py>,
         mut buffer: BufWriter<File>,
-        trivial_size: usize,
-        small_obj_threshold: usize,
+        trivial_size: u64,
+        small_obj_threshold: u64,
         numpy_encoder: bool,
     ) -> PyResult<Self> {
-        let numpy_ndarray_type = py
+        let ndarray_type = py
             .import("numpy")
             .ok()
             .and_then(|m| m.getattr("ndarray").ok())
             .map(Bound::unbind);
-        let data_start = buffer.stream_position().map_err(to_py_err)?;
+        let initial_pos = buffer.stream_position().map_err(to_py_err)?;
 
         Ok(Self {
             py,
             buffer,
-            ndarray_type: numpy_ndarray_type,
-            initial_pos: data_start,
+            ndarray_type,
+            initial_pos,
             trivial_size,
             small_obj_threshold,
             numpy_encoder,
         })
     }
 
-    fn rel_pos(&mut self) -> usize {
-        (self.buffer.stream_position().unwrap() - self.initial_pos) as usize
+    fn offset(&mut self) -> u64 {
+        self.buffer.stream_position().unwrap() - self.initial_pos
     }
 
     fn try_append_fast_int(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
@@ -304,7 +304,7 @@ impl<'py> LazyWriter<'py> {
         Ok(false)
     }
 
-    fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<TocNode>> {
+    fn try_pack_numpy(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<Option<TOC>> {
         let Some(ndarray_type) = &self.ndarray_type else {
             return Ok(None);
         };
@@ -313,15 +313,15 @@ impl<'py> LazyWriter<'py> {
         }
 
         if self.numpy_encoder {
-            let start = self.rel_pos();
+            let start = self.offset();
             let dumped = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
             rmp::encode::write_bin_len(&mut self.buffer, dumped.as_bytes().len() as u32)
                 .map_err(to_py_err)?;
             self.buffer
                 .write_all(dumped.as_bytes())
                 .map_err(to_py_err)?;
-            return Ok(Some(TocNode::Leaf {
-                pos: [start, self.rel_pos()],
+            return Ok(Some(TOC::Leaf {
+                pos: [start, self.offset()],
             }));
         }
 
@@ -329,7 +329,7 @@ impl<'py> LazyWriter<'py> {
         self.pack(as_list.as_any()).map(Some)
     }
 
-    fn pack_dict(&mut self, start_pos: usize, dict: &Bound<'py, PyDict>) -> PyResult<TocNode> {
+    fn pack_dict(&mut self, start_pos: u64, dict: &Bound<'py, PyDict>) -> PyResult<TOC> {
         rmp::encode::write_map_len(&mut self.buffer, dict.len() as u32).map_err(to_py_err)?;
         let mut all_trivial = true;
         let mut entries = Vec::with_capacity(dict.len());
@@ -343,22 +343,22 @@ impl<'py> LazyWriter<'py> {
             entries.push((k.unbind(), node));
         }
 
-        let end_pos = self.rel_pos();
+        let end_pos = self.offset();
         Ok(build_container_node(
             start_pos,
             end_pos,
             all_trivial,
-            TocChildren::Map(entries),
+            TOCContainer::Map(entries),
             self.small_obj_threshold,
         ))
     }
 
     fn pack_sequence(
         &mut self,
-        start_pos: usize,
+        start_pos: u64,
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
         len: usize,
-    ) -> PyResult<TocNode> {
+    ) -> PyResult<TOC> {
         rmp::encode::write_array_len(&mut self.buffer, len as u32).map_err(to_py_err)?;
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
@@ -371,18 +371,18 @@ impl<'py> LazyWriter<'py> {
             items.push(node);
         }
 
-        let end_pos = self.rel_pos();
+        let end_pos = self.offset();
         Ok(build_container_node(
             start_pos,
             end_pos,
             all_trivial,
-            TocChildren::Array(items),
+            TOCContainer::Array(items),
             self.small_obj_threshold,
         ))
     }
 
-    fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<TocNode> {
-        let start_pos = self.rel_pos();
+    fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<TOC> {
+        let start_pos = self.offset();
 
         if let Ok(dict) = obj.cast::<PyDict>() {
             return self.pack_dict(start_pos, dict);
@@ -407,8 +407,8 @@ impl<'py> LazyWriter<'py> {
         }
 
         self.try_append_native(obj)?;
-        Ok(TocNode::Leaf {
-            pos: [start_pos, self.rel_pos()],
+        Ok(TOC::Leaf {
+            pos: [start_pos, self.offset()],
         })
     }
 }
@@ -443,11 +443,11 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     let mut toc_bytes = Vec::with_capacity(1024 * 1024);
     toc.encode_msgpack(py, &mut toc_bytes)?;
 
-    let toc_start = writer.rel_pos();
+    let toc_start = writer.offset();
     writer.buffer.write_all(&toc_bytes).map_err(to_py_err)?;
 
     let toc_start_header = encode_header_value(toc_start)?;
-    let toc_len_header = encode_header_value(toc_bytes.len())?;
+    let toc_len_header = encode_header_value(toc_bytes.len() as u64)?;
 
     writer
         .buffer
