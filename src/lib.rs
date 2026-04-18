@@ -228,6 +228,7 @@ struct LazyWriter<'py> {
     py: Python<'py>,
     buffer: LazyBuffer<BufWriter<File>>,
     ndarray_type: Option<Py<PyAny>>,
+    sorted_fn: Py<PyAny>,
     trivial_size: u64,
     small_obj_threshold: u64,
     numpy_encoder: bool,
@@ -252,6 +253,7 @@ impl<'py> LazyWriter<'py> {
                 .ok()
                 .and_then(|m| m.getattr("ndarray").ok())
                 .map(Bound::unbind),
+            sorted_fn: py.import("builtins")?.getattr("sorted")?.unbind(),
             trivial_size: config.getattr("trivial_size")?.extract()?,
             small_obj_threshold: config
                 .getattr("small_obj_optimization_threshold")?
@@ -354,9 +356,8 @@ impl<'py> LazyWriter<'py> {
         }
         if obj.cast::<PySet>().is_ok() {
             let value = self
-                .py
-                .import("builtins")?
-                .getattr("sorted")?
+                .sorted_fn
+                .bind(self.py)
                 .call1((obj,))?
                 .cast_into::<PyList>()?;
             return self.pack_array(value.iter(), value.len());
