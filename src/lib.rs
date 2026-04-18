@@ -265,71 +265,73 @@ impl<'py> LazyWriter<'py> {
         let Some(ndarray_type) = &self.ndarray_type else {
             return Ok(None);
         };
+
         if !obj.is_instance(ndarray_type.bind(self.py))? {
             return Ok(None);
         }
 
-        if self.numpy_encoder {
-            let start = self.offset();
-            let dumped = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
-            rmp::encode::write_bin_len(&mut self.buffer, dumped.as_bytes().len() as u32)
-                .map_err(to_py)?;
-            self.buffer.write_all(dumped.as_bytes()).map_err(to_py)?;
-            return Ok(Some(TOC::Leaf {
-                pos: [start, self.offset()],
-            }));
+        if !self.numpy_encoder {
+            let value = obj.call_method0("tolist")?;
+            return self.pack(value.as_any()).map(Some);
         }
 
-        let as_list = obj.call_method0("tolist")?;
-        self.pack(as_list.as_any()).map(Some)
+        let start_pos = self.offset();
+        let bytes = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
+        let value = bytes.as_bytes();
+        rmp::encode::write_bin_len(&mut self.buffer, value.len() as u32).map_err(to_py)?;
+        self.buffer.write_all(value).map_err(to_py)?;
+        Ok(Some(TOC::Leaf {
+            pos: [start_pos, self.offset()],
+        }))
     }
 
-    fn pack_map(&mut self, start_pos: u64, dict: &Bound<'py, PyDict>) -> PyResult<TOC> {
-        rmp::encode::write_map_len(&mut self.buffer, dict.len() as u32).map_err(to_py)?;
+    fn pack_map(&mut self, value: &Bound<'py, PyDict>) -> PyResult<TOC> {
+        let start_pos = self.offset();
         let mut all_trivial = true;
-        let mut entries = Vec::with_capacity(dict.len());
+        let mut items = Vec::with_capacity(value.len());
 
-        for (k, v) in dict.iter() {
+        rmp::encode::write_map_len(&mut self.buffer, value.len() as u32).map_err(to_py)?;
+
+        for (k, v) in value.iter() {
             write_primitive(&k, &mut self.buffer)?;
             let node = self.pack(&v)?;
-            if !node.is_trivial(self.trivial_size) {
+            if all_trivial && !node.is_trivial(self.trivial_size) {
                 all_trivial = false;
             }
-            entries.push((k.unbind(), node));
+            items.push((k.unbind(), node));
         }
 
-        let end_pos = self.offset();
         Ok(build_tree(
             start_pos,
-            end_pos,
+            self.offset(),
             all_trivial,
-            TOCContainer::Map(entries),
+            TOCContainer::Map(items),
             self.small_obj_threshold,
         ))
     }
 
     fn pack_array(
         &mut self,
-        start_pos: u64,
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
         len: usize,
     ) -> PyResult<TOC> {
-        rmp::encode::write_array_len(&mut self.buffer, len as u32).map_err(to_py)?;
+        let start_pos = self.offset();
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
 
+        rmp::encode::write_array_len(&mut self.buffer, len as u32).map_err(to_py)?;
+
         for item in iter {
             let node = self.pack(&item)?;
-            if !node.is_trivial(self.trivial_size) {
+            if all_trivial && !node.is_trivial(self.trivial_size) {
                 all_trivial = false;
             }
             items.push(node);
         }
 
-        let end_pos = self.offset();
         Ok(build_tree(
             start_pos,
-            end_pos,
+            self.offset(),
             all_trivial,
             TOCContainer::Array(items),
             self.small_obj_threshold,
@@ -337,29 +339,29 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<TOC> {
-        let start_pos = self.offset();
-
-        if let Ok(dict) = obj.cast::<PyDict>() {
-            return self.pack_map(start_pos, dict);
+        if let Ok(value) = obj.cast::<PyDict>() {
+            return self.pack_map(value);
         }
-        if let Ok(list) = obj.cast::<PyList>() {
-            return self.pack_array(start_pos, list.iter(), list.len());
+        if let Ok(value) = obj.cast::<PyList>() {
+            return self.pack_array(value.iter(), value.len());
         }
-        if let Ok(tuple) = obj.cast::<PyTuple>() {
-            return self.pack_array(start_pos, tuple.iter(), tuple.len());
+        if let Ok(value) = obj.cast::<PyTuple>() {
+            return self.pack_array(value.iter(), value.len());
         }
         if obj.cast::<PySet>().is_ok() {
-            let sorted = self
+            let value = self
                 .py
                 .import("builtins")?
                 .getattr("sorted")?
                 .call1((obj,))?
                 .cast_into::<PyList>()?;
-            return self.pack_array(start_pos, sorted.iter(), sorted.len());
+            return self.pack_array(value.iter(), value.len());
         }
         if let Some(node) = self.try_pack_numpy(obj)? {
             return Ok(node);
         }
+
+        let start_pos = self.offset();
 
         write_primitive(obj, &mut self.buffer)?;
 
