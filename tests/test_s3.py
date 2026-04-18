@@ -30,7 +30,10 @@ def s3_client(request):
     if request.param == "pyarrow" and find_spec("pyarrow"):
         from pyarrow.fs import S3FileSystem
 
-        yield ArrowFSWrapper(
+        class Wrapper(ArrowFSWrapper):
+            root_marker = ""
+
+        yield Wrapper(
             S3FileSystem(
                 access_key="rustfsadmin",
                 secret_key="rustfsadmin",
@@ -60,7 +63,7 @@ def temp_bucket(s3_client):
 
     try:
         if s3_client.exists(bucket_name):
-            s3_client.rmdir(bucket_name)
+            s3_client.rm(bucket_name, recursive=True)
     except Exception as e:
         print(f"Error cleaning up bucket {bucket_name}: {e}")
 
@@ -91,11 +94,7 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
         with pytest.raises(ValueError):
             writer.write(json_before)
 
-    from s3fs import S3FileSystem
-
-    # pyarrow is buggy handling path, skip it
-    if isinstance(fs, S3FileSystem):
-        dump(target, json_after, fs=fs, backend="rust")
+    dump(target, json_after, fs=fs, backend="rust")
 
     stats = LazyStats()
 
