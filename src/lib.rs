@@ -6,9 +6,7 @@ use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::os::raw::c_int;
 
 const HEADER_FIELD_LEN: usize = 10;
-const HEADER_TOTAL_LEN: usize = 20;
-const STREAM_WRITE_BUFFER_BYTES: usize = 8 * 1024 * 1024;
-const STREAM_SCRATCH_FLUSH_BYTES: usize = 256 * 1024;
+const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
 
 pub enum TocNode {
     Leaf {
@@ -222,55 +220,21 @@ fn try_build_blocked_node(kids: &[TocNode], threshold: usize) -> Option<TocNode>
     }
 }
 
-struct CountingWriter<W: Write + Seek> {
-    inner: W,
-    pos: u64,
-}
-
-impl<W: Write + Seek> CountingWriter<W> {
-    fn new(mut inner: W) -> std::io::Result<Self> {
-        let pos = inner.stream_position()?;
-        Ok(Self { inner, pos })
-    }
-}
-
-impl<W: Write + Seek> Write for CountingWriter<W> {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        let n = self.inner.write(buf)?;
-        self.pos += n as u64;
-        Ok(n)
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        self.inner.flush()
-    }
-}
-
-impl<W: Write + Seek> Seek for CountingWriter<W> {
-    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> {
-        let new_pos = self.inner.seek(pos)?;
-        self.pos = new_pos;
-        Ok(new_pos)
-    }
-}
-
-struct StreamTocBuilder<'py, W: Write + Seek> {
+struct LazyWriter<'py> {
     py: Python<'py>,
     python_packer: Py<PyAny>,
     numpy_ndarray_type: Option<Py<PyAny>>,
-    writer: CountingWriter<W>,
-    data_start: u64,
-    scratch: Vec<u8>,
+    writer: BufWriter<File>,
+    initial_pos: u64,
     trivial_size: usize,
     small_obj_threshold: usize,
     numpy_encoder: bool,
 }
 
-impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
+impl<'py> LazyWriter<'py> {
     fn new(
         py: Python<'py>,
-        writer: W,
-        data_start: u64,
+        mut writer: BufWriter<File>,
         trivial_size: usize,
         small_obj_threshold: usize,
         numpy_encoder: bool,
@@ -281,50 +245,22 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
             .ok()
             .and_then(|m| m.getattr("ndarray").ok())
             .map(Bound::unbind);
+        let data_start = writer.stream_position().map_err(to_py_err)?;
 
         Ok(Self {
             py,
             python_packer,
             numpy_ndarray_type,
-            writer: CountingWriter::new(writer).map_err(to_py_err)?,
-            data_start,
-            scratch: Vec::with_capacity(STREAM_SCRATCH_FLUSH_BYTES),
+            writer,
+            initial_pos: data_start,
             trivial_size,
             small_obj_threshold,
             numpy_encoder,
         })
     }
 
-    fn rel_pos(&self) -> usize {
-        (self.writer.pos + self.scratch.len() as u64 - self.data_start) as usize
-    }
-
-    fn flush_scratch(&mut self) -> PyResult<()> {
-        if !self.scratch.is_empty() {
-            self.writer.write_all(&self.scratch).map_err(to_py_err)?;
-            self.scratch.clear();
-        }
-        Ok(())
-    }
-
-    fn write_to_scratch<F, E>(&mut self, encode: F) -> PyResult<()>
-    where
-        F: FnOnce(&mut Vec<u8>) -> Result<(), E>,
-        E: std::fmt::Display,
-    {
-        encode(&mut self.scratch).map_err(to_py_err)?;
-        if self.scratch.len() >= STREAM_SCRATCH_FLUSH_BYTES {
-            self.flush_scratch()?;
-        }
-        Ok(())
-    }
-
-    fn write_bytes_to_scratch(&mut self, bytes: &[u8]) -> PyResult<()> {
-        self.scratch.extend_from_slice(bytes);
-        if self.scratch.len() >= STREAM_SCRATCH_FLUSH_BYTES {
-            self.flush_scratch()?;
-        }
-        Ok(())
+    fn rel_pos(&mut self) -> usize {
+        (self.writer.stream_position().unwrap() - self.initial_pos) as usize
     }
 
     fn append_with_python_packer(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<()> {
@@ -333,7 +269,10 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
             .bind(self.py)
             .call_method1("pack", (obj,))?
             .cast_into::<PyBytes>()?;
-        self.write_bytes_to_scratch(packed.as_bytes())
+        self.writer
+            .write_all(packed.as_bytes())
+            .map_err(to_py_err)?;
+        Ok(())
     }
 
     fn try_append_fast_int(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
@@ -344,7 +283,7 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
             if unsafe { !ffi::PyErr_Occurred().is_null() } {
                 return Err(PyErr::fetch(self.py));
             }
-            self.write_to_scratch(|b| rmp::encode::write_sint(b, signed).map(|_| ()))?;
+            rmp::encode::write_sint(&mut self.writer, signed).map_err(to_py_err)?;
             return Ok(true);
         }
 
@@ -357,7 +296,7 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
                 }
                 return Err(err);
             }
-            self.write_to_scratch(|b| rmp::encode::write_uint(b, unsigned).map(|_| ()))?;
+            rmp::encode::write_uint(&mut self.writer, unsigned).map_err(to_py_err)?;
             return Ok(true);
         }
 
@@ -366,12 +305,12 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
 
     fn try_append_native(&mut self, obj: &Bound<'_, PyAny>) -> PyResult<bool> {
         if obj.is_none() {
-            self.write_to_scratch(rmp::encode::write_nil)?;
+            rmp::encode::write_nil(&mut self.writer).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyBool>() {
             let value: bool = obj.extract()?;
-            self.write_to_scratch(|b| rmp::encode::write_bool(b, value))?;
+            rmp::encode::write_bool(&mut self.writer, value).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyInt>() {
@@ -379,11 +318,10 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         }
         if let Ok(s) = obj.cast::<pyo3::types::PyString>() {
             let value = s.to_str()?;
-            self.write_to_scratch(|b| rmp::encode::write_str(b, value))?;
+            rmp::encode::write_str(&mut self.writer, value).map_err(to_py_err)?;
             return Ok(true);
         }
         if let Ok(b) = obj.cast::<PyBytes>() {
-            self.flush_scratch()?;
             rmp::encode::write_bin(&mut self.writer, b.as_bytes()).map_err(to_py_err)?;
             return Ok(true);
         }
@@ -391,13 +329,12 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
             || obj.is_instance_of::<pyo3::types::PyMemoryView>()
         {
             let bytes = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
-            self.flush_scratch()?;
             rmp::encode::write_bin(&mut self.writer, bytes.as_bytes()).map_err(to_py_err)?;
             return Ok(true);
         }
         if obj.is_instance_of::<pyo3::types::PyFloat>() {
             let value: f64 = obj.extract()?;
-            self.write_to_scratch(|b| rmp::encode::write_f64(b, value))?;
+            rmp::encode::write_f64(&mut self.writer, value).map_err(to_py_err)?;
             return Ok(true);
         }
 
@@ -422,7 +359,6 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         if self.numpy_encoder {
             let start = self.rel_pos();
             let dumped = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
-            self.flush_scratch()?;
             rmp::encode::write_bin_len(&mut self.writer, dumped.as_bytes().len() as u32)
                 .map_err(to_py_err)?;
             self.writer
@@ -438,7 +374,7 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
     }
 
     fn pack_dict(&mut self, start_pos: usize, dict: &Bound<'py, PyDict>) -> PyResult<TocNode> {
-        self.write_to_scratch(|b| rmp::encode::write_map_len(b, dict.len() as u32).map(|_| ()))?;
+        rmp::encode::write_map_len(&mut self.writer, dict.len() as u32).map_err(to_py_err)?;
         let mut all_trivial = true;
         let mut entries = Vec::with_capacity(dict.len());
 
@@ -467,7 +403,7 @@ impl<'py, W: Write + Seek> StreamTocBuilder<'py, W> {
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
         len: usize,
     ) -> PyResult<TocNode> {
-        self.write_to_scratch(|b| rmp::encode::write_array_len(b, len as u32).map(|_| ()))?;
+        rmp::encode::write_array_len(&mut self.writer, len as u32).map_err(to_py_err)?;
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
 
@@ -536,26 +472,18 @@ fn dump_rust_impl(py: Python<'_>, path: String, obj: Bound<'_, PyAny>) -> PyResu
     let numpy_encoder = config.getattr("numpy_encoder")?.extract()?;
 
     let file = File::create(&path).map_err(to_py_err)?;
-    let mut buffer = BufWriter::with_capacity(STREAM_WRITE_BUFFER_BYTES, file);
+    let mut buffer = BufWriter::new(file);
 
     buffer.write_all(&magic).map_err(to_py_err)?;
     let header_start = buffer.stream_position().map_err(to_py_err)?;
     buffer
         .write_all(&[0u8; HEADER_TOTAL_LEN])
         .map_err(to_py_err)?;
-    let data_start = buffer.stream_position().map_err(to_py_err)?;
 
-    let mut builder = StreamTocBuilder::new(
-        py,
-        buffer,
-        data_start,
-        trivial_size,
-        small_obj_threshold,
-        numpy_encoder,
-    )?;
+    let mut builder =
+        LazyWriter::new(py, buffer, trivial_size, small_obj_threshold, numpy_encoder)?;
 
     let toc = builder.pack(&obj)?;
-    builder.flush_scratch()?;
 
     let mut toc_bytes = Vec::with_capacity(1024 * 1024);
     toc.encode_msgpack(py, &builder.python_packer, &mut toc_bytes)?;
