@@ -30,6 +30,58 @@ enum TOCContainer {
     Array(Vec<TOC>),
 }
 
+fn write_map_key<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
+    if obj.is_none() {
+        rmp::encode::write_nil(out).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyBool>() {
+        let value: bool = obj.extract()?;
+        rmp::encode::write_bool(out, value).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyInt>() {
+        if let Ok(value) = obj.extract::<i64>() {
+            rmp::encode::write_sint(out, value).map_err(to_py)?;
+            return Ok(());
+        }
+        if let Ok(value) = obj.extract::<u64>() {
+            rmp::encode::write_uint(out, value).map_err(to_py)?;
+            return Ok(());
+        }
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyFloat>() {
+        let value: f64 = obj.extract()?;
+        rmp::encode::write_f64(out, value).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if obj.is_instance_of::<pyo3::types::PyByteArray>()
+        || obj.is_instance_of::<pyo3::types::PyMemoryView>()
+    {
+        let value = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
+        rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if let Ok(value) = obj.cast::<PyBytes>() {
+        rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
+        return Ok(());
+    }
+
+    if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
+        rmp::encode::write_str(out, value.to_str()?).map_err(to_py)?;
+        return Ok(());
+    }
+
+    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+        "Unsupported key type.",
+    ))
+}
+
 impl TOC {
     fn is_trivial(&self, threshold: u64) -> bool {
         matches!(self, TOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
@@ -66,7 +118,7 @@ impl TOC {
                     TOCContainer::Map(items) => {
                         rmp::encode::write_map_len(out, items.len() as u32).map_err(to_py)?;
                         for (key, child) in items {
-                            write_native_or_python_packed(key.bind(py), out)?;
+                            write_map_key(key.bind(py), out)?;
                             child.encode(py, out)?;
                         }
                     }
@@ -81,39 +133,6 @@ impl TOC {
         }
         Ok(())
     }
-}
-
-fn write_native_or_python_packed<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
-    if obj.is_none() {
-        rmp::encode::write_nil(out).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if obj.is_instance_of::<pyo3::types::PyBool>() {
-        let value: bool = obj.extract()?;
-        rmp::encode::write_bool(out, value).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if obj.is_instance_of::<pyo3::types::PyInt>() {
-        if let Ok(value) = obj.extract::<i64>() {
-            rmp::encode::write_sint(out, value).map_err(to_py)?;
-            return Ok(());
-        }
-        if let Ok(value) = obj.extract::<u64>() {
-            rmp::encode::write_uint(out, value).map_err(to_py)?;
-            return Ok(());
-        }
-    }
-
-    if let Ok(s) = obj.cast::<pyo3::types::PyString>() {
-        rmp::encode::write_str(out, s.to_str()?).map_err(to_py)?;
-        return Ok(());
-    }
-
-    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-        "Unsupported key type.",
-    ))
 }
 
 fn build_container_node(
@@ -308,13 +327,13 @@ impl<'py> LazyWriter<'py> {
         self.pack(as_list.as_any()).map(Some)
     }
 
-    fn pack_dict(&mut self, start_pos: u64, dict: &Bound<'py, PyDict>) -> PyResult<TOC> {
+    fn pack_map(&mut self, start_pos: u64, dict: &Bound<'py, PyDict>) -> PyResult<TOC> {
         rmp::encode::write_map_len(&mut self.buffer, dict.len() as u32).map_err(to_py)?;
         let mut all_trivial = true;
         let mut entries = Vec::with_capacity(dict.len());
 
         for (k, v) in dict.iter() {
-            self.try_append_native(&k)?;
+            write_map_key(&k, &mut self.buffer)?;
             let node = self.pack(&v)?;
             if !node.is_trivial(self.trivial_size) {
                 all_trivial = false;
@@ -332,7 +351,7 @@ impl<'py> LazyWriter<'py> {
         ))
     }
 
-    fn pack_sequence(
+    fn pack_array(
         &mut self,
         start_pos: u64,
         iter: impl Iterator<Item = Bound<'py, PyAny>>,
@@ -364,13 +383,13 @@ impl<'py> LazyWriter<'py> {
         let start_pos = self.offset();
 
         if let Ok(dict) = obj.cast::<PyDict>() {
-            return self.pack_dict(start_pos, dict);
+            return self.pack_map(start_pos, dict);
         }
         if let Ok(list) = obj.cast::<PyList>() {
-            return self.pack_sequence(start_pos, list.iter(), list.len());
+            return self.pack_array(start_pos, list.iter(), list.len());
         }
         if let Ok(tuple) = obj.cast::<PyTuple>() {
-            return self.pack_sequence(start_pos, tuple.iter(), tuple.len());
+            return self.pack_array(start_pos, tuple.iter(), tuple.len());
         }
         if obj.cast::<PySet>().is_ok() {
             let sorted = self
@@ -379,7 +398,7 @@ impl<'py> LazyWriter<'py> {
                 .getattr("sorted")?
                 .call1((obj,))?
                 .cast_into::<PyList>()?;
-            return self.pack_sequence(start_pos, sorted.iter(), sorted.len());
+            return self.pack_array(start_pos, sorted.iter(), sorted.len());
         }
         if let Some(node) = self.try_pack_numpy(obj)? {
             return Ok(node);
