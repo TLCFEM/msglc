@@ -41,7 +41,7 @@ jobs:
           fi
           uv run ruff check --statistics .
           uv run pytest --cov=msglc tests/
-          if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
+          if [[ "${{ matrix.python-version }}" != "pypy"* ]]; then
             cargo llvm-cov report --lcov --output-path coverage-rust.lcov
           fi
       - name: Upload
