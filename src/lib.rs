@@ -143,58 +143,48 @@ fn build_container_node(
     small_obj_threshold: u64,
 ) -> TOC {
     let size = end_pos - start_pos;
+
     if size <= small_obj_threshold {
         return TOC::Leaf {
             pos: [start_pos, end_pos],
         };
     }
 
-    if all_trivial {
-        if let TOCContainer::Array(ref kids) = children {
-            if let Some(blocked) = try_build_blocked_node(kids, small_obj_threshold) {
-                return blocked;
-            }
-        }
-        return TOC::Leaf {
+    if !all_trivial {
+        return TOC::Normal {
             pos: [start_pos, end_pos],
+            container: children,
         };
     }
 
-    TOC::Normal {
-        pos: [start_pos, end_pos],
-        container: children,
-    }
-}
+    if let TOCContainer::Array(ref items) = children {
+        let mut blocks = Vec::new();
+        let mut count = 0u64;
+        let mut size = 0u64;
+        let mut block_start = 0u64;
 
-fn try_build_blocked_node(kids: &[TOC], threshold: u64) -> Option<TOC> {
-    if kids.is_empty() {
-        return None;
-    }
-
-    let mut blocks = Vec::new();
-    let mut count = 0u64;
-    let mut size = 0u64;
-    let mut block_start = 0u64;
-
-    for (i, kid) in kids.iter().enumerate() {
-        if let TOC::Leaf { pos } = kid {
-            if count == 0 {
-                block_start = pos[0];
+        for (index, item) in items.iter().enumerate() {
+            if let TOC::Leaf { pos } = item {
+                if count == 0 {
+                    block_start = pos[0];
+                }
+                count += 1;
+                size += pos[1] - pos[0];
+                if size > small_obj_threshold || index + 1 == items.len() {
+                    blocks.push((count, block_start, pos[1]));
+                    count = 0;
+                    size = 0;
+                }
             }
-            count += 1;
-            size += pos[1] - pos[0];
-            if size > threshold || i == kids.len() - 1 {
-                blocks.push((count, block_start, pos[1]));
-                count = 0;
-                size = 0;
-            }
+        }
+
+        if blocks.len() > 1 {
+            return TOC::Blocked { blocks };
         }
     }
 
-    if blocks.len() > 1 {
-        Some(TOC::Blocked { blocks })
-    } else {
-        None
+    TOC::Leaf {
+        pos: [start_pos, end_pos],
     }
 }
 
