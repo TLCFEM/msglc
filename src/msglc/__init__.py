@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import nullcontext
 from io import IOBase
-from tempfile import TemporaryDirectory, mkstemp
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, BinaryIO
 from uuid import uuid4
 
@@ -47,12 +47,16 @@ def dump(
     """
     This function is used to write the object to the file.
 
-    :param file: a string representing the file path
+    When the destination is a file given by its path as a plain `str` or a `UPath` object, it is possible to use
+    `rust` backend to serialize the object, the overhead of which is significantly lower than that of the pure
+    `python` implementation, on par with the cost of encoding vanilla `msgpack` data.
+
+    :param file: a string representing the file path or an in memory buffer
     :param obj: the object to be written to the file
     :param backend: the backend to be used for writing, only used when `file` is a `str` or `UPath`:
         'python' for the pure Python implementation;
         'rust' for the Rust implementation.
-    :param kwargs: additional keyword arguments to be passed to the `LazyWriter`
+    :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when `rust` backend is used
     :return: None
     """
     if backend == "python" or not isinstance(file, (str, UPath)):
@@ -72,14 +76,9 @@ def dump(
         return
 
     # rust implementation on remote file
-    _, tmp_path = mkstemp()
-    try:
-        dump_rust_impl(tmp_path, obj)
+    with TemporaryDirectory() as tmp_dir:
+        dump_rust_impl(tmp_path := (UPath(tmp_dir) / uuid4().hex).as_posix(), obj)
         target_fs.put(tmp_path, target_path)
-    except Exception:
-        raise
-    finally:
-        UPath(tmp_path).unlink()
 
 
 class FileInfo:
@@ -146,12 +145,20 @@ class FileInfo:
                 if not config.check_compatibility(magic):
                     raise ValueError("Invalid file format.")
 
-    def chunking(self):
+    def chunking(self, backend: Literal["python", "rust"]):
+        """
+        When in-memory objects are provided, it is necessary to serialize them to the disk first before chunking.
+        The `backend` will be used in this serialization procedure.
+        """
         if isinstance(self.path, LazyReader):
             yield from self.path.raw_data()
         elif self.path is None:
             with TemporaryDirectory() as _tmp_dir:
-                dump(file_path := UPath(_tmp_dir) / uuid4().hex, to_obj(self._obj))
+                dump(
+                    file_path := UPath(_tmp_dir) / uuid4().hex,
+                    to_obj(self._obj),
+                    backend=backend,
+                )
                 with LazyReader(file_path) as _tmp_file:
                     yield from _tmp_file.raw_data()
         else:
@@ -167,6 +174,7 @@ def combine(
     mode: Literal["a", "w"] = "w",
     validate: bool = True,
     fs: FileSystem | None = None,
+    backend: Literal["python", "rust"] = "python",
 ):
     """
     This function is used to combine the multiple serialized files into a single archive.
@@ -183,6 +191,9 @@ def combine(
     :param mode: a string representing the combination mode, 'w' for write and 'a' for append
     :param validate: switch on to validate the files before combining, ignored if `files` is a generator.
     :param fs: `FileSystem` object to be used for storing
+    :param backend: the backend to be used for potential temporary writing:
+        'python' for the pure Python implementation;
+        'rust' for the Rust implementation.
     :return: None
     """
     if isinstance(files, FileInfo):
@@ -205,7 +216,7 @@ def combine(
 
     with LazyCombiner(archive, mode=mode, fs=fs) as combiner:
         for file in files:
-            combiner.write(file.chunking(), file.name)
+            combiner.write(file.chunking(backend), file.name)
 
 
 def append(
@@ -214,6 +225,7 @@ def append(
     *,
     validate: bool = True,
     fs: FileSystem | None = None,
+    backend: Literal["python", "rust"] = "python",
 ):
     """
     This function is used to append the multiple serialized files to an existing single archive.
@@ -226,6 +238,9 @@ def append(
     :param files: a list of FileInfo objects
     :param validate: switch on to validate the files before combining
     :param fs: `FileSystem` object to be used for storing
+    :param backend: the backend to be used for potential temporary writing:
+        'python' for the pure Python implementation;
+        'rust' for the Rust implementation.
     :return: None
     """
-    combine(archive, files, mode="a", validate=validate, fs=fs)
+    combine(archive, files, mode="a", validate=validate, fs=fs, backend=backend)
