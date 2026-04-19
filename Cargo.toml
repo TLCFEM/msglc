@@ -7,9 +7,5 @@ name = "msglc_rust"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "*"
+pyo3 = { version = "*", features = ["extension-module"] }
 rmp = "*"
-
-[features]
-extension-module = ["pyo3/extension-module"]
-default = ["extension-module"]
