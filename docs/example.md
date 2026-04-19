@@ -191,9 +191,9 @@ class DictStream(Mapping):
 ```
 
 !!! warning "length requirement"
-Only two things will be invoked: `len()` and `.items()`.
-Thus, `__len__(self)` and `items(self)` must be properly implemented.
-If the length is **not** known in advance, streaming data is not feasible.
+    Only two things will be invoked: `len()` and `.items()`.
+    Thus, `__len__(self)` and `items(self)` must be properly implemented.
+    If the length is **not** known in advance, streaming data is not feasible.
 
 With the above, one can do the following.
 
