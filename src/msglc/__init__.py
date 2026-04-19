@@ -56,7 +56,7 @@ def dump(
     :param backend: the backend to be used for writing, only used when `file` is a `str` or `UPath`:
         'python' for the pure Python implementation;
         'rust' for the Rust implementation.
-    :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when `rust` backend is used
+    :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when 'rust' backend is used
     :return: None
     """
     if backend == "python" or not isinstance(file, (str, UPath)):
