@@ -48,57 +48,39 @@ enum LazyContainer {
 // Both can be converted to bytes in advance.
 // One shall note that raw bytes are not supported by json specification as well.
 fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
+    let unsupported = Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+        "Unsupported type.",
+    ));
+
     if obj.is_none() {
         rmp::encode::write_nil(out).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
+    } else if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
         rmp::encode::write_bool(out, value.is_true()).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if let Ok(value) = obj.cast::<pyo3::types::PyFloat>() {
+    } else if let Ok(value) = obj.cast::<pyo3::types::PyFloat>() {
         rmp::encode::write_f64(out, value.value()).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if obj.is_instance_of::<pyo3::types::PyInt>() {
+    } else if obj.is_instance_of::<pyo3::types::PyInt>() {
         if let Ok(value) = obj.extract::<i64>() {
             rmp::encode::write_sint(out, value).map_err(to_py)?;
-            return Ok(());
-        }
-        if let Ok(value) = obj.extract::<u64>() {
+        } else if let Ok(value) = obj.extract::<u64>() {
             rmp::encode::write_uint(out, value).map_err(to_py)?;
-            return Ok(());
+        } else {
+            return unsupported;
         }
-    }
-
-    if let Ok(value) = obj.cast::<PyBytes>() {
+    } else if let Ok(value) = obj.cast::<PyBytes>() {
         rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if let Ok(value) = obj.cast::<pyo3::types::PyByteArray>() {
+    } else if let Ok(value) = obj.cast::<pyo3::types::PyByteArray>() {
         let bytes = value.to_vec();
         rmp::encode::write_bin(out, &bytes).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if let Ok(_) = obj.cast::<pyo3::types::PyMemoryView>() {
+    } else if let Ok(_) = obj.cast::<pyo3::types::PyMemoryView>() {
         let value = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
         rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
-        return Ok(());
-    }
-
-    if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
+    } else if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
         rmp::encode::write_str(out, value.to_str()?).map_err(to_py)?;
-        return Ok(());
+    } else {
+        return unsupported;
     }
 
-    Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-        "Unsupported type.",
-    ))
+    Ok(())
 }
 
 impl LazyTOC {
