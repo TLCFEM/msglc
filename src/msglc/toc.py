@@ -207,6 +207,10 @@ class TOC:
             return _resume_flag((obj_toc, [start_pos, self._pos], False))
 
         if isinstance(obj, Mapping) or len(obj) == 0:
+            # we do not consider further optimization for dicts with all trivial children
+            # since storing the structure is more expensive than storing the data
+            # and since the TOC is read once, there is no motivation to chunk the actual data
+            # we thus treat it as a leaf node
             return _resume_flag(_generate(start_pos))
 
         groups = _group_into_batches(
