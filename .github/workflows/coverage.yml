@@ -55,7 +55,7 @@ jobs:
   linux:
     name: Wheels (linux)
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, '[publish]')
+    if: github.ref == 'refs/heads/master'
     needs: test
     strategy:
       matrix:
@@ -82,7 +82,7 @@ jobs:
   windows:
     name: Wheels (windows)
     runs-on: windows-latest
-    if: contains(github.event.head_commit.message, '[publish]')
+    if: github.ref == 'refs/heads/master'
     needs: test
     strategy:
       matrix:
@@ -109,7 +109,7 @@ jobs:
   macos:
     name: Wheels (macos)
     runs-on: macos-latest
-    if: contains(github.event.head_commit.message, '[publish]')
+    if: github.ref == 'refs/heads/master'
     needs: test
     strategy:
       matrix:
@@ -135,7 +135,7 @@ jobs:
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, '[publish]')
+    if: github.ref == 'refs/heads/master'
     needs: test
     steps:
       - name: Clone
@@ -158,7 +158,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     needs: [ linux, windows, macos, sdist ]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish]')
     permissions:
       id-token: write
     steps:
