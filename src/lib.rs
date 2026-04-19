@@ -43,6 +43,10 @@ enum LazyContainer {
     Array(Vec<LazyTOC>),
 }
 
+// Compared to the standard `msgpack` specification, we do not support `ext` types and timestamps.
+// They are not part of json specification anyway.
+// Both can be converted to bytes in advance.
+// One shall note that raw bytes are not supported by json specification as well.
 fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
     if obj.is_none() {
         rmp::encode::write_nil(out).map_err(to_py)?;
