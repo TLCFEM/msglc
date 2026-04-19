@@ -523,7 +523,10 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
         with tmpdir.as_cwd():
             import numpy
 
-            assert_identical_bytes({"array": numpy.random.random((10, 11, 12000))})
+            assert_identical_bytes({"array": numpy.random.randn(1000, 1000)})
+            assert_identical_bytes(
+                {"array": numpy.random.randint(0, 2**63 - 1, size=(1000, 1000))}
+            )
     except ImportError:
         pass
 
