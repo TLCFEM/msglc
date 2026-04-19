@@ -1,6 +1,7 @@
 **/*.egg-info
 *.lock
 *.pyc
+*coverage*
 .dirty
 .idea
 .venv

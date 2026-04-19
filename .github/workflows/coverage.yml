@@ -22,6 +22,10 @@ jobs:
         uses: actions/checkout@v6
       - name: Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: llvm-tools
+      - name: Coverage
+        uses: taiki-e/install-action@cargo-llvm-cov
       - name: Python
         uses: astral-sh/setup-uv@v5
         with:
@@ -32,15 +36,22 @@ jobs:
           if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
             uv pip install ".[dev,numpy,s3fs]"
           else
-            uv pip install ".[all]"
+            source <(cargo llvm-cov show-env --sh)
+            export CARGO_TARGET_DIR=$CARGO_LLVM_COV_TARGET_DIR
+            uv pip install -e ".[all]" maturin
+            maturin develop --uv
           fi
           uv run ruff check --statistics .
-          uv run pytest --cov=msglc tests/
+          uv run pytest --cov=msglc --cov-report=xml tests/
+          if [[ "${{ matrix.python-version }}" != "pypy"* ]]; then
+            cargo llvm-cov report --lcov --output-path coverage.lcov
+          fi
       - name: Upload
         uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          plugins: pycoverage
+          plugins: pycoverage,gcov
+          files: coverage.lcov,coverage.xml
   linux:
     name: Wheels (linux)
     runs-on: ubuntu-latest
