@@ -525,3 +525,29 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
             assert_identical_bytes({"array": numpy.random.random((10, 11, 12000))})
     except ImportError:
         pass
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {2, 1, 5},
+        (1, "1", 1.1, b"11"),
+        {str(v): v for v in range(10000)},
+        9223372036854775809,
+        b"asdadsa",
+        bytearray(b"asdadsa"),
+        memoryview(b"asdadsa"),
+    ],
+    ids=[
+        "set",
+        "tuple",
+        "trivial_map",
+        "big_int",
+        "bytes",
+        "bytes_array",
+        "memory_view",
+    ],
+)
+def test_rust_basic_types(tmpdir, data):
+    with tmpdir.as_cwd():
+        assert_identical_bytes(data)
