@@ -1046,43 +1046,22 @@
 <a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mh">0x221548313</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">}}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
+<p>If using <code>CPython</code> runtime, it may be beneficial to use <code>rust</code> implementation of the writer for better performance.
+To do so, use <code>backend="rust"</code> when calling <code>dump</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span>
+<span class="normal"><a href="#__codelineno-1-3">3</a></span>
+<span class="normal"><a href="#__codelineno-1-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mh">0x221548313</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">}}</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;rust&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>The potential performance gain may not be significant with other runtimes.
+One may want to benchmark the performance of the <code>rust</code> backend with their specific use case before using it.</p>
 <h3 id="combining-several-files">Combining several files</h3>
 <p>Use <code>combine</code> to combine several serialized files together.
 The combined files can be further combined.</p>
 <h4 id="combine-as-dict">Combine as <code>dict</code></h4>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-1-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-1-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-1-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-1-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-1-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-1-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-1-10">10</a></span>
-<span class="normal"><a href="#__codelineno-1-11">11</a></span>
-<span class="normal"><a href="#__codelineno-1-12">12</a></span>
-<span class="normal"><a href="#__codelineno-1-13">13</a></span>
-<span class="normal"><a href="#__codelineno-1-14">14</a></span>
-<span class="normal"><a href="#__codelineno-1-15">15</a></span>
-<span class="normal"><a href="#__codelineno-1-16">16</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">FileInfo</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)})</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="n">combine</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;dict&quot;</span><span class="p">),</span> <span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">)])</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="c1"># support recursively combining files</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="c1"># ...</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11"></a><span class="c1"># the combined file uses a dict layout</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12"></a><span class="c1"># { &#39;dict&#39; : {&#39;1&#39;:1,&#39;2&#39;:2,...}, &#39;list&#39; : [1.0,2.0,3.0,...] }</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13"></a><span class="c1"># so one can read it as follows, details in coming section</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;dict/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">101</span>  <span class="c1"># also reader[&#39;dict&#39;][101]</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;list/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">101.0</span>  <span class="c1"># also reader[&#39;list&#39;][101]</span>
-</code></pre></div></td></tr></table></div>
-<h4 id="combine-as-list">Combine as <code>list</code></h4>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-2-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-2-3"> 3</a></span>
@@ -1104,19 +1083,18 @@ The combined files can be further combined.</p>
 <a id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)})</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="n">combine</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">),</span> <span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">)])</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="n">combine</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;dict&quot;</span><span class="p">),</span> <span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">)])</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="c1"># support recursively combining files</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9"></a><span class="c1"># ...</span>
 <a id="__codelineno-2-10" name="__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11"></a><span class="c1"># the combined file uses a list layout</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12"></a><span class="c1"># [ {&#39;1&#39;:1,&#39;2&#39;:2,...}, [1.0,2.0,3.0,...] ]</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11"></a><span class="c1"># the combined file uses a dict layout</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12"></a><span class="c1"># { &#39;dict&#39; : {&#39;1&#39;:1,&#39;2&#39;:2,...}, &#39;list&#39; : [1.0,2.0,3.0,...] }</span>
 <a id="__codelineno-2-13" name="__codelineno-2-13"></a><span class="c1"># so one can read it as follows, details in coming section</span>
 <a id="__codelineno-2-14" name="__codelineno-2-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;0/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">101</span>  <span class="c1"># also reader[0][101]</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;1/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">101.0</span>  <span class="c1"># also reader[1][101]</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;dict/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">101</span>  <span class="c1"># also reader[&#39;dict&#39;][101]</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;list/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">101.0</span>  <span class="c1"># also reader[&#39;list&#39;][101]</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="deserialization">Deserialization</h2>
-<p>Use <code>LazyReader</code> to read a file.</p>
+<h4 id="combine-as-list">Combine as <code>list</code></h4>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-3-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-3-3"> 3</a></span>
@@ -1130,27 +1108,27 @@ The combined files can be further combined.</p>
 <span class="normal"><a href="#__codelineno-3-11">11</a></span>
 <span class="normal"><a href="#__codelineno-3-12">12</a></span>
 <span class="normal"><a href="#__codelineno-3-13">13</a></span>
-<span class="normal"><a href="#__codelineno-3-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span><span class="p">,</span> <span class="n">to_obj</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># return a LazyDict, LazyList, dict, list or primitive value</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s2">&quot;b/c&quot;</span><span class="p">]</span>  <span class="c1"># subscriptable if the actual data is subscriptable</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6"></a>    <span class="c1"># data = reader[2:]  # also support slicing if its underlying data is list compatible</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;b/c&quot;</span><span class="p">)</span>  <span class="c1"># or provide a path to visit a particular node</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># 4</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9"></a>    <span class="n">b_dict</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">b_dict</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>  <span class="c1"># &lt;class &#39;msglc.reader.LazyDict&#39;&gt;</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11"></a>    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>  <span class="c1"># dict compatible</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12"></a>        <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>  <span class="c1"># c 4, d 5</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14"></a>    <span class="n">b_json</span> <span class="o">=</span> <span class="n">to_obj</span><span class="p">(</span><span class="n">b_dict</span><span class="p">)</span>  <span class="c1"># ensure plain dict</span>
+<span class="normal"><a href="#__codelineno-3-14">14</a></span>
+<span class="normal"><a href="#__codelineno-3-15">15</a></span>
+<span class="normal"><a href="#__codelineno-3-16">16</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">FileInfo</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)})</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">)])</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7"></a><span class="n">combine</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;dict.msg&quot;</span><span class="p">),</span> <span class="n">FileInfo</span><span class="p">(</span><span class="s2">&quot;list.msg&quot;</span><span class="p">)])</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8"></a><span class="c1"># support recursively combining files</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9"></a><span class="c1"># ...</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11"></a><span class="c1"># the combined file uses a list layout</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12"></a><span class="c1"># [ {&#39;1&#39;:1,&#39;2&#39;:2,...}, [1.0,2.0,3.0,...] ]</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13"></a><span class="c1"># so one can read it as follows, details in coming section</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;0/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">101</span>  <span class="c1"># also reader[0][101]</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16"></a>    <span class="k">assert</span> <span class="n">reader</span><span class="p">[</span><span class="s1">&#39;1/101&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">101.0</span>  <span class="c1"># also reader[1][101]</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="raw-data-extraction">Raw Data Extraction</h2>
-<p>It is possible to extract the raw bytes from a <code>LazyReader</code>.</p>
-<h3 id="raw-msgpack-compatible-data">Raw <code>msgpack</code> Compatible Data</h3>
-<p>The serialized binary blob effectively consists of the <code>msgpack</code> compatible data and some metadata.
-If for some reason (need to interoperate with plain <code>msgpack</code> encoder/decoder, etc.), the vanilla <code>msgpack</code> compatible
-data is needed, it can be extracted as follows.</p>
+<h2 id="deserialization">Deserialization</h2>
+<p>Use <code>LazyReader</code> to read a file.</p>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-4-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-4-3"> 3</a></span>
@@ -1162,76 +1140,66 @@ data is needed, it can be extracted as follows.</p>
 <span class="normal"><a href="#__codelineno-4-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-4-10">10</a></span>
 <span class="normal"><a href="#__codelineno-4-11">11</a></span>
-<span class="normal"><a href="#__codelineno-4-12">12</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msgpack</span><span class="w"> </span><span class="kn">import</span> <span class="n">unpackb</span>
+<span class="normal"><a href="#__codelineno-4-12">12</a></span>
+<span class="normal"><a href="#__codelineno-4-13">13</a></span>
+<span class="normal"><a href="#__codelineno-4-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span><span class="p">,</span> <span class="n">to_obj</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9"></a>    <span class="n">msgpack_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">msgpack_raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10"></a>    <span class="c1"># this can be unpacked by any standard msgpack decoder</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11"></a>    <span class="c1"># this prints: {&#39;a&#39;: [1, 2, 3]}</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">unpackb</span><span class="p">(</span><span class="n">msgpack_raw</span><span class="p">))</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># return a LazyDict, LazyList, dict, list or primitive value</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="p">[</span><span class="s2">&quot;b/c&quot;</span><span class="p">]</span>  <span class="c1"># subscriptable if the actual data is subscriptable</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6"></a>    <span class="c1"># data = reader[2:]  # also support slicing if its underlying data is list compatible</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;b/c&quot;</span><span class="p">)</span>  <span class="c1"># or provide a path to visit a particular node</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># 4</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9"></a>    <span class="n">b_dict</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">b_dict</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>  <span class="c1"># &lt;class &#39;msglc.reader.LazyDict&#39;&gt;</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11"></a>    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>  <span class="c1"># dict compatible</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12"></a>        <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13"></a>            <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>  <span class="c1"># c 4, d 5</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14"></a>    <span class="n">b_json</span> <span class="o">=</span> <span class="n">to_obj</span><span class="p">(</span><span class="n">b_dict</span><span class="p">)</span>  <span class="c1"># ensure plain dict</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="raw-data-extraction">Raw Data Extraction</h2>
+<p>It is possible to extract the raw bytes from a <code>LazyReader</code>.</p>
+<h3 id="raw-msgpack-compatible-data">Raw <code>msgpack</code> Compatible Data</h3>
+<p>The serialized binary blob effectively consists of the <code>msgpack</code> compatible data and some metadata.
+If for some reason (need to interoperate with plain <code>msgpack</code> encoder/decoder, etc.), the vanilla <code>msgpack</code> compatible
+data is needed, it can be extracted as follows.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-5-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-5-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-5-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-5-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-5-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-5-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-5-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-5-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-5-10">10</a></span>
+<span class="normal"><a href="#__codelineno-5-11">11</a></span>
+<span class="normal"><a href="#__codelineno-5-12">12</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msgpack</span><span class="w"> </span><span class="kn">import</span> <span class="n">unpackb</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6"></a><span class="n">dump</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9"></a>    <span class="n">msgpack_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">msgpack_raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10"></a>    <span class="c1"># this can be unpacked by any standard msgpack decoder</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11"></a>    <span class="c1"># this prints: {&#39;a&#39;: [1, 2, 3]}</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">unpackb</span><span class="p">(</span><span class="n">msgpack_raw</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="raw-binary-data">Raw Binary Data</h3>
 <p>The raw binary data that is recognizable by <code>msglc</code> can also be extracted.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
-<span class="normal"><a href="#__codelineno-5-2">2</a></span>
-<span class="normal"><a href="#__codelineno-5-3">3</a></span>
-<span class="normal"><a href="#__codelineno-5-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4"></a>    <span class="n">msglc_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span>
+<span class="normal"><a href="#__codelineno-6-2">2</a></span>
+<span class="normal"><a href="#__codelineno-6-3">3</a></span>
+<span class="normal"><a href="#__codelineno-6-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;data.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4"></a>    <span class="n">msglc_raw</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <p>By design, combining serialized object does not change the underlying data, thus the extracted raw data from a combined
 file can be directly flushed to a separate file without decoding and re-encoding.
 In other words, splitting a combined file is merely plain copying of the raw binary data.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1"> 1</a></span>
-<span class="normal"><a href="#__codelineno-6-2"> 2</a></span>
-<span class="normal"><a href="#__codelineno-6-3"> 3</a></span>
-<span class="normal"><a href="#__codelineno-6-4"> 4</a></span>
-<span class="normal"><a href="#__codelineno-6-5"> 5</a></span>
-<span class="normal"><a href="#__codelineno-6-6"> 6</a></span>
-<span class="normal"><a href="#__codelineno-6-7"> 7</a></span>
-<span class="normal"><a href="#__codelineno-6-8"> 8</a></span>
-<span class="normal"><a href="#__codelineno-6-9"> 9</a></span>
-<span class="normal"><a href="#__codelineno-6-10">10</a></span>
-<span class="normal"><a href="#__codelineno-6-11">11</a></span>
-<span class="normal"><a href="#__codelineno-6-12">12</a></span>
-<span class="normal"><a href="#__codelineno-6-13">13</a></span>
-<span class="normal"><a href="#__codelineno-6-14">14</a></span>
-<span class="normal"><a href="#__codelineno-6-15">15</a></span>
-<span class="normal"><a href="#__codelineno-6-16">16</a></span>
-<span class="normal"><a href="#__codelineno-6-17">17</a></span>
-<span class="normal"><a href="#__codelineno-6-18">18</a></span>
-<span class="normal"><a href="#__codelineno-6-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileInfo</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">LazyReader</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="c1"># prepare a combined file</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="n">combine</span><span class="p">(</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5"></a>    <span class="s1">&#39;combined.msg&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6"></a>    <span class="p">[</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7"></a>        <span class="n">FileInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child_dict&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">}),</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8"></a>        <span class="n">FileInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child_list&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9"></a>    <span class="p">],</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10"></a><span class="p">)</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11"></a>
-<a id="__codelineno-6-12" name="__codelineno-6-12"></a><span class="c1"># extract the child</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13"></a><span class="c1"># !!! only binary copying is involved, no decoding and re-encoding, thus very efficient</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">combined</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;child_dict.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">child_dict</span><span class="p">:</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15"></a>    <span class="n">child_dict</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">combined</span><span class="p">[</span><span class="s2">&quot;child_dict&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<a id="__codelineno-6-16" name="__codelineno-6-16"></a>
-<a id="__codelineno-6-17" name="__codelineno-6-17"></a><span class="c1"># this will print {&#39;a&#39;: &#39;a&#39;, &#39;b&#39;: &#39;b&#39;}</span>
-<a id="__codelineno-6-18" name="__codelineno-6-18"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;child_dict.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">child_dict</span><span class="p">:</span>
-<a id="__codelineno-6-19" name="__codelineno-6-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">child_dict</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
-</code></pre></div></td></tr></table></div>
-<h2 id="streaming-data">Streaming Data</h2>
-<p>The data fed to the writer does not need to be fully generated in advance.
-It is possible to generate data on the fly.</p>
-<p>The writer expects and recognizes <code>collections.abc.Mapping</code> objects.
-It is thus possible to fake a dictionary with items generated from generators.</p>
-<p>The following is a minimum implementation.</p>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-7-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-7-3"> 3</a></span>
@@ -1250,37 +1218,32 @@ It is thus possible to fake a dictionary with items generated from generators.</
 <span class="normal"><a href="#__codelineno-7-16">16</a></span>
 <span class="normal"><a href="#__codelineno-7-17">17</a></span>
 <span class="normal"><a href="#__codelineno-7-18">18</a></span>
-<span class="normal"><a href="#__codelineno-7-19">19</a></span>
-<span class="normal"><a href="#__codelineno-7-20">20</a></span>
-<span class="normal"><a href="#__codelineno-7-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="normal"><a href="#__codelineno-7-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileInfo</span><span class="p">,</span> <span class="n">combine</span><span class="p">,</span> <span class="n">LazyReader</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3"></a>
-<a id="__codelineno-7-4" name="__codelineno-7-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">DictStream</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="n">length</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">generator</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8"></a>
-<a id="__codelineno-7-9" name="__codelineno-7-9"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10"></a>
-<a id="__codelineno-7-11" name="__codelineno-7-11"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">/</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12"></a>
-<a id="__codelineno-7-13" name="__codelineno-7-13"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14"></a>        <span class="c1"># required</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15"></a>        <span class="c1"># note that the length needs to be known in advance</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16"></a>        <span class="c1"># you do not want to get it from the generator as doing so consumes it</span>
-<a id="__codelineno-7-17" name="__codelineno-7-17"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18"></a>
-<a id="__codelineno-7-19" name="__codelineno-7-19"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20"></a>        <span class="c1"># required</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3"></a><span class="c1"># prepare a combined file</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4"></a><span class="n">combine</span><span class="p">(</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5"></a>    <span class="s1">&#39;combined.msg&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6"></a>    <span class="p">[</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7"></a>        <span class="n">FileInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child_dict&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">}),</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8"></a>        <span class="n">FileInfo</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;child_list&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9"></a>    <span class="p">],</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10"></a><span class="p">)</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11"></a>
+<a id="__codelineno-7-12" name="__codelineno-7-12"></a><span class="c1"># extract the child</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13"></a><span class="c1"># !!! only binary copying is involved, no decoding and re-encoding, thus very efficient</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;combined.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">combined</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;child_dict.msg&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">child_dict</span><span class="p">:</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15"></a>    <span class="n">child_dict</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">combined</span><span class="p">[</span><span class="s2">&quot;child_dict&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span><span class="p">(</span><span class="n">chunked</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16"></a>
+<a id="__codelineno-7-17" name="__codelineno-7-17"></a><span class="c1"># this will print {&#39;a&#39;: &#39;a&#39;, &#39;b&#39;: &#39;b&#39;}</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="s2">&quot;child_dict.msg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">child_dict</span><span class="p">:</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">child_dict</span><span class="o">.</span><span class="n">to_obj</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
-<div class="admonition warning">
-<p class="admonition-title">length requirement</p>
-<p>Only two things will be invoked: <code>len()</code> and <code>.items()</code>.
-Thus, <code>__len__(self)</code> and <code>items(self)</code> must be properly implemented.
-If the length is <strong>not</strong> known in advance, streaming data is not feasible.</p>
-</div>
-<p>With the above, one can do the following.</p>
+<h2 id="streaming-data">Streaming Data</h2>
+<p>The data fed to the writer does not need to be fully generated in advance.
+It is possible to generate data on the fly.</p>
+<p>The writer expects and recognizes <code>collections.abc.Mapping</code> objects.
+It is thus possible to fake a dictionary with items generated from generators.</p>
+<p>The following is a minimum implementation.</p>
 <div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-8-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-8-3"> 3</a></span>
@@ -1294,20 +1257,69 @@ If the length is <strong>not</strong> known in advance, streaming data is not fe
 <span class="normal"><a href="#__codelineno-8-11">11</a></span>
 <span class="normal"><a href="#__codelineno-8-12">12</a></span>
 <span class="normal"><a href="#__codelineno-8-13">13</a></span>
-<span class="normal"><a href="#__codelineno-8-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<span class="normal"><a href="#__codelineno-8-14">14</a></span>
+<span class="normal"><a href="#__codelineno-8-15">15</a></span>
+<span class="normal"><a href="#__codelineno-8-16">16</a></span>
+<span class="normal"><a href="#__codelineno-8-17">17</a></span>
+<span class="normal"><a href="#__codelineno-8-18">18</a></span>
+<span class="normal"><a href="#__codelineno-8-19">19</a></span>
+<span class="normal"><a href="#__codelineno-8-20">20</a></span>
+<span class="normal"><a href="#__codelineno-8-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Mapping</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2"></a>
 <a id="__codelineno-8-3" name="__codelineno-8-3"></a>
-<a id="__codelineno-8-4" name="__codelineno-8-4"></a>
-<a id="__codelineno-8-5" name="__codelineno-8-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">example</span><span class="p">():</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6"></a>    <span class="k">yield</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7"></a>    <span class="k">yield</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="mi">2</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">DictStream</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_len</span> <span class="o">=</span> <span class="n">length</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">generator</span>
 <a id="__codelineno-8-8" name="__codelineno-8-8"></a>
-<a id="__codelineno-8-9" name="__codelineno-8-9"></a>
-<a id="__codelineno-8-10" name="__codelineno-8-10"></a><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;example.msg&quot;</span>
-<a id="__codelineno-8-11" name="__codelineno-8-11"></a><span class="n">dump</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">DictSteam</span><span class="p">(</span><span class="n">example</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10"></a>
+<a id="__codelineno-8-11" name="__codelineno-8-11"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">/</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># not used by writer but has to be implemented</span>
 <a id="__codelineno-8-12" name="__codelineno-8-12"></a>
-<a id="__codelineno-8-13" name="__codelineno-8-13"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
-<a id="__codelineno-8-14" name="__codelineno-8-14"></a>    <span class="k">assert</span> <span class="n">reader</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14"></a>        <span class="c1"># required</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15"></a>        <span class="c1"># note that the length needs to be known in advance</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16"></a>        <span class="c1"># you do not want to get it from the generator as doing so consumes it</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_len</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18"></a>
+<a id="__codelineno-8-19" name="__codelineno-8-19"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20"></a>        <span class="c1"># required</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21"></a>        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span>
+</code></pre></div></td></tr></table></div>
+<div class="admonition warning">
+<p class="admonition-title">length requirement</p>
+<p>Only two things will be invoked: <code>len()</code> and <code>.items()</code>.
+Thus, <code>__len__(self)</code> and <code>items(self)</code> must be properly implemented.
+If the length is <strong>not</strong> known in advance, streaming data is not feasible.</p>
+</div>
+<p>With the above, one can do the following.</p>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-9-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-9-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-9-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-9-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-9-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-9-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-9-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-9-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-9-10">10</a></span>
+<span class="normal"><a href="#__codelineno-9-11">11</a></span>
+<span class="normal"><a href="#__codelineno-9-12">12</a></span>
+<span class="normal"><a href="#__codelineno-9-13">13</a></span>
+<span class="normal"><a href="#__codelineno-9-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">msglc.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyReader</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5"></a><span class="k">def</span><span class="w"> </span><span class="nf">example</span><span class="p">():</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6"></a>    <span class="k">yield</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7"></a>    <span class="k">yield</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="mi">2</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9"></a>
+<a id="__codelineno-9-10" name="__codelineno-9-10"></a><span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;example.msg&quot;</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11"></a><span class="n">dump</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">DictSteam</span><span class="p">(</span><span class="n">example</span><span class="p">(),</span> <span class="mi">2</span><span class="p">))</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12"></a>
+<a id="__codelineno-9-13" name="__codelineno-9-13"></a><span class="k">with</span> <span class="n">LazyReader</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14"></a>    <span class="k">assert</span> <span class="n">reader</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 
 
