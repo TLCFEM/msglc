@@ -15,6 +15,7 @@
 
 import random
 from collections.abc import Generator, Mapping
+from datetime import datetime
 from io import BytesIO
 from itertools import cycle
 
@@ -551,3 +552,14 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
 def test_rust_basic_types(tmpdir, data):
     with tmpdir.as_cwd():
         assert_identical_bytes(data)
+
+
+@pytest.mark.parametrize(
+    "data",
+    [datetime.now()],
+    ids=["timestamp"],
+)
+def test_rust_invalid_types(tmpdir, data):
+    with tmpdir.as_cwd(), pytest.raises(TypeError) as exc_info:
+        dump("data-rust.msg", data, backend="rust")
+        assert str(exc_info.value) == "Unsupported type."
