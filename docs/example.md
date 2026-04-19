@@ -13,6 +13,19 @@ data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
 dump("data.msg", data)
 ```
 
+If using `CPython` runtime, it may be beneficial to use `rust` implementation of the writer for better performance.
+To do so, use `backend="rust"` when calling `dump`.
+
+```python
+from msglc import dump
+
+data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
+dump("data.msg", data, backend="rust")
+```
+
+The potential performance gain may not be significant with other runtimes.
+One may want to benchmark the performance of the `rust` backend with their specific use case before using it.
+
 ### Combining several files
 
 Use `combine` to combine several serialized files together.
@@ -178,9 +191,9 @@ class DictStream(Mapping):
 ```
 
 !!! warning "length requirement"
-    Only two things will be invoked: `len()` and `.items()`.
-    Thus, `__len__(self)` and `items(self)` must be properly implemented.
-    If the length is **not** known in advance, streaming data is not feasible.
+Only two things will be invoked: `len()` and `.items()`.
+Thus, `__len__(self)` and `items(self)` must be properly implemented.
+If the length is **not** known in advance, streaming data is not feasible.
 
 With the above, one can do the following.
 
