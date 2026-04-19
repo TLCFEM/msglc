@@ -4,12 +4,8 @@ edition = "2021"
 
 [lib]
 name = "msglc_rust"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "*"
+pyo3 = { version = "*", features = ["extension-module"] }
 rmp = "*"
-
-[features]
-extension-module = ["pyo3/extension-module"]
-default = ["extension-module"]
