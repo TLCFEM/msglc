@@ -131,7 +131,7 @@ def prepare(tmpdir_factory):
 @pytest.mark.parametrize("total", [0, 1, 2, 3, 4])
 @pytest.mark.parametrize(
     "unpacker",
-    [MsgpackCodec(), MsgspecCodec(), OrmsgpackCodec()],
+    [MsgpackCodec(), MsgspecCodec(), OrmsgpackCodec],
     ids=["vanilla", "msgspec", "ormsgpack"],
 )
 def test_matrix(prepare, benchmark, size, total, unpacker):
