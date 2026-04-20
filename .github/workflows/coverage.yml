@@ -40,7 +40,7 @@ jobs:
             source <(cargo llvm-cov show-env --sh)
             export CARGO_TARGET_DIR=$CARGO_LLVM_COV_TARGET_DIR
             uv pip install -e ".[all]" maturin
-            maturin develop --uv
+            uv run maturin develop --uv
           fi
           uv run ruff check --statistics .
           uv run pytest --cov=msglc --cov-report=xml tests/
