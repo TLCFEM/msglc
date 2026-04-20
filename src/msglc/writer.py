@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from .config import BufferReader, BufferWriter, FileSystem
 
 
-def _upsert(source: BufferReader, target: str, fs: FileSystem | None):
+def _upsert(source: BufferReader | TemporaryFile, target: str, fs: FileSystem | None):  # type: ignore
     if not fs:
         return
 
@@ -50,15 +50,23 @@ def _upsert(source: BufferReader, target: str, fs: FileSystem | None):
 
 
 class LazyBuffer:
-    def __init__(self, packer: LazyCodec | None, fs: FileSystem | None):
+    def __init__(
+        self,
+        buffer_or_path: str | UPath | BufferWriter,
+        packer: LazyCodec | None,
+        fs: FileSystem | None,
+    ):
+        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._packer: LazyCodec = packer or MsgpackCodec()
         self._fs: FileSystem | None = fs or config.fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._header_start: int = 0
+        self._file_start: int = 0
 
-    def _finalize(self, packed_toc: bytes, toc_start: int):
-        self._buffer.write(packed_toc)
+    def _finalize(self, toc: dict):
+        toc_start: int = self._buffer.tell() - self._file_start
+        self._buffer.write(packed_toc := self._packer.encode(toc))
         self._buffer.seek(self._header_start)
         self._buffer.write(self._packer.encode(toc_start).rjust(10, b"\0"))
         self._buffer.write(self._packer.encode(len(packed_toc)).rjust(10, b"\0"))
@@ -112,13 +120,10 @@ class LazyWriter(LazyBuffer):
         :param fs: `FileSystem` object to be used for storing
         :param toc_cls: a `TOC` packer class
         """
-        super().__init__(packer, fs)
-
-        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
+        super().__init__(buffer_or_path, packer, fs)
 
         self._toc_packer: TOC = None  # type: ignore
         self._toc_cls = toc_cls or TOC
-        self._file_start: int = 0
         self._no_more_writes: bool = False
 
     def __enter__(self):
@@ -178,9 +183,7 @@ class LazyWriter(LazyBuffer):
 
         self._no_more_writes = True
 
-        toc: dict = self._toc_packer.pack(obj)
-
-        self._finalize(self._packer.encode(toc), self._buffer.tell() - self._file_start)
+        self._finalize(self._toc_packer.pack(obj))
 
 
 class LazyCombiner(LazyBuffer):
@@ -202,13 +205,11 @@ class LazyCombiner(LazyBuffer):
         :param packer: packer object to be used for packing the object
         :param fs: `FileSystem` object to be used for storing
         """
-        super().__init__(packer, fs)
+        super().__init__(buffer_or_path, packer, fs)
 
-        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._mode: str = mode
 
         self._toc: dict | list = None  # type: ignore
-        self._file_start: int = 0
 
     def __enter__(self):
         if isinstance(self._buffer_or_path, str):
@@ -294,10 +295,7 @@ class LazyCombiner(LazyBuffer):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._finalize(
-            self._packer.encode({"t": self._toc}),
-            self._buffer.tell() - self._file_start,
-        )
+        self._finalize({"t": self._toc})
 
         if isinstance(self._buffer_or_path, str):
             _upsert(self._buffer, self._buffer_or_path, self._fs)
@@ -307,9 +305,9 @@ class LazyCombiner(LazyBuffer):
 
     def write(self, obj: Generator, name: str | None = None) -> None:
         """
-        Write a number of objects to the file.
+        Write the object to the file.
 
-        :param obj: a generator of objects to be written to the file
+        :param obj: the object to be written to the file, the generator shall yield data
         :param name: a name to be assigned to the object, only required when combining in dict mode
         """
         if self._toc is None:
