@@ -797,7 +797,7 @@ class LazyReader(LazyItem):
             self._raw_stats.data_size + self._raw_stats.toc_size,
         )
 
-    def msgpack_raw_data(self, chunked: bool = True):
+    def protocol_raw_data(self, chunked: bool = True):
         """
         Reads the msgpack data out as bytes.
         The data shall be fully compatible with the msgpack specification thus can be decoded by any msgpack decoders.
