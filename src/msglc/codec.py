@@ -29,9 +29,9 @@ class LazyCodec(ABC):
     def decode(self, data):
         raise NotImplementedError
 
-    @staticmethod
-    def stream_decode(data):
-        yield from msgpack.Unpacker(BytesIO(data))
+    @abstractmethod
+    def stream_decode(self, data):
+        raise NotImplementedError
 
 
 class MsgpackCodec(LazyCodec):
@@ -45,6 +45,9 @@ class MsgpackCodec(LazyCodec):
     def decode(self, data):
         self._unpacker.feed(data)
         return self._unpacker.unpack()
+
+    def stream_decode(self, data):
+        yield from msgpack.Unpacker(BytesIO(data))
 
 
 if find_spec("msgspec"):
@@ -60,6 +63,9 @@ if find_spec("msgspec"):
 
         def decode(self, data):
             return self._unpacker.decode(data)
+
+        def stream_decode(self, data):
+            yield from msgpack.Unpacker(BytesIO(data))
 else:
     MsgspecCodec = MsgpackCodec
 
@@ -73,5 +79,8 @@ if find_spec("ormsgpack"):
 
         def decode(self, data):
             return ormsgpack.unpackb(data)
+
+        def stream_decode(self, data):
+            yield from msgpack.Unpacker(BytesIO(data))
 else:
     OrmsgpackCodec = MsgpackCodec
