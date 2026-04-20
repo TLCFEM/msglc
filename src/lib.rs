@@ -146,9 +146,7 @@ fn build_tree(
     children: LazyContainer,
     small_obj_threshold: u64,
 ) -> LazyTOC {
-    let size = end_pos - start_pos;
-
-    if size <= small_obj_threshold {
+    if end_pos <= small_obj_threshold + start_pos {
         return LazyTOC::Leaf {
             pos: [start_pos, end_pos],
         };
