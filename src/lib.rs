@@ -100,7 +100,7 @@ impl LazyTOC {
             LazyTOC::Blocked { blocks } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py)?;
                 rmp::encode::write_str(out, "p").map_err(to_py)?;
-                rmp::encode::write_array_len(out, blocks.len() as u32).map_err(to_py)?;
+                rmp::encode::write_array_len(out, u32::try_from(blocks.len())?).map_err(to_py)?;
                 for &(count, start, end) in blocks {
                     rmp::encode::write_array_len(out, 3).map_err(to_py)?;
                     rmp::encode::write_uint(out, count).map_err(to_py)?;
@@ -117,14 +117,16 @@ impl LazyTOC {
                 rmp::encode::write_str(out, "t").map_err(to_py)?;
                 match container {
                     LazyContainer::Map(items) => {
-                        rmp::encode::write_map_len(out, items.len() as u32).map_err(to_py)?;
+                        rmp::encode::write_map_len(out, u32::try_from(items.len())?)
+                            .map_err(to_py)?;
                         for (key, child) in items {
                             write_primitive(key.bind(py), out)?;
                             child.encode(py, out)?;
                         }
                     }
                     LazyContainer::Array(items) => {
-                        rmp::encode::write_array_len(out, items.len() as u32).map_err(to_py)?;
+                        rmp::encode::write_array_len(out, u32::try_from(items.len())?)
+                            .map_err(to_py)?;
                         for child in items {
                             child.encode(py, out)?;
                         }
@@ -305,7 +307,7 @@ impl<'py> LazyWriter<'py> {
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(value.len());
 
-        rmp::encode::write_map_len(&mut self.buffer, value.len() as u32).map_err(to_py)?;
+        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(value.len())?).map_err(to_py)?;
 
         for (k, v) in value.iter() {
             write_primitive(&k, &mut self.buffer)?;
@@ -334,7 +336,7 @@ impl<'py> LazyWriter<'py> {
         let mut all_trivial = true;
         let mut items = Vec::with_capacity(len);
 
-        rmp::encode::write_array_len(&mut self.buffer, len as u32).map_err(to_py)?;
+        rmp::encode::write_array_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
 
         for item in iter {
             let node = self.pack(&item)?;
