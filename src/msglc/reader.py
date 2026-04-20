@@ -27,6 +27,7 @@ from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
+from .codec import LazyCodec, MsgspecCodec
 from .config import (
     BufferReaderType,
     config,
@@ -34,7 +35,6 @@ from .config import (
     increment_gc_counter,
 )
 from .index import normalise_index, to_index
-from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
 
 if TYPE_CHECKING:
@@ -99,19 +99,19 @@ class LazyItem:
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: LazyCodec | None = None,
     ):
         self._buffer: BufferReader = buffer
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
-        self._unpacker: Unpacker
-        if isinstance(unpacker, Unpacker):
+        self._unpacker: LazyCodec
+        if isinstance(unpacker, LazyCodec):
             self._unpacker = unpacker
-        elif isclass(unpacker) and issubclass(unpacker, Unpacker):
+        elif isclass(unpacker) and issubclass(unpacker, LazyCodec):
             self._unpacker = unpacker()
         elif unpacker is None:
-            self._unpacker = MsgspecUnpacker()
+            self._unpacker = MsgspecCodec()
         else:
             raise TypeError("Need a valid unpacker.")
 
@@ -242,7 +242,7 @@ class LazyList(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: LazyCodec | None = None,
     ):
         super().__init__(
             buffer, offset, counter=counter, cached=cached, unpacker=unpacker
@@ -412,7 +412,7 @@ class LazyDict(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: LazyCodec | None = None,
     ):
         super().__init__(
             buffer, offset, counter=counter, cached=cached, unpacker=unpacker
@@ -513,21 +513,24 @@ class LazyReader(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: LazyCodec | None = None,
         fs: FileSystem | None = None,
     ):
         """
         It is possible to use a customized unpacker.
-        Please inherit the `Unpacker` class from the `unpacker.py`.
+        Please inherit the `LazyCodec` class from the `codec.py`.
         There are already several unpackers available using different libraries.
 
         ```py
-        class CustomUnpacker(Unpacker):
+        class CustomCodec(LazyCodec):
+            def encode(self, data: bytes):
+                # provide the encoding logic
+                ...
             def decode(self, data: bytes):
                 # provide the decoding logic
                 ...
 
-        with LazyReader("file.msg", unpacker=CustomUnpacker()) as reader:
+        with LazyReader("file.msg", unpacker=CustomCodec()) as reader:
             # read the data
             ...
         ```

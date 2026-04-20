@@ -42,7 +42,7 @@ To this end, we repeatedly read random locations in the matrix and measure the t
 ```py
 @timeit
 def read_msg(file: str):
-    with LazyReader(file, unpacker=MsgspecUnpacker, cached=False) as reader:
+    with LazyReader(file, unpacker=MsgspecCodec, cached=False) as reader:
         for _ in range(repeat):
             reader[random.randint(0, 4999)][random.randint(0, 4999)]
 
@@ -52,7 +52,7 @@ def read_h5(file: str):
     with h5py.File(file, "r") as f:
         dataset = f["data"]
         for _ in range(repeat):
-            dataset[random.randint(0, 4999)][random.randint(0, 4999)]`
+            dataset[random.randint(0, 4999)][random.randint(0, 4999)]
 ```
 
 The following is the result of reading 1000 elements.

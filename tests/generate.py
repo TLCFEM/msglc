@@ -20,9 +20,9 @@ import string
 import msgpack  # type: ignore
 
 from msglc import dump
+from msglc.codec import LazyCodec
 from msglc.config import configure
 from msglc.reader import LazyDict, LazyList, LazyReader, LazyStats
-from msglc.unpacker import Unpacker
 
 
 def generate_token():
@@ -124,7 +124,7 @@ def generate(*, depth=6, width=11, threshold=23):
         configure_and_dump(archive, step)
 
 
-def compare(mode, size: int = 13, total: int = 5, unpacker: Unpacker = None):
+def compare(mode, size: int = 13, total: int = 5, unpacker: LazyCodec = None):
     accumulator: int = 0
 
     with open("path.txt") as f:

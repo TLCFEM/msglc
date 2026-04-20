@@ -19,13 +19,13 @@ from importlib.util import find_spec
 import msgpack
 
 
-class Unpacker(ABC):
+class LazyCodec(ABC):
     @abstractmethod
     def decode(self, data):
         raise NotImplementedError
 
 
-class MsgpackUnpacker(Unpacker):
+class MsgpackCodec(LazyCodec):
     def __init__(self):
         self._unpacker = msgpack.Unpacker()
 
@@ -37,21 +37,21 @@ class MsgpackUnpacker(Unpacker):
 if find_spec("msgspec"):
     import msgspec
 
-    class MsgspecUnpacker(Unpacker):
+    class MsgspecCodec(LazyCodec):
         def __init__(self):
             self._unpacker = msgspec.msgpack.Decoder()
 
         def decode(self, data):
             return self._unpacker.decode(data)
 else:
-    MsgspecUnpacker = MsgpackUnpacker
+    MsgspecCodec = MsgpackCodec
 
 
 if find_spec("ormsgpack"):
     import ormsgpack
 
-    class OrmsgpackUnpacker(Unpacker):
+    class OrmsgpackCodec(LazyCodec):
         def decode(self, data):
             return ormsgpack.unpackb(data)
 else:
-    OrmsgpackUnpacker = MsgpackUnpacker
+    OrmsgpackCodec = MsgpackCodec
