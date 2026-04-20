@@ -5,6 +5,17 @@ build-backend = "maturin"
 [tool.maturin]
 python-source = "src"
 module-name = "msglc.msglc_rust"
+exclude = [
+    ".github/**/*",
+    ".gitignore",
+    "docs/**/*",
+    "MANIFEST.in",
+    "mkdocs.yml",
+    "README.md",
+    "requirements*",
+    "scripts/**/*",
+    "tests/**/*",
+]
 
 [project]
 version = "260319"

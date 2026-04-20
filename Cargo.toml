@@ -1,6 +1,11 @@
 [package]
 name = "msglc"
 edition = "2021"
+description = "rust extension of msglc writer"
+license-file = "LICENSE"
+documentation = "https://github.com/TLCFEM/msglc"
+homepage = "https://github.com/TLCFEM/msglc"
+repository = "https://github.com/TLCFEM/msglc"
 
 [lib]
 name = "msglc_rust"
