@@ -18,15 +18,13 @@ from __future__ import annotations
 import asyncio
 import pickle
 from dataclasses import dataclass
-from inspect import isclass
-from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
-import msgpack
 from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
+from .codec import LazyCodec, acquire_codec
 from .config import (
     BufferReaderType,
     config,
@@ -34,7 +32,6 @@ from .config import (
     increment_gc_counter,
 )
 from .index import normalise_index, to_index
-from .unpacker import MsgspecUnpacker, Unpacker
 from .writer import LazyWriter
 
 if TYPE_CHECKING:
@@ -99,21 +96,13 @@ class LazyItem:
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: type[LazyCodec] | LazyCodec | None = None,
     ):
         self._buffer: BufferReader = buffer
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
-        self._unpacker: Unpacker
-        if isinstance(unpacker, Unpacker):
-            self._unpacker = unpacker
-        elif isclass(unpacker) and issubclass(unpacker, Unpacker):
-            self._unpacker = unpacker()
-        elif unpacker is None:
-            self._unpacker = MsgspecUnpacker()
-        else:
-            raise TypeError("Need a valid unpacker.")
+        self._unpacker: LazyCodec = acquire_codec(unpacker)
 
         self._accessed_items: int = 0
 
@@ -242,7 +231,7 @@ class LazyList(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: LazyCodec | None = None,
     ):
         super().__init__(
             buffer, offset, counter=counter, cached=cached, unpacker=unpacker
@@ -285,7 +274,7 @@ class LazyList(LazyItem):
                 low = mid
 
     def _all(self, start: int, end: int) -> list:
-        return list(msgpack.Unpacker(BytesIO(self._readb(start, end))))
+        return list(self._unpacker.stream_decode(self._readb(start, end)))
 
     def __getitem__(self, index):
         index_range: list | range
@@ -412,7 +401,7 @@ class LazyDict(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: LazyCodec | None = None,
     ):
         super().__init__(
             buffer, offset, counter=counter, cached=cached, unpacker=unpacker
@@ -513,21 +502,24 @@ class LazyReader(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: Unpacker | None = None,
+        unpacker: type[LazyCodec] | LazyCodec | None = None,
         fs: FileSystem | None = None,
     ):
         """
         It is possible to use a customized unpacker.
-        Please inherit the `Unpacker` class from the `unpacker.py`.
+        Please inherit the `LazyCodec` class from the `codec.py`.
         There are already several unpackers available using different libraries.
 
         ```py
-        class CustomUnpacker(Unpacker):
+        class CustomCodec(LazyCodec):
+            def encode(self, data: bytes):
+                # provide the encoding logic
+                ...
             def decode(self, data: bytes):
                 # provide the decoding logic
                 ...
 
-        with LazyReader("file.msg", unpacker=CustomUnpacker()) as reader:
+        with LazyReader("file.msg", unpacker=CustomCodec()) as reader:
             # read the data
             ...
         ```
@@ -796,7 +788,7 @@ class LazyReader(LazyItem):
             self._raw_stats.data_size + self._raw_stats.toc_size,
         )
 
-    def msgpack_raw_data(self, chunked: bool = True):
+    def protocol_raw_data(self, chunked: bool = True):
         """
         Reads the msgpack data out as bytes.
         The data shall be fully compatible with the msgpack specification thus can be decoded by any msgpack decoders.

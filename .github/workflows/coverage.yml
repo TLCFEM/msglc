@@ -4,11 +4,14 @@ on:
   pull_request:
 permissions:
   contents: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       rustfs:
         image: rustfs/rustfs:latest

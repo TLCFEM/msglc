@@ -6,8 +6,8 @@ import h5py
 import matplotlib.pyplot as plt
 from timer import get_color, timeit
 
+from msglc.codec import MsgspecCodec
 from msglc.reader import LazyReader
-from msglc.unpacker import MsgspecUnpacker
 
 repeat = 1000
 
@@ -22,7 +22,7 @@ except ImportError:
 
 @timeit
 def read_msg(file: str):
-    with LazyReader(file, unpacker=MsgspecUnpacker, cached=False) as reader:
+    with LazyReader(file, unpacker=MsgspecCodec, cached=False) as reader:
         for _ in range(repeat):
             reader[random.randint(0, 4999)][random.randint(0, 4999)]
 

@@ -15,43 +15,86 @@
 
 from abc import ABC, abstractmethod
 from importlib.util import find_spec
+from inspect import isclass
+from io import BytesIO
 
 import msgpack
 
 
-class Unpacker(ABC):
+class LazyCodec(ABC):
+    @abstractmethod
+    def encode(self, data):
+        raise NotImplementedError
+
     @abstractmethod
     def decode(self, data):
         raise NotImplementedError
 
+    @abstractmethod
+    def stream_decode(self, data):
+        raise NotImplementedError
 
-class MsgpackUnpacker(Unpacker):
+
+class MsgpackCodec(LazyCodec):
     def __init__(self):
+        self._packer = msgpack.Packer()
         self._unpacker = msgpack.Unpacker()
+
+    def encode(self, data):
+        return self._packer.pack(data)
 
     def decode(self, data):
         self._unpacker.feed(data)
         return self._unpacker.unpack()
 
+    def stream_decode(self, data):
+        yield from msgpack.Unpacker(BytesIO(data))
+
 
 if find_spec("msgspec"):
     import msgspec
 
-    class MsgspecUnpacker(Unpacker):
+    class MsgspecCodec(LazyCodec):
         def __init__(self):
+            self._packer = msgspec.msgpack.Encoder()
             self._unpacker = msgspec.msgpack.Decoder()
+
+        def encode(self, data):
+            return self._packer.encode(data)
 
         def decode(self, data):
             return self._unpacker.decode(data)
+
+        def stream_decode(self, data):
+            yield from msgpack.Unpacker(BytesIO(data))
 else:
-    MsgspecUnpacker = MsgpackUnpacker
+    MsgspecCodec = MsgpackCodec
 
 
 if find_spec("ormsgpack"):
     import ormsgpack
 
-    class OrmsgpackUnpacker(Unpacker):
+    class OrmsgpackCodec(LazyCodec):
+        def encode(self, data):
+            return ormsgpack.packb(data)
+
         def decode(self, data):
             return ormsgpack.unpackb(data)
+
+        def stream_decode(self, data):
+            yield from msgpack.Unpacker(BytesIO(data))
 else:
-    OrmsgpackUnpacker = MsgpackUnpacker
+    OrmsgpackCodec = MsgpackCodec
+
+
+def acquire_codec(codec: type[LazyCodec] | LazyCodec | None) -> LazyCodec:
+    if isinstance(codec, LazyCodec):
+        return codec
+
+    if isclass(codec) and issubclass(codec, LazyCodec):
+        return codec()
+
+    if codec is None:
+        return MsgspecCodec()
+
+    raise TypeError("Need a valid codec.")

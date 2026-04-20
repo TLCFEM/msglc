@@ -113,7 +113,7 @@ from msglc.reader import LazyReader
 dump("data.msg", {"a": [1, 2, 3]})
 
 with LazyReader("data.msg") as reader:
-    msgpack_raw = reader.msgpack_raw_data(chunked=False)
+    msgpack_raw = reader.protocol_raw_data(chunked=False)
     # this can be unpacked by any standard msgpack decoder
     # this prints: {'a': [1, 2, 3]}
     print(unpackb(msgpack_raw))
