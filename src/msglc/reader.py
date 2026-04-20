@@ -97,7 +97,7 @@ class LazyItem:
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: LazyCodec | None = None,
+        unpacker: type[LazyCodec] | LazyCodec | None = None,
     ):
         self._buffer: BufferReader = buffer
         self._offset: int = offset  # start of original data
@@ -511,7 +511,7 @@ class LazyReader(LazyItem):
         *,
         counter: LazyStats | None = None,
         cached: bool = True,
-        unpacker: LazyCodec | None = None,
+        unpacker: type[LazyCodec] | LazyCodec | None = None,
         fs: FileSystem | None = None,
     ):
         """

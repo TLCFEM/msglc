@@ -16,13 +16,14 @@
 from __future__ import annotations
 
 import os.path
+from inspect import isclass
 from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from .codec import LazyCodec, MsgpackCodec
+from .codec import LazyCodec, MsgspecCodec
 from .config import (
     config,
     decrement_gc_counter,
@@ -53,11 +54,20 @@ class LazyBuffer:
     def __init__(
         self,
         buffer_or_path: str | UPath | BufferWriter,
-        packer: LazyCodec | None,
+        packer: type[LazyCodec] | LazyCodec | None,
         fs: FileSystem | None,
     ):
         self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
-        self._packer: LazyCodec = packer or MsgpackCodec()
+        self._packer: LazyCodec
+        if isinstance(packer, LazyCodec):
+            self._packer = packer
+        elif isclass(packer) and issubclass(packer, LazyCodec):
+            self._packer = packer()
+        elif packer is None:
+            self._packer = MsgspecCodec()
+        else:
+            raise TypeError("Need a valid packer.")
+
         self._fs: FileSystem | None = fs or config.fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
@@ -87,7 +97,7 @@ class LazyWriter(LazyBuffer):
         self,
         buffer_or_path: str | UPath | BufferWriter,
         *,
-        packer: LazyCodec | None = None,
+        packer: type[LazyCodec] | LazyCodec | None = None,
         fs: FileSystem | None = None,
         toc_cls: type[TOC] | None = None,
     ):
@@ -192,7 +202,7 @@ class LazyCombiner(LazyBuffer):
         buffer_or_path: str | UPath | BufferWriter,
         *,
         mode: Literal["a", "w"] = "w",
-        packer: LazyCodec | None = None,
+        packer: type[LazyCodec] | LazyCodec | None = None,
         fs: FileSystem | None = None,
     ):
         """
