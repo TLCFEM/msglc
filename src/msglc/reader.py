@@ -19,10 +19,8 @@ import asyncio
 import pickle
 from dataclasses import dataclass
 from inspect import isclass
-from io import BytesIO
 from typing import TYPE_CHECKING, Any
 
-import msgpack
 from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
@@ -285,7 +283,7 @@ class LazyList(LazyItem):
                 low = mid
 
     def _all(self, start: int, end: int) -> list:
-        return list(msgpack.Unpacker(BytesIO(self._readb(start, end))))
+        return list(self._unpacker.stream_decode(self._readb(start, end)))
 
     def __getitem__(self, index):
         index_range: list | range

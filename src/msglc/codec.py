@@ -15,6 +15,7 @@
 
 from abc import ABC, abstractmethod
 from importlib.util import find_spec
+from io import BytesIO
 
 import msgpack
 
@@ -27,6 +28,10 @@ class LazyCodec(ABC):
     @abstractmethod
     def decode(self, data):
         raise NotImplementedError
+
+    @staticmethod
+    def stream_decode(data):
+        yield from msgpack.Unpacker(BytesIO(data))
 
 
 class MsgpackCodec(LazyCodec):
