@@ -25,6 +25,7 @@ from msgpack import unpackb
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
+from msglc.codec import MsgpackCodec, MsgspecCodec, OrmsgpackCodec
 from msglc.config import config, configure, decrement_gc_counter, increment_gc_counter
 from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
@@ -37,8 +38,13 @@ from msglc.utility import MockIO
 @pytest.mark.parametrize("size", [0, 8192])
 @pytest.mark.parametrize("cached", [True, False])
 @pytest.mark.parametrize("fs_cls", [None, ZipFileSystem])
+@pytest.mark.parametrize(
+    "packer",
+    [MsgpackCodec(), MsgspecCodec(), OrmsgpackCodec()],
+    ids=["vanilla", "msgspec", "ormsgpack"],
+)
 def test_msglc(
-    monkeypatch, tmpdir, json_before, json_after, target, size, cached, fs_cls
+    monkeypatch, tmpdir, json_before, json_after, target, size, cached, fs_cls, packer
 ):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", size)
 
@@ -47,7 +53,7 @@ def test_msglc(
             target.seek(0)
 
         fs = fs_cls("archive.zip", "w") if fs_cls else None
-        with LazyWriter(target, fs=fs) as writer:
+        with LazyWriter(target, packer=packer, fs=fs) as writer:
             writer.write(json_before)
             with pytest.raises(ValueError):
                 writer.write(json_before)

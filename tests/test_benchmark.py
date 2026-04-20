@@ -26,7 +26,7 @@ from generate import (
 )
 
 from msglc import config, dump
-from msglc.codec import MsgpackCodec, MsgspecCodec
+from msglc.codec import MsgpackCodec, MsgspecCodec, OrmsgpackCodec
 from msglc.reader import LazyReader, LazyStats
 
 
@@ -130,7 +130,9 @@ def prepare(tmpdir_factory):
 @pytest.mark.parametrize("size", [x for x in range(13, 25)])
 @pytest.mark.parametrize("total", [0, 1, 2, 3, 4])
 @pytest.mark.parametrize(
-    "unpacker", [MsgpackCodec(), MsgspecCodec()], ids=["vanilla", "msgspec"]
+    "unpacker",
+    [MsgpackCodec(), MsgspecCodec(), OrmsgpackCodec()],
+    ids=["vanilla", "msgspec", "ormsgpack"],
 )
 def test_matrix(prepare, benchmark, size, total, unpacker):
     with prepare.as_cwd():
