@@ -33,6 +33,7 @@ jobs:
           enable-cache: true
       - name: Build
         run: |
+          uv venv
           if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
             uv pip install ".[dev,numpy,s3fs]"
           else
@@ -76,6 +77,7 @@ jobs:
           enable-cache: true
       - name: Build
         run: |
+          uv venv
           if [[ "${{ matrix.python-version }}" == "pypy"* ]]; then
             uv pip install ".[dev,numpy,s3fs]"
           else
@@ -220,6 +222,7 @@ jobs:
           enable-cache: true
       - name: Deploy
         run: |
+          uv venv
           uv pip install -e .[all]
           uv run mkdocs build
           git fetch origin

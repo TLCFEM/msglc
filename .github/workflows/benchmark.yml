@@ -20,6 +20,7 @@ jobs:
           enable-cache: true
       - name: Test
         run: |
+          uv venv
           uv pip install ".[all]" matplotlib h5py psutil
           uv run python3 ./tests/h5/generate.py
           uv run python3 ./tests/h5/read.py
