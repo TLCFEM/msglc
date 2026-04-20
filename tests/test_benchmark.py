@@ -76,11 +76,14 @@ def pack(array, backend: Literal["python", "rust"]):
     )
 
 
+@pytest.mark.parametrize("num_type", [float, int])
 @pytest.mark.parametrize("backend", ["python", "rust"])
-def test_pack_large_array(tmpdir, benchmark, backend: Literal["python", "rust"]):
+def test_pack_large_array(
+    tmpdir, benchmark, num_type, backend: Literal["python", "rust"]
+):
     def pack_large_array(_tmpdir):
         with _tmpdir.as_cwd():
-            pack([float(x) for x in range(20000)], backend)
+            pack([num_type(x) for x in range(20000)], backend)
 
     benchmark(pack_large_array, tmpdir)
 

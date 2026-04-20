@@ -523,7 +523,10 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
         with tmpdir.as_cwd():
             import numpy
 
-            assert_identical_bytes({"array": numpy.random.random((10, 11, 12000))})
+            assert_identical_bytes({"array": numpy.random.randn(1000, 1000)})
+            assert_identical_bytes(
+                {"array": numpy.random.randint(0, 2**63 - 1, size=(1000, 1000))}
+            )
     except ImportError:
         pass
 
@@ -534,7 +537,7 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
         {2, 1, 5},
         (1, "1", 1.1, b"11"),
         {str(v): v for v in range(10000)},
-        9223372036854775809,
+        2**63,
         b"asdadsa",
         bytearray(b"asdadsa"),
         memoryview(b"asdadsa"),
@@ -556,10 +559,22 @@ def test_rust_basic_types(tmpdir, data):
 
 @pytest.mark.parametrize(
     "data",
-    [datetime.now()],
-    ids=["timestamp"],
+    [datetime.now(), 2**65],
+    ids=["timestamp", "bigint"],
 )
 def test_rust_invalid_types(tmpdir, data):
     with tmpdir.as_cwd(), pytest.raises(TypeError) as exc_info:
         dump("data-rust.msg", data, backend="rust")
         assert str(exc_info.value) == "Unsupported type."
+
+
+def test_integer_identical_bytes(tmpdir):
+    with tmpdir.as_cwd():
+        number = 1
+        while number < 2**64 - 1:
+            assert_identical_bytes(number)
+            number *= 2
+        number = -1
+        while number >= -(2**63):
+            assert_identical_bytes(number)
+            number *= 2
