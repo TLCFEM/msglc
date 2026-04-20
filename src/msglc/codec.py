@@ -21,13 +21,21 @@ import msgpack
 
 class LazyCodec(ABC):
     @abstractmethod
+    def encode(self, data):
+        raise NotImplementedError
+
+    @abstractmethod
     def decode(self, data):
         raise NotImplementedError
 
 
 class MsgpackCodec(LazyCodec):
     def __init__(self):
+        self._packer = msgpack.Packer()
         self._unpacker = msgpack.Unpacker()
+
+    def encode(self, data):
+        return self._packer.pack(data)
 
     def decode(self, data):
         self._unpacker.feed(data)
@@ -39,7 +47,11 @@ if find_spec("msgspec"):
 
     class MsgspecCodec(LazyCodec):
         def __init__(self):
+            self._packer = msgspec.msgpack.Encoder()
             self._unpacker = msgspec.msgpack.Decoder()
+
+        def encode(self, data):
+            return self._packer.encode(data)
 
         def decode(self, data):
             return self._unpacker.decode(data)
@@ -51,6 +63,9 @@ if find_spec("ormsgpack"):
     import ormsgpack
 
     class OrmsgpackCodec(LazyCodec):
+        def encode(self, data):
+            return ormsgpack.packb(data)
+
         def decode(self, data):
             return ormsgpack.unpackb(data)
 else:

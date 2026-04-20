@@ -20,9 +20,9 @@ from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 
-from msgpack import Packer, packb, unpackb
 from upath import UPath
 
+from .codec import LazyCodec, MsgpackCodec
 from .config import (
     config,
     decrement_gc_counter,
@@ -49,7 +49,22 @@ def _upsert(source: BufferReader, target: str, fs: FileSystem | None):
             s3_file.write(chunk)
 
 
-class LazyWriter:
+class LazyBuffer:
+    def __init__(self, packer: LazyCodec | None, fs: FileSystem | None):
+        self._packer: LazyCodec = packer or MsgpackCodec()
+        self._fs: FileSystem | None = fs or config.fs
+
+        self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
+        self._header_start: int = 0
+
+    def _finalize(self, packed_toc: bytes, toc_start: int):
+        self._buffer.write(packed_toc)
+        self._buffer.seek(self._header_start)
+        self._buffer.write(self._packer.encode(toc_start).rjust(10, b"\0"))
+        self._buffer.write(self._packer.encode(len(packed_toc)).rjust(10, b"\0"))
+
+
+class LazyWriter(LazyBuffer):
     magic: bytes = b"msglc-2024".rjust(max_magic_len, b"\0")
 
     @classmethod
@@ -63,14 +78,14 @@ class LazyWriter:
     def __init__(
         self,
         buffer_or_path: str | UPath | BufferWriter,
-        packer: Packer = None,
         *,
+        packer: LazyCodec | None = None,
         fs: FileSystem | None = None,
         toc_cls: type[TOC] | None = None,
     ):
         """
         It is possible to provide a custom packer object to be used for packing the object.
-        However, this packer must be compatible with the `msgpack` packer.
+        However, this packer must be implement `encode` and `decode` methods.
 
         The `buffer_or_path` can be
         1. a plain `str` pointing to a file on local filesystem, or a file on target filesystem if `fs` is provided,
@@ -97,14 +112,12 @@ class LazyWriter:
         :param fs: `FileSystem` object to be used for storing
         :param toc_cls: a `TOC` packer class
         """
-        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
-        self._packer: Packer = packer or Packer()
-        self._fs: FileSystem | None = fs or config.fs
+        super().__init__(packer, fs)
 
-        self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
+        self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
+
         self._toc_packer: TOC = None  # type: ignore
         self._toc_cls = toc_cls or TOC
-        self._header_start: int = 0
         self._file_start: int = 0
         self._no_more_writes: bool = False
 
@@ -166,21 +179,17 @@ class LazyWriter:
         self._no_more_writes = True
 
         toc: dict = self._toc_packer.pack(obj)
-        toc_start: int = self._buffer.tell() - self._file_start
-        packed_toc: bytes = self._packer.pack(toc)
 
-        self._buffer.write(packed_toc)
-        self._buffer.seek(self._header_start)
-        self._buffer.write(self._packer.pack(toc_start).rjust(10, b"\0"))
-        self._buffer.write(self._packer.pack(len(packed_toc)).rjust(10, b"\0"))
+        self._finalize(self._packer.encode(toc), self._buffer.tell() - self._file_start)
 
 
-class LazyCombiner:
+class LazyCombiner(LazyBuffer):
     def __init__(
         self,
         buffer_or_path: str | UPath | BufferWriter,
         *,
         mode: Literal["a", "w"] = "w",
+        packer: LazyCodec | None = None,
         fs: FileSystem | None = None,
     ):
         """
@@ -190,16 +199,15 @@ class LazyCombiner:
 
         :param buffer_or_path: target buffer or file path
         :param mode: mode of operation, 'w' for write and 'a' for append
+        :param packer: packer object to be used for packing the object
         :param fs: `FileSystem` object to be used for storing
         """
+        super().__init__(packer, fs)
+
         self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._mode: str = mode
-        self._fs: FileSystem | None = fs or config.fs
-
-        self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
 
         self._toc: dict | list = None  # type: ignore
-        self._header_start: int = 0
         self._file_start: int = 0
 
     def __enter__(self):
@@ -264,11 +272,11 @@ class LazyCombiner:
                     "Invalid file format, cannot append to the current file."
                 )
 
-            toc_start: int = unpackb(header[sep_a:sep_b].lstrip(b"\0"))
-            toc_size: int = unpackb(header[sep_b:sep_c].lstrip(b"\0"))
+            toc_start: int = self._packer.decode(header[sep_a:sep_b].lstrip(b"\0"))
+            toc_size: int = self._packer.decode(header[sep_b:sep_c].lstrip(b"\0"))
 
             self._buffer.seek(ini_position + sep_c + toc_start)
-            self._toc = unpackb(self._buffer.read(toc_size)).get("t", None)
+            self._toc = self._packer.decode(self._buffer.read(toc_size)).get("t", None)
 
             if isinstance(self._toc, list):
                 if any(not isinstance(i, int) for i in self._toc):
@@ -286,13 +294,10 @@ class LazyCombiner:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        toc_start: int = self._buffer.tell() - self._file_start
-        packed_toc: bytes = packb({"t": self._toc})
-
-        self._buffer.write(packed_toc)
-        self._buffer.seek(self._header_start)
-        self._buffer.write(packb(toc_start).rjust(10, b"\0"))
-        self._buffer.write(packb(len(packed_toc)).rjust(10, b"\0"))
+        self._finalize(
+            self._packer.encode({"t": self._toc}),
+            self._buffer.tell() - self._file_start,
+        )
 
         if isinstance(self._buffer_or_path, str):
             _upsert(self._buffer, self._buffer_or_path, self._fs)

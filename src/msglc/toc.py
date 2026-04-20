@@ -25,8 +25,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from tempfile import TemporaryFile
 
-    from msgpack import Packer
-
+    from .codec import LazyCodec
     from .config import BufferWriter
 
 try:
@@ -64,12 +63,12 @@ class TOC:
     def __init__(
         self,
         *,
-        packer: Packer,
+        packer: LazyCodec,
         buffer: BufferWriter | TemporaryFile,
         transform: Callable = None,
     ):
         self._buffer: BufferWriter | TemporaryFile = buffer
-        self._packer: Packer = packer
+        self._packer: LazyCodec = packer
         self._initial_pos = self._buffer.tell()
         self._pos: int = 0
         self._in_numpy_array: bool = False
@@ -110,7 +109,7 @@ class TOC:
 
         if not isinstance(obj, (Mapping, list, set, tuple, ndarray)):
             start_pos = self._pos
-            self._writeb(self._packer.pack(obj))
+            self._writeb(self._packer.encode(obj))
             return _generate(start_pos)
 
         current_level_is_numpy_array: bool = False
@@ -127,7 +126,7 @@ class TOC:
         elif ndarray is not list and isinstance(obj, ndarray):
             if config.numpy_encoder:
                 start_pos = self._pos
-                self._writeb(self._packer.pack(obj.dumps()))
+                self._writeb(self._packer.encode(obj.dumps()))
                 return _generate(start_pos)
 
             obj = obj.tolist()
@@ -143,7 +142,7 @@ class TOC:
             self._write_map_header(len(obj))
             obj_toc = {}
             for k, v in self._transform(obj.items()):
-                self._writeb(self._packer.pack(k))
+                self._writeb(self._packer.encode(k))
                 obj_toc[k] = self._pack(v)
             all_small_obj = all(v[2] for v in obj_toc.values())
         elif isinstance(obj, list):
@@ -160,7 +159,7 @@ class TOC:
                 list_start: int = self._pos
 
                 for v in obj:
-                    self._writeb(self._packer.pack(v))
+                    self._writeb(self._packer.encode(v))
 
                 if self._pos < start_pos + config.small_obj_optimization_threshold:
                     return _resume_flag(_generate(start_pos))
