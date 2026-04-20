@@ -58,7 +58,6 @@ class LazyBuffer:
     ):
         self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
         self._packer: LazyCodec = acquire_codec(packer)
-
         self._fs: FileSystem | None = fs or config.fs
 
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
