@@ -27,7 +27,7 @@ jobs:
       - name: Coverage
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -70,7 +70,7 @@ jobs:
       - name: Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -94,7 +94,7 @@ jobs:
       - name: Clone
         uses: actions/checkout@v6
       - name: Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Version
         run: sed -i -E 's/^version = "[0-9]{6}"$/version = "'"$(date +%y%m%d)"'"/' pyproject.toml
       - name: Build
@@ -121,7 +121,7 @@ jobs:
       - name: Clone
         uses: actions/checkout@v6
       - name: Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Version
         shell: bash
         run: sed -i -E 's/^version = "[0-9]{6}"$/version = "'"$(date +%y%m%d)"'"/' pyproject.toml
@@ -148,7 +148,7 @@ jobs:
       - name: Clone
         uses: actions/checkout@v6
       - name: Python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Version
         run: sed -i -E 's/^version = "[0-9]{6}"$/version = "'"$(date +%y%m%d)"'"/' pyproject.toml
       - name: Build
@@ -171,7 +171,7 @@ jobs:
       - name: Clone
         uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Version
         run: sed -i -E 's/^version = "[0-9]{6}"$/version = "'"$(date +%y%m%d)"'"/' pyproject.toml
       - name: Build
@@ -214,7 +214,7 @@ jobs:
       - name: Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
           enable-cache: true
