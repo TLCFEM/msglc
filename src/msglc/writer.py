@@ -16,14 +16,13 @@
 from __future__ import annotations
 
 import os.path
-from inspect import isclass
 from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
 from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from .codec import LazyCodec, MsgspecCodec
+from .codec import LazyCodec, acquire_codec
 from .config import (
     config,
     decrement_gc_counter,
@@ -58,15 +57,7 @@ class LazyBuffer:
         fs: FileSystem | None,
     ):
         self._buffer_or_path: str | UPath | BufferWriter = buffer_or_path
-        self._packer: LazyCodec
-        if isinstance(packer, LazyCodec):
-            self._packer = packer
-        elif isclass(packer) and issubclass(packer, LazyCodec):
-            self._packer = packer()
-        elif packer is None:
-            self._packer = MsgspecCodec()
-        else:
-            raise TypeError("Need a valid packer.")
+        self._packer: LazyCodec = acquire_codec(packer)
 
         self._fs: FileSystem | None = fs or config.fs
 

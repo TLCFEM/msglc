@@ -18,14 +18,13 @@ from __future__ import annotations
 import asyncio
 import pickle
 from dataclasses import dataclass
-from inspect import isclass
 from typing import TYPE_CHECKING, Any
 
 from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
-from .codec import LazyCodec, MsgspecCodec
+from .codec import LazyCodec, acquire_codec
 from .config import (
     BufferReaderType,
     config,
@@ -103,15 +102,7 @@ class LazyItem:
         self._offset: int = offset  # start of original data
         self._counter: LazyStats | None = counter
         self._cached: bool = cached
-        self._unpacker: LazyCodec
-        if isinstance(unpacker, LazyCodec):
-            self._unpacker = unpacker
-        elif isclass(unpacker) and issubclass(unpacker, LazyCodec):
-            self._unpacker = unpacker()
-        elif unpacker is None:
-            self._unpacker = MsgspecCodec()
-        else:
-            raise TypeError("Need a valid unpacker.")
+        self._unpacker: LazyCodec = acquire_codec(unpacker)
 
         self._accessed_items: int = 0
 

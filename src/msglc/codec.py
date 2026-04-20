@@ -15,6 +15,7 @@
 
 from abc import ABC, abstractmethod
 from importlib.util import find_spec
+from inspect import isclass
 from io import BytesIO
 
 import msgpack
@@ -84,3 +85,16 @@ if find_spec("ormsgpack"):
             yield from msgpack.Unpacker(BytesIO(data))
 else:
     OrmsgpackCodec = MsgpackCodec
+
+
+def acquire_codec(codec: type[LazyCodec] | LazyCodec | None) -> LazyCodec:
+    if isinstance(codec, LazyCodec):
+        return codec
+
+    if isclass(codec) and issubclass(codec, LazyCodec):
+        return codec()
+
+    if codec is None:
+        return MsgspecCodec()
+
+    raise TypeError("Need a valid codec.")
