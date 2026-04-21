@@ -19,13 +19,14 @@ from datetime import datetime
 from io import BytesIO
 from itertools import cycle
 
+import cbor2
 import pytest
 from fsspec.implementations.zip import ZipFileSystem
 from msgpack import unpackb
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
-from msglc.codec import MsgpackCodec, MsgspecCodec, OrmsgpackCodec
+from msglc.codec import CBORCodec, MsgpackCodec, MsgspecCodec, OrmsgpackCodec
 from msglc.config import config, configure, decrement_gc_counter, increment_gc_counter
 from msglc.reader import LazyReader, LazyStats, async_to_obj
 from msglc.utility import MockIO
@@ -40,8 +41,8 @@ from msglc.utility import MockIO
 @pytest.mark.parametrize("fs_cls", [None, ZipFileSystem])
 @pytest.mark.parametrize(
     "packer",
-    [MsgpackCodec(), MsgspecCodec(), OrmsgpackCodec()],
-    ids=["vanilla", "msgspec", "ormsgpack"],
+    [MsgpackCodec(), MsgspecCodec(), OrmsgpackCodec(), CBORCodec],
+    ids=["vanilla", "msgspec", "ormsgpack", "cbor"],
 )
 def test_msglc(
     monkeypatch, tmpdir, json_before, json_after, target, size, cached, fs_cls, packer
@@ -69,7 +70,9 @@ def test_msglc(
         fs = fs_cls("archive.zip", "r") if fs_cls else None
         with (
             MockIO(target, "rb", 0, 500 * 2**20, fs=fs) as buffer,
-            LazyReader(buffer, counter=stats, cached=cached, fs=fs) as reader,
+            LazyReader(
+                buffer, counter=stats, cached=cached, fs=fs, unpacker=packer
+            ) as reader,
         ):
             assert (
                 reader.read(
@@ -97,9 +100,10 @@ def test_msglc(
             for x in list_container:
                 assert x in ["GML", "XML"]
             assert set(list_container) == {"GML", "XML"}
-            assert unpackb(reader.protocol_raw_data(chunked=False)) == reader.to_obj()
+            loader = cbor2.loads if packer is CBORCodec else unpackb
+            assert loader(reader.protocol_raw_data(chunked=False)) == reader.to_obj()
             assert (
-                unpackb(b"".join(reader.protocol_raw_data(chunked=True)))
+                loader(b"".join(reader.protocol_raw_data(chunked=True)))
                 == reader.to_obj()
             )
 
@@ -584,3 +588,23 @@ def test_integer_identical_bytes(tmpdir):
         while number >= -(2**63):
             assert_identical_bytes(number)
             number *= 2
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        list(range(2**16 + 1)),
+        {str(v): v for v in range(2**16 + 1)},
+        list(range(2**8 + 1)),
+        {str(v): v for v in range(2**8 + 1)},
+        list(range(50)),
+        {str(v): v for v in range(50)},
+    ],
+    ids=["large_array", "large_dict", "array", "dict", "small_array", "small_dict"],
+)
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_cbor_large_container(tmpdir, data, packer):
+    with tmpdir.as_cwd():
+        dump("data.pack", data, packer=packer)
+        with LazyReader("data.pack", unpacker=packer) as reader:
+            assert reader == data
