@@ -1,4 +1,4 @@
-# msglc --- (de)serialize json objects with lazy/partial loading containers using msgpack
+# msglc --- (de)serialize json objects with lazy/partial loading containers using msgpack or cbor
 
 [![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/TLCFEM/msglc)
 [![codecov](https://codecov.io/gh/TLCFEM/msglc/graph/badge.svg?token=JDPARZSVDR)](https://codecov.io/gh/TLCFEM/msglc)
@@ -7,9 +7,10 @@
 ## What
 
 `msglc` is a Python library that provides a way to serialize and deserialize json objects with lazy/partial loading
-containers using `msgpack` as the serialization format.
+containers using `msgpack` or `cbor` as the serialization format.
 
-It can be used in environments that use `msgpack` to store/exchange data that is larger than a few MBs if any of the
+It can be used in environments that use `msgpack`/`cbor` to store/exchange data that is larger than a few MBs if any of
+the
 followings hold.
 
 1. After cold storage, each retrieval only accesses part of the stored data.
@@ -113,8 +114,8 @@ with LazyReader("data.msg", cached=False) as reader:
 
 ## Why
 
-The `msgpack` specification and the corresponding Python library `msgpack` provide a tool to serialize json objects into
-binary data.
+The `msgpack`/`cbor` specification and the corresponding Python library `msgpack`/`cbor2` provide a tool to
+serialize json objects into binary data.
 However, the encoded data has to be fully decoded to reveal what is inside.
 This becomes an issue when the data is large and only a small part of it is needed.
 

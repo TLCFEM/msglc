@@ -19,6 +19,7 @@ from importlib.util import find_spec
 from inspect import isclass
 from io import BytesIO
 
+import cbor2
 import msgpack
 
 
@@ -42,6 +43,50 @@ class LazyCodec(ABC):
     @abstractmethod
     def write_map_header(self, n):
         raise NotImplementedError
+
+
+class CBORCodec(LazyCodec):
+    def encode(self, data):
+        return cbor2.dumps(data)
+
+    def decode(self, data):
+        return cbor2.loads(data)
+
+    def stream_decode(self, data):
+        decoder = cbor2.CBORDecoder(BytesIO(data))
+        while True:
+            try:
+                yield decoder.decode()
+            except cbor2.CBORDecodeEOF:
+                break
+
+    def write_array_header(self, n):
+        if n <= 23:
+            return struct.pack("B", 0x80 | n)
+        elif n <= 0xFF:
+            return struct.pack(">BB", 0x98, n)
+        elif n <= 0xFFFF:
+            return struct.pack(">BH", 0x99, n)
+        elif n <= 0xFFFFFFFF:
+            return struct.pack(">BI", 0x9A, n)
+        elif n <= 0xFFFFFFFFFFFFFFFF:
+            return struct.pack(">BQ", 0x9B, n)
+        else:
+            raise ValueError("Array is too large")
+
+    def write_map_header(self, n):
+        if n <= 23:
+            return struct.pack("B", 0xA0 | n)
+        elif n <= 0xFF:
+            return struct.pack(">BB", 0xB8, n)
+        elif n <= 0xFFFF:
+            return struct.pack(">BH", 0xB9, n)
+        elif n <= 0xFFFFFFFF:
+            return struct.pack(">BI", 0xBA, n)
+        elif n <= 0xFFFFFFFFFFFFFFFF:
+            return struct.pack(">BQ", 0xBB, n)
+        else:
+            raise ValueError("Dict is too large")
 
 
 class MsgpackCodecBase(LazyCodec, ABC):
@@ -110,52 +155,6 @@ if find_spec("ormsgpack"):
             return ormsgpack.unpackb(data)
 else:
     OrmsgpackCodec = MsgpackCodec
-
-if find_spec("cbor2"):
-    import cbor2
-
-    class CBORCodec(LazyCodec):
-        def encode(self, data):
-            return cbor2.dumps(data)
-
-        def decode(self, data):
-            return cbor2.loads(data)
-
-        def stream_decode(self, data):
-            decoder = cbor2.CBORDecoder(BytesIO(data))
-            while True:
-                try:
-                    yield decoder.decode()
-                except cbor2.CBORDecodeEOF:
-                    break
-
-        def write_array_header(self, n):
-            if n <= 23:
-                return struct.pack("B", 0x80 | n)
-            elif n <= 0xFF:
-                return struct.pack(">BB", 0x98, n)
-            elif n <= 0xFFFF:
-                return struct.pack(">BH", 0x99, n)
-            elif n <= 0xFFFFFFFF:
-                return struct.pack(">BI", 0x9A, n)
-            elif n <= 0xFFFFFFFFFFFFFFFF:
-                return struct.pack(">BQ", 0x9B, n)
-            else:
-                raise ValueError("Array is too large")
-
-        def write_map_header(self, n):
-            if n <= 23:
-                return struct.pack("B", 0xA0 | n)
-            elif n <= 0xFF:
-                return struct.pack(">BB", 0xB8, n)
-            elif n <= 0xFFFF:
-                return struct.pack(">BH", 0xB9, n)
-            elif n <= 0xFFFFFFFF:
-                return struct.pack(">BI", 0xBA, n)
-            elif n <= 0xFFFFFFFFFFFFFFFF:
-                return struct.pack(">BQ", 0xBB, n)
-            else:
-                raise ValueError("Dict is too large")
 
 
 def acquire_codec(codec: type[LazyCodec] | LazyCodec | None) -> LazyCodec:
