@@ -18,21 +18,21 @@ from typing import Literal
 
 import msgpack
 import pytest
-
 from generate import (
     compare,
     find_all_paths,
     generate,
     goto_path,
 )
+
 from msglc import config, dump
-from msglc.codec import MsgpackCodec, MsgspecCodec, OrmsgpackCodec, CBORCodec
+from msglc.codec import CBORCodec, MsgpackCodec, MsgspecCodec, OrmsgpackCodec
 from msglc.reader import LazyReader, LazyStats
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
 def test_random_benchmark(
-        monkeypatch, tmpdir, random_medium_data, backend: Literal["python", "rust"]
+    monkeypatch, tmpdir, random_medium_data, backend: Literal["python", "rust"]
 ):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 8192)
 
@@ -81,7 +81,7 @@ def pack(array, backend: Literal["python", "rust"], packer=None):
 @pytest.mark.parametrize("backend", ["python", "rust"])
 @pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
 def test_pack_large_array(
-        tmpdir, benchmark, num_type, backend: Literal["python", "rust"], packer
+    tmpdir, benchmark, num_type, backend: Literal["python", "rust"], packer
 ):
     def pack_large_array(_tmpdir):
         with _tmpdir.as_cwd():
@@ -93,7 +93,9 @@ def test_pack_large_array(
 @pytest.mark.parametrize("backend", ["python", "rust"])
 @pytest.mark.parametrize("encoder", [True, False])
 @pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
-def test_numpy_array(monkeypatch, tmpdir, encoder, backend: Literal["python", "rust"], packer):
+def test_numpy_array(
+    monkeypatch, tmpdir, encoder, backend: Literal["python", "rust"], packer
+):
     monkeypatch.setattr(config, "numpy_encoder", encoder)
 
     try:
@@ -144,7 +146,7 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
 def test_serialize_large_json(
-        tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
+    tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
 ):
     def serialize_large_json():
         dump("repo_data.msg", repo_data, backend=backend)
@@ -161,6 +163,7 @@ def test_random_huge_json(tmpdir, benchmark, random_huge_data, backend):
 
 def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data):
     with tmpdir.as_cwd():
+
         def msgpack_dump():
             with open("data.msgpack", "wb") as f:
                 msgpack.dump(random_huge_data, f)
