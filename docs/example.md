@@ -41,8 +41,6 @@ data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
 dump("data.cbor", data, packer=CBORCodec)
 ```
 
-Currently, there is no `rust` implementation of the `cbor` writer.
-
 ### Combining several files
 
 Use `combine` to combine several serialized files together.

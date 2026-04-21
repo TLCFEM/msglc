@@ -27,7 +27,7 @@ from upath import UPath
 
 from .codec import LazyCodec
 from .config import config
-from .msglc_rust import dump_rust_impl
+from .msglc_rust import dump_rust_impl_cbor, dump_rust_impl_msgpack
 from .reader import LazyReader, to_obj
 from .writer import LazyCombiner, LazyWriter
 
@@ -60,11 +60,6 @@ def dump(
     :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when 'rust' backend is used
     :return: None
     """
-    is_cbor: bool = bool(packer := kwargs.get("packer")) and packer.protocol == "cbor"  # type: ignore
-
-    if is_cbor and backend == "rust":
-        raise ValueError("Currently there is no rust backend for cbor format.")
-
     if backend == "python" or not isinstance(file, (str, UPath)):
         with LazyWriter(file, **kwargs) as msglc_writer:
             msglc_writer.write(obj)
@@ -76,6 +71,10 @@ def dump(
     else:
         target_path = file
         target_fs = kwargs.get("fs", config.fs) or LocalFileSystem()
+
+    is_cbor: bool = bool(packer := kwargs.get("packer")) and packer.protocol == "cbor"  # type: ignore
+
+    dump_rust_impl = dump_rust_impl_cbor if is_cbor else dump_rust_impl_msgpack
 
     if isinstance(target_fs, LocalFileSystem):
         dump_rust_impl(target_path, obj)

@@ -509,9 +509,9 @@ def test_gc_counter_decrement():
     assert decrement_gc_counter() == initial_counter - 1
 
 
-def assert_identical_bytes(data):
-    dump("data-python.msg", data, backend="python")
-    dump("data-rust.msg", data, backend="rust")
+def assert_identical_bytes(data, packer=None):
+    dump("data-python.msg", data, backend="python", packer=packer)
+    dump("data-rust.msg", data, backend="rust", packer=packer)
     with (
         open("data-rust.msg", "rb") as f_rust,
         open("data-python.msg", "rb") as f_python,
@@ -520,9 +520,10 @@ def assert_identical_bytes(data):
             assert d_rust == d_python
 
 
-def test_rust_identical_bytes(tmpdir, random_medium_data):
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_rust_identical_bytes(tmpdir, random_medium_data, packer):
     with tmpdir.as_cwd():
-        assert_identical_bytes(random_medium_data)
+        assert_identical_bytes(random_medium_data, packer)
 
 
 @pytest.mark.parametrize("encoder", [True, False])
@@ -562,9 +563,12 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
         "memory_view",
     ],
 )
-def test_rust_basic_types(tmpdir, data):
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_rust_basic_types(tmpdir, data, packer):
+    if packer is CBORCodec and isinstance(data, memoryview):
+        return
     with tmpdir.as_cwd():
-        assert_identical_bytes(data)
+        assert_identical_bytes(data, packer)
 
 
 @pytest.mark.parametrize(
