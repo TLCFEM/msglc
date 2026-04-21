@@ -24,9 +24,8 @@ jobs:
           uv pip install ".[all]" matplotlib h5py psutil
           uv run python3 ./tests/h5/generate.py
           uv run python3 ./tests/h5/read.py
-          tar czf benchmark.tar.gz .dirty/*.pdf
       - name: Upload
         uses: actions/upload-artifact@v7
         with:
           name: msglc-benchmark
-          path: benchmark.tar.gz
+          path: .dirty/*.pdf
