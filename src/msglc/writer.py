@@ -68,8 +68,12 @@ class LazyBuffer:
         toc_start: int = self._buffer.tell() - self._file_start
         self._buffer.write(packed_toc := self._packer.encode(toc))
         self._buffer.seek(self._header_start)
-        self._buffer.write(self._packer.encode(toc_start).rjust(10, b"\0"))
-        self._buffer.write(self._packer.encode(len(packed_toc)).rjust(10, b"\0"))
+        if self._packer.protocol == "cbor":
+            self._buffer.write(self._packer.encode(toc_start).ljust(10, b"\0"))
+            self._buffer.write(self._packer.encode(len(packed_toc)).ljust(10, b"\0"))
+        else:
+            self._buffer.write(self._packer.encode(toc_start).rjust(10, b"\0"))
+            self._buffer.write(self._packer.encode(len(packed_toc)).rjust(10, b"\0"))
 
 
 class LazyWriter(LazyBuffer):
