@@ -13,16 +13,35 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-mod cbor;
-mod msgpack;
-pub mod utility;
-use cbor::dump_rust_impl_cbor;
-use msgpack::dump_rust_impl_msgpack;
-use pyo3::prelude::*;
+use pyo3::{Py, PyAny, PyErr};
 
-#[pymodule]
-fn msglc_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(dump_rust_impl_cbor, m)?)?;
-    m.add_function(wrap_pyfunction!(dump_rust_impl_msgpack, m)?)?;
-    Ok(())
+pub const HEADER_FIELD_LEN: usize = 10;
+pub const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
+
+pub fn to_py(e: impl std::fmt::Display) -> PyErr {
+    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
+}
+
+pub enum LazyTOC {
+    Leaf {
+        pos: [u64; 2],
+    },
+    Blocked {
+        blocks: Vec<(u64, u64, u64)>,
+    },
+    Normal {
+        pos: [u64; 2],
+        container: LazyContainer,
+    },
+}
+
+pub enum LazyContainer {
+    Map(Vec<(Py<PyAny>, LazyTOC)>),
+    Array(Vec<LazyTOC>),
+}
+
+impl LazyTOC {
+    pub fn is_trivial(&self, threshold: u64) -> bool {
+        matches!(self, LazyTOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
+    }
 }

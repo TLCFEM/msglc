@@ -13,35 +13,11 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::utility::{to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
 use std::fs::File;
 use std::io::{BufWriter, Seek, Write};
-
-const HEADER_FIELD_LEN: usize = 10;
-const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
-
-fn to_py(e: impl std::fmt::Display) -> PyErr {
-    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
-}
-
-enum LazyTOC {
-    Leaf {
-        pos: [u64; 2],
-    },
-    Blocked {
-        blocks: Vec<(u64, u64, u64)>,
-    },
-    Normal {
-        pos: [u64; 2],
-        container: LazyContainer,
-    },
-}
-
-enum LazyContainer {
-    Map(Vec<(Py<PyAny>, LazyTOC)>),
-    Array(Vec<LazyTOC>),
-}
 
 // Compared to the standard `msgpack` specification, we do not support `ext` types and timestamps.
 // They are not part of json specification anyway.
@@ -84,11 +60,7 @@ fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()
 }
 
 impl LazyTOC {
-    fn is_trivial(&self, threshold: u64) -> bool {
-        matches!(self, LazyTOC::Leaf { pos } if (pos[1] - pos[0]) <= threshold)
-    }
-
-    fn encode<W: Write>(&self, py: Python<'_>, out: &mut W) -> PyResult<()> {
+    fn encode_msgpack<W: Write>(&self, py: Python<'_>, out: &mut W) -> PyResult<()> {
         match self {
             LazyTOC::Leaf { pos } => {
                 rmp::encode::write_map_len(out, 1).map_err(to_py)?;
@@ -121,14 +93,14 @@ impl LazyTOC {
                             .map_err(to_py)?;
                         for (key, child) in items {
                             write_primitive(key.bind(py), out)?;
-                            child.encode(py, out)?;
+                            child.encode_msgpack(py, out)?;
                         }
                     }
                     LazyContainer::Array(items) => {
                         rmp::encode::write_array_len(out, u32::try_from(items.len())?)
                             .map_err(to_py)?;
                         for child in items {
-                            child.encode(py, out)?;
+                            child.encode_msgpack(py, out)?;
                         }
                     }
                 }
@@ -412,7 +384,7 @@ pub fn dump_rust_impl_msgpack(py: Python<'_>, path: String, obj: Bound<'_, PyAny
 
     let toc = writer.pack(&obj)?;
     let toc_start_pos = writer.offset()?;
-    toc.encode(py, &mut writer.buffer)?;
+    toc.encode_msgpack(py, &mut writer.buffer)?;
     let toc_end_pos = writer.offset()?;
 
     writer.buffer.seek(header_pos).map_err(to_py)?;
