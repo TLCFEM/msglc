@@ -102,12 +102,12 @@ def goto_path(json_obj, path):
     return target
 
 
-def configure_and_dump(archive, block):
+def configure_and_dump(archive, block, packer):
     configure(small_obj_optimization_threshold=2**block)
-    dump(f"archive_{block}.msg", archive)
+    dump(f"archive_{block}.msg", archive, packer=packer)
 
 
-def generate(*, depth=6, width=11, threshold=23):
+def generate(*, depth=6, width=11, threshold=23, packer=None):
     archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
     indices = list(range(0, min(1_000_000, len(path))))
@@ -121,10 +121,10 @@ def generate(*, depth=6, width=11, threshold=23):
         msgpack.dump(archive, f)
 
     for step in range(13, threshold + 1):
-        configure_and_dump(archive, step)
+        configure_and_dump(archive, step, packer)
 
 
-def compare(mode, size: int = 13, total: int = 5, unpacker: LazyCodec = None):
+def compare(mode, size: int = 13, total: int = 5, *, unpacker=None):
     accumulator: int = 0
 
     with open("path.txt") as f:
