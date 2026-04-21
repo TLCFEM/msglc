@@ -25,6 +25,7 @@ from uuid import uuid4
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
+from .codec import LazyCodec
 from .config import config
 from .msglc_rust import dump_rust_impl
 from .reader import LazyReader, to_obj
@@ -61,7 +62,10 @@ def dump(
     """
     is_cbor: bool = bool(packer := kwargs.get("packer")) and packer.protocol == "cbor"  # type: ignore
 
-    if backend == "python" or not isinstance(file, (str, UPath)) or is_cbor:
+    if is_cbor and backend == "rust":
+        raise ValueError("Currently there is no rust backend for cbor format.")
+
+    if backend == "python" or not isinstance(file, (str, UPath)):
         with LazyWriter(file, **kwargs) as msglc_writer:
             msglc_writer.write(obj)
         return
@@ -147,10 +151,14 @@ class FileInfo:
                 if not config.check_compatibility(magic):
                     raise ValueError("Invalid file format.")
 
-    def chunking(self, backend: Literal["python", "rust"]):
+    def chunking(
+        self,
+        backend: Literal["python", "rust"],
+        packer: type[LazyCodec] | LazyCodec | None,
+    ):
         """
         When in-memory objects are provided, it is necessary to serialize them to the disk first before chunking.
-        The `backend` will be used in this serialization procedure.
+        The `backend` and `packer` will be used in this serialization procedure.
         """
         if isinstance(self.path, LazyReader):
             yield from self.path.raw_data()
@@ -160,6 +168,7 @@ class FileInfo:
                     file_path := UPath(_tmp_dir) / uuid4().hex,
                     to_obj(self._obj),
                     backend=backend,
+                    packer=packer,
                 )
                 with LazyReader(file_path) as _tmp_file:
                     yield from _tmp_file.raw_data()
@@ -175,6 +184,7 @@ def combine(
     *,
     mode: Literal["a", "w"] = "w",
     validate: bool = True,
+    packer: type[LazyCodec] | LazyCodec | None = None,
     fs: FileSystem | None = None,
     backend: Literal["python", "rust"] = "python",
 ):
@@ -191,7 +201,8 @@ def combine(
     :param archive: a string representing the file path of the archive
     :param files: a single `FileInfo` object, a list of `FileInfo` objects, or a generator that yields `FileInfo` objects
     :param mode: a string representing the combination mode, 'w' for write and 'a' for append
-    :param validate: switch on to validate the files before combining, ignored if `files` is a generator.
+    :param validate: switch on to validate the files before combining, ignored if `files` is a generator
+    :param packer: packer object to be used for packing the object
     :param fs: `FileSystem` object to be used for storing
     :param backend: the backend to be used for potential temporary writing:
         'python' for the pure Python implementation;
@@ -216,9 +227,9 @@ def combine(
             for file in files:
                 file.validate()
 
-    with LazyCombiner(archive, mode=mode, fs=fs) as combiner:
+    with LazyCombiner(archive, mode=mode, packer=packer, fs=fs) as combiner:
         for file in files:
-            combiner.write(file.chunking(backend), file.name)
+            combiner.write(file.chunking(backend, packer), file.name)
 
 
 def append(
@@ -226,6 +237,7 @@ def append(
     files: FileInfo | list[FileInfo] | Generator[FileInfo, None, None],
     *,
     validate: bool = True,
+    packer: type[LazyCodec] | LazyCodec | None = None,
     fs: FileSystem | None = None,
     backend: Literal["python", "rust"] = "python",
 ):
@@ -239,10 +251,19 @@ def append(
     :param archive: a string representing the file path of the archive
     :param files: a list of FileInfo objects
     :param validate: switch on to validate the files before combining
+    :param packer: packer object to be used for packing the object
     :param fs: `FileSystem` object to be used for storing
     :param backend: the backend to be used for potential temporary writing:
         'python' for the pure Python implementation;
         'rust' for the Rust implementation.
     :return: None
     """
-    combine(archive, files, mode="a", validate=validate, fs=fs, backend=backend)
+    combine(
+        archive,
+        files,
+        mode="a",
+        validate=validate,
+        packer=packer,
+        fs=fs,
+        backend=backend,
+    )

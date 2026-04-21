@@ -4,6 +4,9 @@
 
 ### Dumping one object to a file
 
+#### Using `msgpack` format
+
+By default, the `msgpack` format is used for serialization.
 Use `dump` to serialize a json object to a file.
 
 ```python
@@ -25,6 +28,20 @@ dump("data.msg", data, backend="rust")
 
 The potential performance gain may not be significant with other runtimes.
 One may want to benchmark the performance of the `rust` backend with their specific use case before using it.
+
+#### Using `cbor` format
+
+To use `cbor` format, pass the corresponding `packer` to `dump`.
+
+```python
+from msglc import dump
+from msglc.codec import CBORCodec
+
+data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
+dump("data.cbor", data, packer=CBORCodec)
+```
+
+Currently, there is no `rust` implementation of the `cbor` writer.
 
 ### Combining several files
 
