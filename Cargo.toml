@@ -14,3 +14,4 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "*", features = ["extension-module"] }
 rmp = "*"
+minicbor = "*"
