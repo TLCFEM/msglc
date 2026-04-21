@@ -20,7 +20,6 @@ import string
 import msgpack  # type: ignore
 
 from msglc import dump
-from msglc.codec import LazyCodec
 from msglc.config import configure
 from msglc.reader import LazyDict, LazyList, LazyReader, LazyStats
 
