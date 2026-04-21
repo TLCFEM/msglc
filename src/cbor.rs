@@ -70,9 +70,6 @@ fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyR
     } else if let Ok(value) = obj.cast::<pyo3::types::PyByteArray>() {
         let bytes = value.to_vec();
         out.bytes(&bytes).map_err(to_py)?;
-    } else if let Ok(_) = obj.cast::<pyo3::types::PyMemoryView>() {
-        let value = obj.call_method0("tobytes")?.cast_into::<PyBytes>()?;
-        out.bytes(value.as_bytes()).map_err(to_py)?;
     } else if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
         out.str(value.to_str()?).map_err(to_py)?;
     } else {
