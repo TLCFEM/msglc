@@ -13,7 +13,9 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::utility::{to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN};
+use crate::utility::{
+    build_tree, to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN,
+};
 use minicbor::data::Int;
 use minicbor::encode::Write as CBORWrite;
 use minicbor::Encoder;
@@ -102,57 +104,6 @@ impl LazyTOC {
         }
 
         Ok(())
-    }
-}
-
-fn build_tree(
-    start_pos: u64,
-    end_pos: u64,
-    all_trivial: bool,
-    children: LazyContainer,
-    small_obj_threshold: u64,
-) -> LazyTOC {
-    if end_pos <= small_obj_threshold + start_pos {
-        return LazyTOC::Leaf {
-            pos: [start_pos, end_pos],
-        };
-    }
-
-    if !all_trivial {
-        return LazyTOC::Normal {
-            pos: [start_pos, end_pos],
-            container: children,
-        };
-    }
-
-    if let LazyContainer::Array(ref items) = children {
-        let mut blocks = Vec::new();
-        let mut count = 0u64;
-        let mut size = 0u64;
-        let mut block_start = 0u64;
-
-        for (index, item) in items.iter().enumerate() {
-            if let LazyTOC::Leaf { pos } = item {
-                if count == 0 {
-                    block_start = pos[0];
-                }
-                count += 1;
-                size += pos[1] - pos[0];
-                if size > small_obj_threshold || index + 1 == items.len() {
-                    blocks.push((count, block_start, pos[1]));
-                    count = 0;
-                    size = 0;
-                }
-            }
-        }
-
-        if blocks.len() > 1 {
-            return LazyTOC::Blocked { blocks };
-        }
-    }
-
-    LazyTOC::Leaf {
-        pos: [start_pos, end_pos],
     }
 }
 
