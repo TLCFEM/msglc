@@ -16,7 +16,7 @@
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
 use std::fs::File;
-use std::io::{BufWriter, Seek, SeekFrom, Write};
+use std::io::{BufWriter, Seek, Write};
 
 const HEADER_FIELD_LEN: usize = 10;
 const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
@@ -219,7 +219,7 @@ impl<W: Write + Seek> Write for LazyBuffer<W> {
 }
 
 impl<W: Write + Seek> Seek for LazyBuffer<W> {
-    fn seek(&mut self, in_pos: SeekFrom) -> std::io::Result<u64> {
+    fn seek(&mut self, in_pos: std::io::SeekFrom) -> std::io::Result<u64> {
         let pos = self.buffer.seek(in_pos)?;
         self.current_pos = pos;
         Ok(pos)
@@ -401,7 +401,7 @@ pub fn dump_rust_impl_msgpack(py: Python<'_>, path: String, obj: Bound<'_, PyAny
         .getattr("LazyWriter")?
         .getattr("magic")?
         .extract()?;
-    let header_pos = SeekFrom::Start(magic.len() as u64);
+    let header_pos = std::io::SeekFrom::Start(magic.len() as u64);
 
     let mut writer = LazyWriter::new(py, &path, magic.len())?;
     writer.buffer.write_all(&magic).map_err(to_py)?;

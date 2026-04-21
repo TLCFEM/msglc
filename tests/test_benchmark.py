@@ -18,21 +18,21 @@ from typing import Literal
 
 import msgpack
 import pytest
+
 from generate import (
     compare,
     find_all_paths,
     generate,
     goto_path,
 )
-
 from msglc import config, dump
-from msglc.codec import MsgpackCodec, MsgspecCodec, OrmsgpackCodec
+from msglc.codec import MsgpackCodec, MsgspecCodec, OrmsgpackCodec, CBORCodec
 from msglc.reader import LazyReader, LazyStats
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
 def test_random_benchmark(
-    monkeypatch, tmpdir, random_medium_data, backend: Literal["python", "rust"]
+        monkeypatch, tmpdir, random_medium_data, backend: Literal["python", "rust"]
 ):
     monkeypatch.setattr(config, "small_obj_optimization_threshold", 8192)
 
@@ -55,7 +55,7 @@ def test_random_benchmark(
         counter.clear()
 
 
-def pack(array, backend: Literal["python", "rust"]):
+def pack(array, backend: Literal["python", "rust"], packer=None):
     dump(
         "large_array.msg",
         {
@@ -73,24 +73,27 @@ def pack(array, backend: Literal["python", "rust"]):
             "large_list": array,
         },
         backend=backend,
+        packer=packer,
     )
 
 
 @pytest.mark.parametrize("num_type", [float, int])
 @pytest.mark.parametrize("backend", ["python", "rust"])
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
 def test_pack_large_array(
-    tmpdir, benchmark, num_type, backend: Literal["python", "rust"]
+        tmpdir, benchmark, num_type, backend: Literal["python", "rust"], packer
 ):
     def pack_large_array(_tmpdir):
         with _tmpdir.as_cwd():
-            pack([num_type(x) for x in range(20000)], backend)
+            pack([num_type(x) for x in range(20000)], backend, packer)
 
     benchmark(pack_large_array, tmpdir)
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
 @pytest.mark.parametrize("encoder", [True, False])
-def test_numpy_array(monkeypatch, tmpdir, encoder, backend: Literal["python", "rust"]):
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_numpy_array(monkeypatch, tmpdir, encoder, backend: Literal["python", "rust"], packer):
     monkeypatch.setattr(config, "numpy_encoder", encoder)
 
     try:
@@ -98,9 +101,9 @@ def test_numpy_array(monkeypatch, tmpdir, encoder, backend: Literal["python", "r
             import numpy
 
             numpy_array = numpy.random.random((10, 11, 12000))
-            pack(numpy_array, backend)
+            pack(numpy_array, backend, packer)
 
-            with LazyReader("large_array.msg") as reader:
+            with LazyReader("large_array.msg", unpacker=packer) as reader:
                 for _ in range(100000):
                     x = random.randint(0, numpy_array.shape[0] - 1)
                     y = random.randint(0, numpy_array.shape[1] - 1)
@@ -141,7 +144,7 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
 def test_serialize_large_json(
-    tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
+        tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
 ):
     def serialize_large_json():
         dump("repo_data.msg", repo_data, backend=backend)
@@ -158,7 +161,6 @@ def test_random_huge_json(tmpdir, benchmark, random_huge_data, backend):
 
 def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data):
     with tmpdir.as_cwd():
-
         def msgpack_dump():
             with open("data.msgpack", "wb") as f:
                 msgpack.dump(random_huge_data, f)

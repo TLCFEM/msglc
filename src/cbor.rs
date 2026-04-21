@@ -266,6 +266,7 @@ impl<'py> LazyWriter<'py> {
     fn writer(&self) -> &LazyBuffer {
         self.encoder.writer()
     }
+
     fn writer_mut(&mut self) -> &mut LazyBuffer {
         self.encoder.writer_mut()
     }
@@ -297,8 +298,7 @@ impl<'py> LazyWriter<'py> {
 
         let start_pos = self.offset()?;
         let bytes = obj.call_method0("dumps")?.cast_into::<PyBytes>()?;
-        let value = bytes.as_bytes();
-        self.encoder.bytes(value).map_err(to_py)?;
+        self.encoder.bytes(bytes.as_bytes()).map_err(to_py)?;
 
         Ok(Some(LazyTOC::Leaf {
             pos: [start_pos, self.offset()?],
