@@ -602,8 +602,9 @@ def test_integer_identical_bytes(tmpdir):
     ],
     ids=["large_array", "large_dict", "array", "dict", "small_array", "small_dict"],
 )
-def test_cbor_large_container(tmpdir, data):
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_cbor_large_container(tmpdir, data, packer):
     with tmpdir.as_cwd():
-        dump("data.cbor", data, packer=CBORCodec)
-        with LazyReader("data.cbor", unpacker=CBORCodec) as reader:
+        dump("data.pack", data, packer=packer)
+        with LazyReader("data.pack", unpacker=packer) as reader:
             assert reader == data
