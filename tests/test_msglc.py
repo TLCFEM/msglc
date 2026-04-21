@@ -589,3 +589,22 @@ def test_integer_identical_bytes(tmpdir):
         while number >= -(2**63):
             assert_identical_bytes(number)
             number *= 2
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        list(range(2**16 + 1)),
+        {str(v): v for v in range(2**16 + 1)},
+        list(range(2**8 + 1)),
+        {str(v): v for v in range(2**8 + 1)},
+        list(range(50)),
+        {str(v): v for v in range(50)},
+    ],
+    ids=["large_array", "large_dict", "array", "dict", "small_array", "small_dict"],
+)
+def test_cbor_large_container(tmpdir, data):
+    with tmpdir.as_cwd():
+        dump("data.cbor", data, packer=CBORCodec)
+        with LazyReader("data.cbor", unpacker=CBORCodec) as reader:
+            assert reader == data
