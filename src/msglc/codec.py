@@ -24,6 +24,8 @@ import msgpack
 
 
 class LazyCodec(ABC):
+    protocol = ""
+
     @abstractmethod
     def encode(self, data):
         raise NotImplementedError
@@ -46,6 +48,8 @@ class LazyCodec(ABC):
 
 
 class CBORCodec(LazyCodec):
+    protocol = "cbor"
+
     def encode(self, data):
         return cbor2.dumps(data)
 
@@ -90,6 +94,8 @@ class CBORCodec(LazyCodec):
 
 
 class MsgpackCodecBase(LazyCodec, ABC):
+    protocol = "msgpack"
+
     def stream_decode(self, data):
         yield from msgpack.Unpacker(BytesIO(data))
 

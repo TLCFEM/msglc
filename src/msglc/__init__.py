@@ -59,7 +59,9 @@ def dump(
     :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when 'rust' backend is used
     :return: None
     """
-    if backend == "python" or not isinstance(file, (str, UPath)):
+    is_cbor: bool = bool(packer := kwargs.get("packer")) and packer.protocol == "cbor"  # type: ignore
+
+    if backend == "python" or not isinstance(file, (str, UPath)) or is_cbor:
         with LazyWriter(file, **kwargs) as msglc_writer:
             msglc_writer.write(obj)
         return
