@@ -1,21 +1,26 @@
 # Motivation
 
-[MessagePack](https://msgpack.org/index.html) is a binary serialization format.
-It can be used for data exchange and storage.
+[MessagePack](https://msgpack.org/index.html)
+and [Concise Binary Object Representation (CBOR)](https://www.rfc-editor.org/rfc/rfc8949.html) are binary
+serialization formats.
+They can be used for data exchange and storage.
 
 When it is used for storing large tree-like data, it has a significant shortcoming.
-That is, whenever one wants to read some data from cold storage, even if only a small amount of data is required, the whole binary blob needs to be de-serialized.
+That is, whenever one wants to read some data from cold storage, even if only a small amount of data is required, the
+whole binary blob needs to be de-serialized.
 
-This is due to the fact that `MessagePack` itself does not generate/store any structural metadata regarding the data to be serialized.
+This is due to the fact that `MessagePack`/`COBR` itself does not generate/store any structural metadata regarding the
+data to be serialized.
 As a result, there is no way to know when the desired segment is located in the binary blob.
 Thus, the whole thing needs to be decoded.
 (To be precise, it is actually linear complexity, the worse case is to decode the whole thing.)
 
-
 ## Structural Information
 
-Similar to the [design](https://en.wikipedia.org/wiki/ZIP_(file_format)) of the zip format, it is possible to append a table of contents to the binary blob.
-The table of contents contains the structural information of the serialized data, serves as a lookup table, and is encoded as well.
+Similar to the [design](https://en.wikipedia.org/wiki/ZIP_(file_format)) of the zip format, it is possible to append a
+table of contents to the binary blob.
+The table of contents contains the structural information of the serialized data, serves as a lookup table, and is
+encoded as well.
 
 Whenever read operations are required, the table of contents is read first.
 Ideally, the table of contents is much smaller than the original binary blob.
@@ -41,7 +46,8 @@ This applies to small containers.
 
 ### Dictionary/Map
 
-Apart from the `p` field that stores the start and end positions of the whole dictionary, to allow nested lookups, the table of contents also contains the tables of contents of the children under the `t` field.
+Apart from the `p` field that stores the start and end positions of the whole dictionary, to allow nested lookups, the
+table of contents also contains the tables of contents of the children under the `t` field.
 
 For example, the table of contents of the dictionary `d={"a": 1, "b": 2}` would look like as follows.
 
@@ -90,7 +96,8 @@ For example, the table of contents of the list `l=[x for x in range(100000)]` wo
 }
 ```
 
-The small objects are grouped together, and the `size` field is used to indicate the number of small objects in the group.
+The small objects are grouped together, and the `size` field is used to indicate the number of small objects in the
+group.
 The size of the group can be adjusted to achieve optimal performance.
 
 ### Nested Structures
@@ -122,12 +129,13 @@ To support recursively packing serialized data, the following format is also use
 Since the packed data is already serialized, it would contain the table of contents.
 It is only necessary to store the start position of the packed data.
 
-
 ### Small Objects
 
-If the data to be serialized is mainly structure, generating the corresponding table of contents would potentially result in a table of contents that is larger than the original data.
+If the data to be serialized is mainly structure, generating the corresponding table of contents would potentially
+result in a table of contents that is larger than the original data.
 
-It is possible to define a threshold, such that for any given node in the tree, if the size of the node is smaller than the threshold, the node is considered a small object.
+It is possible to define a threshold, such that for any given node in the tree, if the size of the node is smaller than
+the threshold, the node is considered a small object.
 For small objects, the `t` field is omitted.
 
 The following is an example.
