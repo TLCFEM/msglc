@@ -19,6 +19,7 @@ from datetime import datetime
 from io import BytesIO
 from itertools import cycle
 
+import cbor2
 import pytest
 from fsspec.implementations.zip import ZipFileSystem
 from msgpack import unpackb
@@ -99,14 +100,12 @@ def test_msglc(
             for x in list_container:
                 assert x in ["GML", "XML"]
             assert set(list_container) == {"GML", "XML"}
-            if packer is not CBORCodec:
-                assert (
-                    unpackb(reader.protocol_raw_data(chunked=False)) == reader.to_obj()
-                )
-                assert (
-                    unpackb(b"".join(reader.protocol_raw_data(chunked=True)))
-                    == reader.to_obj()
-                )
+            loader = cbor2.loads if packer is CBORCodec else unpackb
+            assert loader(reader.protocol_raw_data(chunked=False)) == reader.to_obj()
+            assert (
+                loader(b"".join(reader.protocol_raw_data(chunked=True)))
+                == reader.to_obj()
+            )
 
         str(stats)
 
