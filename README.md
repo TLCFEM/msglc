@@ -1,3 +1,5 @@
+from msglc.codec import CBORCodec
+
 # msglc --- (de)serialize json objects with lazy/partial loading containers using msgpack or cbor
 
 [![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/TLCFEM/msglc)
@@ -7,11 +9,11 @@
 ## What
 
 `msglc` is a Python library that provides a way to serialize and deserialize json objects with lazy/partial loading
-containers using `msgpack` or `cbor` as the serialization format.
+containers using [`msgpack`](https://github.com/msgpack/msgpack/blob/master/spec.md) or [`cbor`](https://cbor.io/) as
+the serialization format.
 
 It can be used in environments that use `msgpack`/`cbor` to store/exchange data that is larger than a few MBs if any of
-the
-followings hold.
+the followings hold.
 
 1. After cold storage, each retrieval only accesses part of the stored data.
 2. Cannot afford to decode the whole file due to memory limitation, performance consideration, etc.
@@ -20,6 +22,9 @@ followings hold.
 One may want to check the [benchmark](https://tlcfem.github.io/msglc/benchmark/).
 
 ## Quick Start
+
+The supported objects need to be json compatible, including `dict`, `list`, `str`, `int`, `float`, `bool` and `None`.
+Extra types may be supported as well but not guaranteed.
 
 ### Serialization
 
@@ -30,6 +35,17 @@ from msglc import dump
 
 data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
 dump("data.msg", data)
+```
+
+Use `backend='python'` or `backend='rust'` to specify the backend for serialization.
+By default, `msgpack` is used as the serialization format, to use `cbor`, use the corresponding packer.
+
+```python
+from msglc import dump
+from msglc.codec import CBORCodec
+
+data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
+dump("data.msg", data, backend='rust', packer=CBORCodec)
 ```
 
 Use `combine` to combine several serialized files together.

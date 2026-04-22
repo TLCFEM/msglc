@@ -24,7 +24,7 @@ from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
 from upath import UPath
 
-from .codec import LazyCodec, acquire_codec
+from .codec import CBORCodec, LazyCodec, MsgspecCodec, acquire_codec
 from .config import (
     BufferReaderType,
     config,
@@ -532,6 +532,9 @@ class LazyReader(LazyItem):
 
         It is recommended to simply pass in a `UPath` object that is generic to handle various underlying filesystems.
 
+        If `unpacker` is not given, a proper one will be automatically assigned based on the contents.
+        If a custom unpacker of a wrong format is assigned, it will raise value error.
+
         :param buffer_or_path: the buffer or path to the file
         :param counter: the counter object for tracking the number of bytes read
         :param cached: whether to cache the data
@@ -564,6 +567,13 @@ class LazyReader(LazyItem):
 
         if not config.check_compatibility(header[:sep_a]):
             raise ValueError("Invalid file format.")
+
+        if unpacker is None:
+            unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
+        elif (unpacker.protocol == "msgpack") != (header[sep_a] == 0):
+            raise ValueError(
+                f"The given unpacker {unpacker} does not match file protocol."
+            )
 
         super().__init__(
             buffer,
