@@ -34,7 +34,22 @@ fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyR
     } else if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
         out.bool(value.is_true()).map_err(to_py)?;
     } else if let Ok(value) = obj.cast::<pyo3::types::PyFloat>() {
-        out.f64(value.value()).map_err(to_py)?;
+        let v = value.value();
+        if v.is_nan() {
+            out.writer_mut()
+                .write_all(&[0xf9, 0x7e, 0x00])
+                .map_err(to_py)?;
+        } else if v == f64::INFINITY {
+            out.writer_mut()
+                .write_all(&[0xf9, 0x7c, 0x00])
+                .map_err(to_py)?;
+        } else if v == f64::NEG_INFINITY {
+            out.writer_mut()
+                .write_all(&[0xf9, 0xfc, 0x00])
+                .map_err(to_py)?;
+        } else {
+            out.f64(v).map_err(to_py)?;
+        }
     } else if obj.is_instance_of::<pyo3::types::PyInt>() {
         if let Ok(value) = obj.extract::<i64>() {
             out.int(Int::from(value)).map_err(to_py)?;

@@ -552,6 +552,12 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
         b"asdadsa",
         bytearray(b"asdadsa"),
         memoryview(b"asdadsa"),
+        float("inf"),
+        float("nan"),
+        float("+inf"),
+        float("+nan"),
+        float("-inf"),
+        float("-nan"),
     ],
     ids=[
         "set",
@@ -561,6 +567,12 @@ def test_numpy_array_identical_bytes(monkeypatch, tmpdir, encoder):
         "bytes",
         "bytes_array",
         "memory_view",
+        "inf",
+        "nan",
+        "+inf",
+        "+nan",
+        "-inf",
+        "-nan",
     ],
 )
 @pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
