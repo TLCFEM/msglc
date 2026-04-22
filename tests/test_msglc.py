@@ -25,7 +25,7 @@ from fsspec.implementations.zip import ZipFileSystem
 from msgpack import unpackb
 from upath import UPath
 
-from msglc import FileInfo, LazyWriter, append, combine, dump
+from msglc import FileInfo, LazyWriter, append, combine, dump, dumps
 from msglc.codec import CBORCodec, MsgpackCodec, MsgspecCodec, OrmsgpackCodec
 from msglc.config import config, configure, decrement_gc_counter, increment_gc_counter
 from msglc.reader import LazyReader, LazyStats, async_to_obj
@@ -626,3 +626,8 @@ def test_cbor_large_container(tmpdir, data, packer):
         dump("data.pack", data, packer=packer)
         with LazyReader("data.pack", unpacker=packer) as reader:
             assert reader == data
+
+
+def test_codec_mismatch():
+    with pytest.raises(ValueError):
+        LazyReader(dumps(list(range(10)), packer=MsgspecCodec), unpacker=CBORCodec)

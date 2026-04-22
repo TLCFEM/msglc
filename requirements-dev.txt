@@ -12,16 +12,16 @@ bitarray==3.8.1           # via msglc (pyproject.toml)
 botocore==1.42.91         # via aiobotocore
 bracex==2.6               # via wcmatch
 cbor2==5.9.0              # via msglc (pyproject.toml)
-certifi==2026.2.25        # via requests
+certifi==2026.4.22        # via requests
 charset-normalizer==3.4.7  # via requests
-click==8.3.2              # via mkdocs
+click==8.3.3              # via mkdocs
 colorama==0.4.6           # via mkdocs-material
 coverage==7.13.5          # via pytest-cov
 frozenlist==1.8.0         # via aiohttp, aiosignal
 fsspec==2026.3.0          # via s3fs, universal-pathlib
 ghp-import==2.1.0         # via mkdocs
 griffelib==2.0.2          # via mkdocstrings-python
-idna==3.11                # via requests, yarl
+idna==3.13                # via requests, yarl
 iniconfig==2.3.0          # via pytest
 jinja2==3.1.6             # via mkdocs, mkdocs-material, mkdocstrings
 jmespath==1.1.0           # via aiobotocore, botocore
@@ -50,7 +50,7 @@ platformdirs==4.9.6       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
 propcache==0.4.1          # via aiohttp, yarl
 py-cpuinfo==9.0.0         # via pytest-benchmark
-pyarrow==23.0.1           # via msglc (pyproject.toml)
+pyarrow==24.0.0           # via msglc (pyproject.toml)
 pygments==2.20.0          # via mkdocs-material, pytest
 pymdown-extensions==10.21.2  # via mkdocs-material, mkdocstrings
 pytest==9.0.3             # via pytest-asyncio, pytest-benchmark, pytest-cov

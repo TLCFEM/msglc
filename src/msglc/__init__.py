@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import nullcontext
-from io import IOBase
+from io import BytesIO, IOBase
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, BinaryIO
 from uuid import uuid4
@@ -32,7 +32,6 @@ from .reader import LazyReader, to_obj
 from .writer import LazyCombiner, LazyWriter
 
 if TYPE_CHECKING:
-    from io import BytesIO
     from typing import Literal
 
     from .config import FileSystem
@@ -84,6 +83,17 @@ def dump(
     with TemporaryDirectory() as tmp_dir:
         dump_rust_impl(tmp_path := (UPath(tmp_dir) / uuid4().hex).as_posix(), obj)
         target_fs.put(tmp_path, target_path)
+
+
+def dumps(obj, *, backend: Literal["python", "rust"] = "python", **kwargs):
+    """
+    Serialize the given object and return a `BytesIO` object containing the serialized data.
+    See documentation of function `dump` for details.
+    """
+    stream = BytesIO()
+    dump(stream, obj, backend=backend, **kwargs)
+    stream.seek(0)
+    return stream
 
 
 class FileInfo:

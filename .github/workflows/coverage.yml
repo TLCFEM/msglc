@@ -42,9 +42,7 @@ jobs:
           uv run maturin develop --uv
           uv run ruff check --statistics .
           uv run pytest --cov=msglc --cov-report=xml tests/
-          if [[ "${{ matrix.python-version }}" != "pypy"* ]]; then
-            cargo llvm-cov report --lcov --output-path coverage.lcov
-          fi
+          cargo llvm-cov report --lcov --output-path coverage.lcov
       - name: Upload
         uses: codecov/codecov-action@v6
         with:
