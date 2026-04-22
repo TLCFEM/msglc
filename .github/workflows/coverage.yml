@@ -33,7 +33,6 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
-          enable-cache: true
       - name: Build
         run: |
           uv venv
@@ -73,7 +72,6 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
-          enable-cache: true
       - name: Build
         run: |
           uv venv
@@ -214,7 +212,6 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
-          enable-cache: true
       - name: Deploy
         run: |
           uv venv
