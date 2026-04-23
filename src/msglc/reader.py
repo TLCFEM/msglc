@@ -171,7 +171,7 @@ class LazyItem:
         # this is used in combined archives
         if isinstance(toc, int):
             self._buffer.seek(toc + self._offset)
-            return LazyReader(self._buffer, **params)
+            return LazyReader(self._buffer, **params, from_combined=True)
 
         if (child_toc := toc.get("t", None)) is None:
             # {"p": [start_pos, end_pos]}
@@ -504,6 +504,7 @@ class LazyReader(LazyItem):
         cached: bool = True,
         unpacker: type[LazyCodec] | LazyCodec | None = None,
         fs: FileSystem | None = None,
+        **kwargs,
     ):
         """
         It is possible to use a customized unpacker.
@@ -571,9 +572,11 @@ class LazyReader(LazyItem):
         if unpacker is None:
             unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
         elif (unpacker.protocol == "msgpack") != (header[sep_a] == 0):
-            raise ValueError(
-                f"The given unpacker {unpacker} does not match file protocol."
-            )
+            if not kwargs.get("from_combined", False):
+                raise ValueError(
+                    f"The given unpacker {unpacker} does not match file protocol."
+                )
+            unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
 
         super().__init__(
             buffer,
