@@ -74,6 +74,10 @@ def test_msglc(
                 buffer, counter=stats, cached=cached, fs=fs, unpacker=packer
             ) as reader,
         ):
+            repr(reader)
+            repr(reader.read("glossary"))
+            repr(reader.read("some_set"))
+
             assert (
                 reader.read(
                     "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
