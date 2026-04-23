@@ -45,7 +45,7 @@ ormsgpack==1.12.2         # via msglc (pyproject.toml)
 packaging==26.1           # via mkdocs, pytest
 paginate==0.5.7           # via mkdocs-material
 pathlib-abc==0.5.2        # via universal-pathlib
-pathspec==1.0.4           # via mkdocs
+pathspec==1.1.0           # via mkdocs
 platformdirs==4.9.6       # via mkdocs-get-deps
 pluggy==1.6.0             # via pytest, pytest-cov
 propcache==0.4.1          # via aiohttp, yarl

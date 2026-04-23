@@ -156,6 +156,7 @@ jobs:
       - name: Collect
         uses: actions/download-artifact@v8
         with:
+          path: dist
           merge-multiple: true
       - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1
