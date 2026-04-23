@@ -88,6 +88,13 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
     target: str | UPath = f"{bucket_name}/path/{str(uuid.uuid4())}"
     if in_memory:
         target = UPath(f"memory://{target}")
+    elif is_upath:
+        target = UPath(
+            f"s3://{target}",
+            endpoint_url="http://localhost:9000",
+            key="rustfsadmin",
+            secret="rustfsadmin",
+        )
 
     with LazyWriter(target, fs=fs) as writer:
         writer.write(json_before)
@@ -97,14 +104,6 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
     dump(target, json_after, fs=fs, backend="rust")
 
     stats = LazyStats()
-
-    if is_upath and isinstance(target, str):
-        target = UPath(
-            f"s3://{target}",
-            endpoint_url="http://localhost:9000",
-            key="rustfsadmin",
-            secret="rustfsadmin",
-        )
 
     with LazyReader(target, counter=stats, fs=fs) as reader:
         assert (
