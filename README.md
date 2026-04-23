@@ -1,5 +1,3 @@
-from msglc.codec import CBORCodec
-
 # msglc --- (de)serialize json objects with lazy/partial loading containers using msgpack or cbor
 
 [![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/TLCFEM/msglc)

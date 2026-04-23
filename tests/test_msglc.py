@@ -389,7 +389,7 @@ def test_combine_archives_append(tmpdir, json_after, target):
     with tmpdir.as_cwd():
         with LazyWriter("test_list.msg") as writer:
             writer.write([x for x in range(30)])
-        with LazyWriter("test_dict.msg") as writer:
+        with LazyWriter("test_dict.msg", packer=CBORCodec) as writer:
             writer.write(json_after)
 
         combine(target, [FileInfo("test_dict.msg")])
