@@ -49,6 +49,13 @@ def _upsert(source: BufferReader | TemporaryFile, target: str, fs: FileSystem | 
             s3_file.write(chunk)
 
 
+def _copy(source: BufferReader | TemporaryFile, target: UPath):  # type: ignore
+    source.seek(0)
+    with target.open("wb") as dest:
+        while chunk := source.read(config.write_buffer_size):
+            dest.write(chunk)
+
+
 class LazyBuffer:
     def __init__(
         self,
@@ -129,6 +136,7 @@ class LazyWriter(LazyBuffer):
         self._toc_packer: TOC = None  # type: ignore
         self._toc_cls = toc_cls or TOC
         self._no_more_writes: bool = False
+        self._unseekable_upath: bool = False
 
     def __enter__(self):
         increment_gc_counter()
@@ -146,9 +154,9 @@ class LazyWriter(LazyBuffer):
         elif isinstance(self._buffer_or_path, UPath):
             self._buffer = self._buffer_or_path.open("wb")
             if not self._buffer.seekable():
-                raise ValueError(
-                    f"The underlying filesystem of the given UPath ({self._buffer_or_path}) does not support random write."
-                )
+                self._unseekable_upath = True
+                self._buffer.close()
+                self._buffer = TemporaryFile()
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
         else:
@@ -168,8 +176,11 @@ class LazyWriter(LazyBuffer):
 
         if isinstance(self._buffer_or_path, str):
             _upsert(self._buffer, self._buffer_or_path, self._fs)
+            self._buffer.close()
 
-        if isinstance(self._buffer_or_path, (str, UPath)):
+        if isinstance(self._buffer_or_path, UPath):
+            if self._unseekable_upath:
+                _copy(self._buffer, self._buffer_or_path)
             self._buffer.close()
 
     def write(self, obj) -> None:
