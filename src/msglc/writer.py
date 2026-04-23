@@ -38,22 +38,24 @@ if TYPE_CHECKING:
     from .config import BufferReader, BufferWriter, FileSystem
 
 
+def _copy_obj(source, dest):
+    source.seek(0)
+    while chunk := source.read(config.write_buffer_size):
+        dest.write(chunk)
+
+
 def _upsert(source: BufferReader | TemporaryFile, target: str, fs: FileSystem | None):  # type: ignore
     if not fs:
         return
 
-    with fs.open(target, "wb", block_size=config.write_buffer_size) as s3_file:
-        # now transfer the local cache to s3
-        source.seek(0)
-        while chunk := source.read(config.write_buffer_size):
-            s3_file.write(chunk)
+    with fs.open(target, "wb", config.write_buffer_size) as remote:
+        # now transfer the local cache to remote
+        _copy_obj(source, remote)
 
 
 def _copy(source: BufferReader | TemporaryFile, target: UPath):  # type: ignore
-    source.seek(0)
-    with target.open("wb") as dest:
-        while chunk := source.read(config.write_buffer_size):
-            dest.write(chunk)
+    with target.open("wb", config.write_buffer_size) as dest:
+        _copy_obj(source, dest)
 
 
 class LazyBuffer:
@@ -70,6 +72,7 @@ class LazyBuffer:
         self._buffer: BufferWriter | TemporaryFile = None  # type: ignore
         self._header_start: int = 0
         self._file_start: int = 0
+        self._unseekable_upath: bool = False
 
     def _finalize(self, toc: dict):
         toc_start: int = self._buffer.tell() - self._file_start
@@ -81,6 +84,16 @@ class LazyBuffer:
         else:
             self._buffer.write(self._packer.encode(toc_start).rjust(10, b"\0"))
             self._buffer.write(self._packer.encode(len(packed_toc)).rjust(10, b"\0"))
+
+    def cleanup(self):
+        if isinstance(self._buffer_or_path, str):
+            _upsert(self._buffer, self._buffer_or_path, self._fs)
+            self._buffer.close()
+
+        if isinstance(self._buffer_or_path, UPath):
+            if self._unseekable_upath:
+                _copy(self._buffer, self._buffer_or_path)
+            self._buffer.close()
 
 
 class LazyWriter(LazyBuffer):
@@ -136,7 +149,6 @@ class LazyWriter(LazyBuffer):
         self._toc_packer: TOC = None  # type: ignore
         self._toc_cls = toc_cls or TOC
         self._no_more_writes: bool = False
-        self._unseekable_upath: bool = False
 
     def __enter__(self):
         increment_gc_counter()
@@ -152,7 +164,7 @@ class LazyWriter(LazyBuffer):
                     self._buffer_or_path, "wb", config.write_buffer_size
                 )
         elif isinstance(self._buffer_or_path, UPath):
-            self._buffer = self._buffer_or_path.open("wb")
+            self._buffer = self._buffer_or_path.open("wb", config.write_buffer_size)
             if not self._buffer.seekable():
                 self._unseekable_upath = True
                 self._buffer.close()
@@ -174,14 +186,7 @@ class LazyWriter(LazyBuffer):
     def __exit__(self, exc_type, exc_val, exc_tb):
         decrement_gc_counter()
 
-        if isinstance(self._buffer_or_path, str):
-            _upsert(self._buffer, self._buffer_or_path, self._fs)
-            self._buffer.close()
-
-        if isinstance(self._buffer_or_path, UPath):
-            if self._unseekable_upath:
-                _copy(self._buffer, self._buffer_or_path)
-            self._buffer.close()
+        self.cleanup()
 
     def write(self, obj) -> None:
         """
@@ -250,12 +255,21 @@ class LazyCombiner(LazyBuffer):
             self._buffer = self._buffer_or_path.open(
                 "wb"
                 if not self._buffer_or_path.exists() or self._mode == "w"
-                else "r+b"
+                else "r+b",
+                config.write_buffer_size,
             )
             if not self._buffer.seekable():
                 raise ValueError(
                     f"The underlying filesystem of the given UPath ({self._buffer_or_path}) does not support random write."
                 )
+                self._unseekable_upath = True
+                self._buffer.close()
+                self._buffer = TemporaryFile()
+                if self._buffer_or_path.exists():
+                    with self._buffer_or_path.open(
+                        "rb", config.read_buffer_size
+                    ) as source:
+                        _copy_obj(source, self._buffer)
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
@@ -312,11 +326,7 @@ class LazyCombiner(LazyBuffer):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._finalize({"t": self._toc})
 
-        if isinstance(self._buffer_or_path, str):
-            _upsert(self._buffer, self._buffer_or_path, self._fs)
-
-        if isinstance(self._buffer_or_path, (str, UPath)):
-            self._buffer.close()
+        self.cleanup()
 
     def write(self, obj: Generator, name: str | None = None) -> None:
         """
