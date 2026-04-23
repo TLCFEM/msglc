@@ -330,7 +330,7 @@ def test_combine_archives(tmpdir, json_after, target):
         combine(
             target,
             [
-                FileInfo("combined_a.msg"),
+                FileInfo(UPath("combined_a.msg")),
                 FileInfo(LazyReader("combined_a.msg")),
                 FileInfo(None, obj={"key": "value"}),
             ],
