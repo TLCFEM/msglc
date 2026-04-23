@@ -88,6 +88,31 @@ with LazyReader("combined.msg") as reader:
     assert reader['1/101'] == 101.0  # also reader[1][101]
 ```
 
+It is possible to combine files with different formats together.
+
+```python
+from msglc import dump, combine, FileInfo
+from msglc.codec import CBORCodec, MsgspecCodec
+from msglc.reader import LazyReader
+
+# this file uses cbor format
+dump("dict.cbor", {str(v): v for v in range(1000)}, backend='rust', packer=CBORCodec)
+# this file uses msgpack format
+dump("list.msg", [float(v) for v in range(1000)], backend='rust')
+
+# two files are combined together,
+# the additional metadata generated for the combined file uses msgpack format
+# but the underlying data of each file is not changed
+combine("combined.msg", [FileInfo("dict.cbor"), FileInfo("list.msg")], packer=MsgspecCodec)
+
+# the combined file uses a list layout
+# [ {'1':1,'2':2,...}, [1.0,2.0,3.0,...] ]
+# so one can read it as follows, details in coming section
+with LazyReader("combined.msg") as reader:
+    assert reader['0/101'] == 101  # also reader[0][101]
+    assert reader['1/101'] == 101.0  # also reader[1][101]
+```
+
 ## Deserialization
 
 Use `LazyReader` to read a file.
@@ -206,9 +231,9 @@ class DictStream(Mapping):
 ```
 
 !!! warning "length requirement"
-    Only two things will be invoked: `len()` and `.items()`.
-    Thus, `__len__(self)` and `items(self)` must be properly implemented.
-    If the length is **not** known in advance, streaming data is not feasible.
+Only two things will be invoked: `len()` and `.items()`.
+Thus, `__len__(self)` and `items(self)` must be properly implemented.
+If the length is **not** known in advance, streaming data is not feasible.
 
 With the above, one can do the following.
 
