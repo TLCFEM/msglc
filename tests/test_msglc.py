@@ -74,6 +74,10 @@ def test_msglc(
                 buffer, counter=stats, cached=cached, fs=fs, unpacker=packer
             ) as reader,
         ):
+            repr(reader)
+            repr(reader.read("glossary"))
+            repr(reader.read("some_set"))
+
             assert (
                 reader.read(
                     "glossary/GlossDiv/GlossList/GlossEntry/GlossDef/GlossSeeAlso/1"
@@ -330,7 +334,7 @@ def test_combine_archives(tmpdir, json_after, target):
         combine(
             target,
             [
-                FileInfo("combined_a.msg"),
+                FileInfo(UPath("combined_a.msg")),
                 FileInfo(LazyReader("combined_a.msg")),
                 FileInfo(None, obj={"key": "value"}),
             ],
