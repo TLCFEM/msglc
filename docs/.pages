@@ -1,7 +1,0 @@
-nav:
-    - msglc: index.md
-    - Motivation: motivation.md
-    - Examples: example.md
-    - S3 Support: s3.md
-    - Benchmark: benchmark.md
-    - API: api

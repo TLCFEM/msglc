@@ -1,0 +1,33 @@
+[project]
+site_name = "msglc"
+site_url = "https://github.com/TLCFEM/msglc"
+site_author = "Theodore Chang"
+copyright = "Copyright © 2024-2026 Theodore Chang"
+nav = [
+{"msglc" = "index.md"},
+{"Motivation" = "motivation.md"},
+{"Examples" = "example.md"},
+{"S3 Support" = "s3.md"},
+{"Benchmark" = "benchmark.md"},
+{"API" = [
+{"Utility" = "api/utility.md"},
+{"LazyReader" = "api/LazyReader.md"},
+{"LazyWriter" = "api/LazyWriter.md"},
+{"LazyCombiner" = "api/LazyCombiner.md"}
+]}
+]
+
+[[project.theme.palette]] 
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "sphinx"
+inherited_members = true
+show_source = true

@@ -4,6 +4,8 @@ on:
   pull_request:
 permissions:
   contents: write
+  pages: write
+  id-token: write
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -164,6 +166,9 @@ jobs:
     name: Documentation
     needs: test
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - name: Delete
@@ -179,13 +184,15 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
-      - name: Deploy
+      - name: Build
         run: |
           uv venv
           uv pip install ".[all]"
-          uv run mkdocs build
-          git fetch origin
-          git config --global user.name "Theodore Chang"
-          git config --global user.email "tlcfem@gmail.com"
-          git pull
-          uv run mkdocs gh-deploy
+          uv run zensical build --clean
+      - name: Upload
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

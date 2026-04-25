@@ -10,7 +10,7 @@ exclude = [
     ".gitignore",
     "docs/**/*",
     "MANIFEST.in",
-    "mkdocs.yml",
+    "zensical.toml",
     "requirements*",
     "scripts/**/*",
     "tests/**/*",
@@ -48,8 +48,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "mkdocs-awesome-pages-plugin",
-    "mkdocs-material",
+    "zensical",
     "mkdocstrings[python]",
     "pytest-asyncio",
     "pytest-benchmark",
