@@ -1,0 +1,44 @@
+name: Documentation
+on:
+    push:
+        branches: [ master ]
+permissions:
+    contents: write
+    pages: write
+    id-token: write
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+jobs:
+    documentation:
+        name: Documentation
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Delete
+              uses: strumwolf/delete-deployment-environment@v3
+              with:
+                  token: ${{ secrets.ALL }}
+                  environment: github-pages
+            - name: Clone
+              uses: actions/checkout@v6
+            - name: Rust
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+            - name: Install uv
+              uses: astral-sh/setup-uv@v7
+              with:
+                  python-version: "3.11"
+            - name: Build
+              run: |
+                  uv venv
+                  uv pip install ".[all]"
+                  uv run zensical build --clean
+            - name: Upload
+              uses: actions/upload-pages-artifact@v5
+              with:
+                  path: site
+            - name: Deploy
+              id: deployment
+              uses: actions/deploy-pages@v5
