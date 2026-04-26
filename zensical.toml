@@ -1,6 +1,6 @@
 [project]
 site_name = "msglc"
-site_url = "https://github.com/TLCFEM/msglc"
+site_url = "https://tlcfem.github.io/msglc/"
 site_author = "Theodore Chang"
 copyright = "Copyright © 2024-2026 Theodore Chang"
 nav = [
@@ -17,15 +17,30 @@ nav = [
 ]}
 ]
 
-[[project.theme.palette]] 
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
 scheme = "default"
 toggle.icon = "lucide/sun"
 toggle.name = "Switch to dark mode"
 
 [[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to light mode"
+
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+linenums = true
+[project.markdown_extensions.pymdownx.blocks.caption]
+[project.markdown_extensions.pymdownx.caret]
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.mark]
+[project.markdown_extensions.pymdownx.snippets]
+[project.markdown_extensions.pymdownx.superfences]
+[project.markdown_extensions.pymdownx.tilde]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 docstring_style = "sphinx"
