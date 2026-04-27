@@ -9,11 +9,9 @@ exclude = [
     ".github/**/*",
     ".gitignore",
     "docs/**/*",
-    "MANIFEST.in",
-    "zensical.toml",
-    "requirements*",
     "scripts/**/*",
     "tests/**/*",
+    "zensical.toml",
 ]
 
 [project]

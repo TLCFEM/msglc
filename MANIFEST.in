@@ -1,5 +1,0 @@
-prune .github
-prune scripts
-prune tests
-prune docs
-exclude .gitignore
