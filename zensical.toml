@@ -2,20 +2,25 @@
 site_name = "msglc"
 site_url = "https://tlcfem.github.io/msglc/"
 site_author = "Theodore Chang"
+repo_url = "https://github.com/TLCFEM/msglc"
+repo_name = "msglc"
 copyright = "Copyright © 2024-2026 Theodore Chang"
 nav = [
-{"msglc" = "index.md"},
-{"Motivation" = "motivation.md"},
-{"Examples" = "example.md"},
-{"S3 Support" = "s3.md"},
-{"Benchmark" = "benchmark.md"},
-{"API" = [
-{"Utility" = "api/utility.md"},
-{"LazyReader" = "api/LazyReader.md"},
-{"LazyWriter" = "api/LazyWriter.md"},
-{"LazyCombiner" = "api/LazyCombiner.md"}
-]}
+    { "msglc" = "index.md" },
+    { "Motivation" = "motivation.md" },
+    { "Examples" = "example.md" },
+    { "S3 Support" = "s3.md" },
+    { "Benchmark" = "benchmark.md" },
+    { "API" = [
+        { "Utility" = "api/utility.md" },
+        { "LazyReader" = "api/LazyReader.md" },
+        { "LazyWriter" = "api/LazyWriter.md" },
+        { "LazyCombiner" = "api/LazyCombiner.md" }
+    ] }
 ]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"
