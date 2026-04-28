@@ -39,7 +39,7 @@ classifiers = [
 ]
 dependencies = [
     "bitarray",
-    "cbor2<6", # https://github.com/agronholm/cbor2/issues/295
+    "cbor2",
     "msgpack>=1",
     "universal_pathlib",
 ]
