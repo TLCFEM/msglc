@@ -65,16 +65,12 @@ ormsgpack = [
 s3fs = [
     "s3fs"
 ]
-pyarrow = [
-    "pyarrow"
-]
 all = [
     "msglc[dev]",
     "numpy",
     "msgspec",
     "ormsgpack",
     "s3fs",
-    "pyarrow",
 ]
 
 [project.urls]

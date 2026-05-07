@@ -15,8 +15,19 @@ jobs:
     services:
       rustfs:
         image: rustfs/rustfs:latest
+        env:
+          RUSTFS_ACCESS_KEY: msglcadmin
+          RUSTFS_SECRET_KEY: msglcadmin
         ports:
-          - 9000:9000
+          - "9000:9000"
+          - "9001:9001"
+      seaweedfs:
+        image: chrislusf/seaweedfs
+        env:
+          AWS_ACCESS_KEY_ID: msglcadmin
+          AWS_SECRET_ACCESS_KEY: msglcadmin
+        ports:
+          - "8333:8333"
     strategy:
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
@@ -56,8 +67,19 @@ jobs:
     services:
       rustfs:
         image: rustfs/rustfs:latest
+        env:
+          RUSTFS_ACCESS_KEY: msglcadmin
+          RUSTFS_SECRET_KEY: msglcadmin
         ports:
-          - 9000:9000
+          - "9000:9000"
+          - "9001:9001"
+      seaweedfs:
+        image: chrislusf/seaweedfs
+        env:
+          AWS_ACCESS_KEY_ID: msglcadmin
+          AWS_SECRET_ACCESS_KEY: msglcadmin
+        ports:
+          - "8333:8333"
     strategy:
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]

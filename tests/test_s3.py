@@ -14,43 +14,24 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from importlib.util import find_spec
 from io import BytesIO
 
 import pytest
-from fsspec.implementations.arrow import ArrowFSWrapper
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
 from msglc.reader import LazyReader, LazyStats
 
 
-@pytest.fixture(scope="session", params=["s3fs", "pyarrow"])
+@pytest.fixture(scope="session", params=["8333", "9000"])
 def s3_client(request):
-    if request.param == "pyarrow" and find_spec("pyarrow"):
-        from pyarrow.fs import S3FileSystem
+    from s3fs import S3FileSystem
 
-        class Wrapper(ArrowFSWrapper):
-            root_marker = ""
-
-        yield Wrapper(
-            S3FileSystem(
-                access_key="rustfsadmin",
-                secret_key="rustfsadmin",
-                endpoint_override="localhost:9000",
-                scheme="http",
-                allow_bucket_creation=True,
-                allow_bucket_deletion=True,
-            )
-        )
-    else:
-        from s3fs import S3FileSystem
-
-        yield S3FileSystem(
-            key="rustfsadmin",
-            secret="rustfsadmin",
-            client_kwargs={"endpoint_url": "http://localhost:9000"},
-        )
+    yield S3FileSystem(
+        key="msglcadmin",
+        secret="msglcadmin",
+        client_kwargs={"endpoint_url": f"http://localhost:{request.param}"},
+    )
 
 
 @pytest.fixture(scope="function")
@@ -91,9 +72,9 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
     elif is_upath:
         target = UPath(
             f"s3://{target}",
-            endpoint_url="http://localhost:9000",
-            key="rustfsadmin",
-            secret="rustfsadmin",
+            key=fs.key,
+            secret=fs.secret,
+            endpoint_url=fs.client_kwargs["endpoint_url"],
         )
 
     with LazyWriter(target, fs=fs) as writer:
