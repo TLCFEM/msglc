@@ -18,7 +18,7 @@ jobs:
             url: ${{ steps.deployment.outputs.page_url }}
         steps:
             - name: Delete
-              uses: strumwolf/delete-deployment-environment@v3
+              uses: strumwolf/delete-deployment-environment@v4
               with:
                   token: ${{ secrets.ALL }}
                   environment: github-pages
