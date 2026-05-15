@@ -20,7 +20,6 @@ jobs:
           RUSTFS_SECRET_KEY: msglcadmin
         ports:
           - "9000:9000"
-          - "9001:9001"
       seaweedfs:
         image: chrislusf/seaweedfs
         env:
@@ -72,7 +71,6 @@ jobs:
           RUSTFS_SECRET_KEY: msglcadmin
         ports:
           - "9000:9000"
-          - "9001:9001"
       seaweedfs:
         image: chrislusf/seaweedfs
         env:

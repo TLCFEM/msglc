@@ -3,6 +3,9 @@ stages:
 test:
   stage: test
   image: rust:latest
+  variables:
+    MSGLC_RUSTFS_ENDPOINT: http://rustfs:9000
+    MSGLC_SEAWEEDFS_ENDPOINT: http://seaweedfs:8333
   parallel:
     matrix:
       - PYTHON_VERSION: "3.10"

@@ -13,6 +13,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import uuid
 from io import BytesIO
 
@@ -23,14 +24,19 @@ from msglc import FileInfo, LazyWriter, append, combine, dump
 from msglc.reader import LazyReader, LazyStats
 
 
-@pytest.fixture(scope="session", params=["8333", "9000"])
+@pytest.fixture(scope="session", params=["seaweedfs", "rustfs"])
 def s3_client(request):
     from s3fs import S3FileSystem
+
+    endpoints = {
+        "seaweedfs": os.getenv("MSGLC_SEAWEEDFS_ENDPOINT", "http://localhost:8333"),
+        "rustfs": os.getenv("MSGLC_RUSTFS_ENDPOINT", "http://localhost:9000"),
+    }
 
     yield S3FileSystem(
         key="msglcadmin",
         secret="msglcadmin",
-        client_kwargs={"endpoint_url": f"http://localhost:{request.param}"},
+        client_kwargs={"endpoint_url": endpoints[request.param]},
     )
 
 
