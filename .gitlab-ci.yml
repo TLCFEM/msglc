@@ -24,10 +24,10 @@ test:
   before_script:
     - apt-get update && apt-get install -y curl
     - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
+    - export PATH="$HOME/.local/bin:$PATH"
     - uv python install $PYTHON_VERSION
     - uv venv
-    - uv pip install -e ".[all]"
+    - uv pip install -e ".[all]" maturin
   script:
     - uv run maturin develop --uv
     - uv run ruff check .
