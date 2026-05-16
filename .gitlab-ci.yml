@@ -3,6 +3,7 @@ stages:
 test:
   stage: test
   image: rust:latest
+  resource_group: $CI_COMMIT_REF_SLUG
   variables:
     MSGLC_RUSTFS_ENDPOINT: http://rustfs:9000
     MSGLC_SEAWEEDFS_ENDPOINT: http://seaweedfs:8333
