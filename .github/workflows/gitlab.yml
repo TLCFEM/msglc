@@ -1,8 +1,6 @@
 name: Sync to GitLab
 on:
   push:
-    branches:
-      - master
   workflow_dispatch:
 jobs:
   sync:
@@ -18,5 +16,5 @@ jobs:
         run: |
           git config user.name "Theodore Chang"
           git config user.email "tlcfem@gmail.com"
-          git remote add gitlab "https://oauth2:${{ secrets.GITLAB_SYNC }}@gitlab.com/tlcfem/msglc.git"
+          git remote add gitlab "https://oauth2:${{ secrets.GITLAB_SYNC }}@gitlab.com/${{ github.repository }}.git"
           git push gitlab "+HEAD:refs/heads/${{ github.ref_name }}" --follow-tags
