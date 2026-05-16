@@ -89,8 +89,7 @@ class LazyBuffer:
         if isinstance(self._buffer_or_path, str):
             _upsert(self._buffer, self._buffer_or_path, self._fs)
             self._buffer.close()
-
-        if isinstance(self._buffer_or_path, UPath):
+        elif isinstance(self._buffer_or_path, UPath):
             if self._unseekable_upath:
                 _copy(self._buffer, self._buffer_or_path)
             self._buffer.close()
