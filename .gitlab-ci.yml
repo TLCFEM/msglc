@@ -2,7 +2,9 @@ stages:
   - test
 test:
   stage: test
-  image: rust:latest
+  image:
+    name: rust:latest
+    pull_policy: if-not-present
   resource_group: $CI_COMMIT_REF_SLUG
   variables:
     MSGLC_RUSTFS_ENDPOINT: http://rustfs:9000
@@ -16,11 +18,13 @@ test:
       - PYTHON_VERSION: "3.14"
   services:
     - name: rustfs/rustfs:latest
+      pull_policy: if-not-present
       alias: rustfs
       variables:
         RUSTFS_ACCESS_KEY: msglcadmin
         RUSTFS_SECRET_KEY: msglcadmin
     - name: chrislusf/seaweedfs
+      pull_policy: if-not-present
       alias: seaweedfs
       variables:
         AWS_ACCESS_KEY_ID: msglcadmin
