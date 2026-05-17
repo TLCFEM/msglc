@@ -29,7 +29,7 @@ jobs:
           - "8333:8333"
     strategy:
       matrix:
-        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Clone
         uses: actions/checkout@v6
@@ -80,7 +80,7 @@ jobs:
           - "8333:8333"
     strategy:
       matrix:
-        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Clone
         uses: actions/checkout@v6
@@ -102,8 +102,8 @@ jobs:
     needs: test
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, windows-11-arm, macos-latest ]
-        target: [ x86_64, aarch64 ]
+        os: [ubuntu-latest, windows-latest, windows-11-arm, macos-latest]
+        target: [x86_64, aarch64]
         exclude:
           - os: windows-latest
             target: aarch64
@@ -168,7 +168,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [ wheels, sdist ]
+    needs: [wheels, sdist]
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish]')
     permissions:
       id-token: write
