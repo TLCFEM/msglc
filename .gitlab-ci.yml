@@ -30,9 +30,8 @@ test:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
     - uv python install $PYTHON_VERSION
-    - uv venv
-    - uv pip install -e ".[all]" maturin
   script:
-    - uv run maturin develop --uv
+    - uv venv
+    - uv pip install -e ".[all]"
     - uv run ruff check .
     - uv run pytest
