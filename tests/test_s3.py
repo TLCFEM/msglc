@@ -18,6 +18,7 @@ import uuid
 from io import BytesIO
 
 import pytest
+from s3fs import S3FileSystem
 from upath import UPath
 
 from msglc import FileInfo, LazyWriter, append, combine, dump
@@ -26,8 +27,6 @@ from msglc.reader import LazyReader, LazyStats
 
 @pytest.fixture(scope="session", params=["seaweedfs", "rustfs"])
 def s3_client(request):
-    from s3fs import S3FileSystem
-
     endpoints = {
         "seaweedfs": os.getenv("MSGLC_SEAWEEDFS_ENDPOINT", "http://localhost:8333"),
         "rustfs": os.getenv("MSGLC_RUSTFS_ENDPOINT", "http://localhost:9000"),
@@ -67,6 +66,15 @@ def test_connection(temp_bucket):
         assert f.read() == msg
 
 
+def to_upath(target, fs: S3FileSystem):
+    return UPath(
+        f"s3://{target}",
+        key=fs.key,
+        secret=fs.secret,
+        endpoint_url=fs.client_kwargs["endpoint_url"],
+    )
+
+
 @pytest.mark.parametrize("is_upath", [True, False])
 @pytest.mark.parametrize("in_memory", [True, False])
 def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory):
@@ -76,12 +84,7 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
     if in_memory:
         target = UPath(f"memory://{target}")
     elif is_upath:
-        target = UPath(
-            f"s3://{target}",
-            key=fs.key,
-            secret=fs.secret,
-            endpoint_url=fs.client_kwargs["endpoint_url"],
-        )
+        target = to_upath(target, fs)
 
     with LazyWriter(target, fs=fs) as writer:
         writer.write(json_before)
@@ -123,19 +126,22 @@ def test_s3_write_read(temp_bucket, json_before, json_after, is_upath, in_memory
     str(stats)
 
 
-@pytest.mark.parametrize("remote", [True, False])
-def test_s3_combine_append(tmpdir, temp_bucket, json_after, remote):
+@pytest.mark.parametrize("is_remote", [True, False])
+@pytest.mark.parametrize("is_upath", [True, False])
+def test_s3_combine_append(tmpdir, temp_bucket, json_after, is_remote, is_upath):
     bucket_name, fs = temp_bucket
 
-    target: str = f"{bucket_name}/{str(uuid.uuid4())}"
+    target: str | UPath = f"{bucket_name}/{str(uuid.uuid4())}"
+    if is_upath:
+        target = to_upath(target, fs)
 
     with tmpdir.as_cwd():
         list_name = "test_list.msg"
         dict_name = "test_dict.msg"
-        if remote:
+        if is_remote:
             list_name = f"{bucket_name}/{list_name}"
             dict_name = f"{bucket_name}/{dict_name}"
-        s3fs = fs if remote else None
+        s3fs = fs if is_remote else None
 
         with LazyWriter(list_name, fs=s3fs) as writer:
             writer.write([x for x in range(30)])

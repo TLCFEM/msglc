@@ -238,8 +238,7 @@ class LazyCombiner(LazyBuffer):
                 self._buffer = TemporaryFile()
                 if self._fs.exists(self._buffer_or_path):
                     with self._fs.open(self._buffer_or_path, "rb") as s3_file:
-                        while chunk := s3_file.read(config.read_buffer_size):
-                            self._buffer.write(chunk)
+                        _copy_obj(s3_file, self._buffer)
                     self._buffer.seek(0)
             else:
                 mode: str = (
@@ -258,9 +257,6 @@ class LazyCombiner(LazyBuffer):
                 config.write_buffer_size,
             )
             if not self._buffer.seekable():
-                raise ValueError(
-                    f"The underlying filesystem of the given UPath ({self._buffer_or_path}) does not support random write."
-                )
                 self._unseekable_upath = True
                 self._buffer.close()
                 self._buffer = TemporaryFile()
@@ -269,6 +265,7 @@ class LazyCombiner(LazyBuffer):
                         "rb", config.read_buffer_size
                     ) as source:
                         _copy_obj(source, self._buffer)
+                    self._buffer.seek(0)
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
