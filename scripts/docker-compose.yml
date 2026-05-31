@@ -9,6 +9,8 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+    volumes:
+      - msglc_rustfs_data:/data
   seaweedfs:
     image: chrislusf/seaweedfs
     restart: no
@@ -18,3 +20,8 @@ services:
       AWS_SECRET_ACCESS_KEY: msglcadmin
     ports:
       - "8333:8333"
+    volumes:
+      - msglc_seaweedfs_data:/data
+volumes:
+  msglc_rustfs_data:
+  msglc_seaweedfs_data:
