@@ -250,15 +250,24 @@ class LazyCombiner(LazyBuffer):
                     self._buffer_or_path, mode, config.write_buffer_size
                 )
         elif isinstance(self._buffer_or_path, UPath):
-            self._buffer = self._buffer_or_path.open(
-                "wb"
-                if not self._buffer_or_path.exists() or self._mode == "w"
-                else "r+b",
-                config.write_buffer_size,
-            )
-            if not self._buffer.seekable():
+            mode_supported: bool = True
+            try:
+                self._buffer = self._buffer_or_path.open(
+                    "wb"
+                    if not self._buffer_or_path.exists() or self._mode == "w"
+                    else "r+b",
+                    config.write_buffer_size,
+                )
+                if not self._buffer.seekable():
+                    self._buffer.close()
+                    self._buffer = None
+                    mode_supported = False
+            except NotImplementedError:
+                mode_supported = False
+
+            if not mode_supported:
                 self._unseekable_upath = True
-                self._buffer.close()
+                assert self._buffer is None
                 self._buffer = TemporaryFile()
                 if self._buffer_or_path.exists():
                     with self._buffer_or_path.open(
