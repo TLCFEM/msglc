@@ -14,10 +14,10 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import annotations
 
-import random
-import string
+from random import choice, choices, randint, random, shuffle
+from string import ascii_letters, digits
 
-import msgpack  # type: ignore
+import msgpack
 
 from msglc import dump
 from msglc.config import configure
@@ -25,16 +25,14 @@ from msglc.reader import LazyDict, LazyList, LazyReader, LazyStats
 
 
 def generate_token():
-    return "".join(
-        random.choices(string.ascii_letters + string.digits, k=random.randint(5, 10))
-    )
+    return "".join(choices(ascii_letters + digits, k=randint(5, 10)))
 
 
 def generate_deterministic_json(depth=10, width=4):
     if depth == 0:
-        return random.randint(-(2**30), 2**30) * random.randint(2**10, 2**14)
+        return randint(-(2**30), 2**30) * randint(2**10, 2**14)
 
-    seed = random.random()
+    seed = random()
 
     if seed < 0.5:
         return {
@@ -46,14 +44,14 @@ def generate_deterministic_json(depth=10, width=4):
 
 
 def generate_random_json(depth=10, width=4, simple=False):
-    seed = random.random()
+    seed = random()
 
     if depth == 0 or (simple and seed < 0.1):
-        return random.choice(
+        return choice(
             [
-                random.randint(-(2**30), 2**30),
-                random.random(),
-                random.choice([True, False]),
+                randint(-(2**30), 2**30),
+                random(),
+                choice([True, False]),
                 generate_token(),
             ]
         )
@@ -67,7 +65,7 @@ def generate_random_json(depth=10, width=4, simple=False):
     if seed < 0.95 or not simple:
         return [generate_random_json(depth - 1, width, True) for _ in range(width)]
 
-    return [random.randint(2**10, 2**30)] * random.randint(2**10, 2**14)
+    return [randint(2**10, 2**30)] * randint(2**10, 2**14)
 
 
 def find_all_paths(json_obj, path=None, path_list=None):
@@ -110,7 +108,7 @@ def generate(*, depth=6, width=11, threshold=23, packer=None):
     archive = {"id": generate_random_json(depth, width)}
     path = find_all_paths(archive)
     indices = list(range(0, min(1_000_000, len(path))))
-    random.shuffle(indices)
+    shuffle(indices)
 
     with open("path.txt", "w") as f:
         for i in indices:

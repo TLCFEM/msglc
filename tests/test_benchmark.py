@@ -102,7 +102,7 @@ def test_numpy_array(
         with tmpdir.as_cwd():
             import numpy
 
-            numpy_array = numpy.random.random((10, 11, 12000))
+            numpy_array: numpy.ndarray = numpy.random.random((10, 11, 12000))  # type: ignore
             pack(numpy_array, backend, packer)
 
             with LazyReader("large_array.msg", unpacker=packer) as reader:
