@@ -17,8 +17,6 @@ the followings hold.
 2. Cannot afford to decode the whole file due to memory limitation, performance consideration, etc.
 3. Want to combine encoded data into a single blob without decoding and re-encoding the same piece of data.
 
-One may want to check the [benchmark](https://tlcfem.github.io/msglc/benchmark/).
-
 ## Quick Start
 
 The supported objects need to be json compatible, including `dict`, `list`, `str`, `int`, `float`, `bool` and `None`.

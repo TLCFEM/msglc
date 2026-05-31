@@ -1,9 +1,11 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_DIR=$(realpath "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT_DIR")
-SCRIPT_DIR=$(dirname "$SCRIPT_DIR")
-cd "$SCRIPT_DIR" || exit
+
+pushd "$(dirname "$SCRIPT_DIR")"
 
 if ! command -v uv &> /dev/null
 then
@@ -19,4 +21,4 @@ fi
 uv pip compile --refresh -U --annotation-style=line --output-file=requirements.txt pyproject.toml
 uv pip compile --refresh -U --annotation-style=line --all-extras --output-file=requirements-dev.txt pyproject.toml
 
-cd ..
+popd

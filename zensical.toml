@@ -10,7 +10,6 @@ nav = [
     { "Motivation" = "motivation.md" },
     { "Examples" = "example.md" },
     { "S3 Support" = "s3.md" },
-    { "Benchmark" = "benchmark.md" },
     { "API" = [
         { "Utility" = "api/utility.md" },
         { "LazyReader" = "api/LazyReader.md" },
