@@ -38,24 +38,18 @@ if TYPE_CHECKING:
     from .config import BufferReader, BufferWriter, FileSystem
 
 
-def _copy_obj(source, dest):
+def _copy_obj(source, dest, seek: bool = False):
     source.seek(0)
     while chunk := source.read(config.write_buffer_size):
         dest.write(chunk)
+    if seek:
+        dest.seek(0)
 
 
-def _upsert(source: BufferReader | TemporaryFile, target: str, fs: FileSystem | None):  # type: ignore
-    if not fs:
-        return
-
-    with fs.open(target, "wb", config.write_buffer_size) as remote:
-        # now transfer the local cache to remote
-        _copy_obj(source, remote)
-
-
-def _copy(source: BufferReader | TemporaryFile, target: UPath):  # type: ignore
-    with target.open("wb", config.write_buffer_size) as dest:
-        _copy_obj(source, dest)
+def _upsert(source: BufferReader | TemporaryFile, target: str, fs: FileSystem | None):
+    if fs:
+        with fs.open(target, "wb", config.write_buffer_size) as remote:
+            _copy_obj(source, remote)
 
 
 class LazyBuffer:
@@ -91,7 +85,9 @@ class LazyBuffer:
             self._buffer.close()
         elif isinstance(self._buffer_or_path, UPath):
             if self._unseekable_upath:
-                _copy(self._buffer, self._buffer_or_path)
+                _upsert(
+                    self._buffer, self._buffer_or_path.path, self._buffer_or_path.fs
+                )
             self._buffer.close()
 
 
@@ -238,8 +234,7 @@ class LazyCombiner(LazyBuffer):
                 self._buffer = TemporaryFile()
                 if self._fs.exists(self._buffer_or_path):
                     with self._fs.open(self._buffer_or_path, "rb") as s3_file:
-                        _copy_obj(s3_file, self._buffer)
-                    self._buffer.seek(0)
+                        _copy_obj(s3_file, self._buffer, True)
             else:
                 mode: str = (
                     "wb"
@@ -273,8 +268,7 @@ class LazyCombiner(LazyBuffer):
                     with self._buffer_or_path.open(
                         "rb", config.read_buffer_size
                     ) as source:
-                        _copy_obj(source, self._buffer)
-                    self._buffer.seek(0)
+                        _copy_obj(source, self._buffer, True)
         elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
