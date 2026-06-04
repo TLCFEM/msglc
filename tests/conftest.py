@@ -66,7 +66,7 @@ def json_after(json_base):
 
 
 @pytest.fixture(scope="session")
-def repo_data():
+def repo_data() -> dict:
     with urlopen(
         "https://conda.anaconda.org/conda-forge/noarch/repodata.json"
     ) as response:
@@ -79,10 +79,10 @@ def global_random_seed():
 
 
 @pytest.fixture(scope="session")
-def random_huge_data():
+def random_huge_data() -> dict:
     return {"id": generate_random_json(6, 8)}
 
 
 @pytest.fixture(scope="session")
-def random_medium_data():
+def random_medium_data() -> dict:
     return {"id": generate_random_json(5, 10)}
