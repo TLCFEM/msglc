@@ -16,6 +16,7 @@
 import random
 from typing import Literal
 
+import cbor2
 import msgpack
 import pytest
 from generate import (
@@ -163,14 +164,16 @@ def test_random_huge_json(tmpdir, benchmark, random_huge_data, backend):
         benchmark(dump, "data.msg", random_huge_data, backend=backend)
 
 
-def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data):
+@pytest.mark.parametrize("packer", ["msgpack", "cbor"])
+def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data, packer):
     with tmpdir.as_cwd():
+        module = msgpack if packer == "msgpack" else cbor2
 
-        def msgpack_dump():
-            with open("data.msgpack", "wb") as f:
-                msgpack.dump(random_huge_data, f)
+        def reference_dump():
+            with open("data.cbor", "wb") as f:
+                module.dump(random_huge_data, f)
 
-        benchmark(msgpack_dump)
+        benchmark(reference_dump)
 
 
 if __name__ == "__main__":
