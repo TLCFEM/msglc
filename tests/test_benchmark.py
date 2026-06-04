@@ -146,11 +146,12 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
 def test_serialize_large_json(
-    tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
+    tmpdir, benchmark, repo_data, backend: Literal["python", "rust"], packer
 ):
     def serialize_large_json():
-        dump("repo_data.msg", repo_data, backend=backend)
+        dump("repo_data.msg", repo_data, backend=backend, packer=packer)
 
     with tmpdir.as_cwd():
         benchmark(serialize_large_json)
