@@ -54,7 +54,7 @@ jobs:
           uv run pytest --cov=msglc --cov-report=xml tests/
           cargo llvm-cov report --lcov --output-path coverage.lcov
       - name: Upload
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           plugins: pycoverage,gcov
