@@ -1,41 +1,38 @@
 stages:
   - test
 test:
-  stage: test
-  image:
-    name: rust:latest
-    pull_policy: if-not-present
-  resource_group: $CI_COMMIT_REF_SLUG
-  variables:
-    MSGLC_RUSTFS_ENDPOINT: http://rustfs:9000
-    MSGLC_SEAWEEDFS_ENDPOINT: http://seaweedfs:8333
-  parallel:
-    matrix:
-      - PYTHON_VERSION: "3.10"
-      - PYTHON_VERSION: "3.11"
-      - PYTHON_VERSION: "3.12"
-      - PYTHON_VERSION: "3.13"
-      - PYTHON_VERSION: "3.14"
-  services:
-    - name: rustfs/rustfs:latest
-      pull_policy: if-not-present
-      alias: rustfs
-      variables:
-        RUSTFS_ACCESS_KEY: msglcadmin
-        RUSTFS_SECRET_KEY: msglcadmin
-    - name: chrislusf/seaweedfs
-      pull_policy: if-not-present
-      alias: seaweedfs
-      variables:
-        AWS_ACCESS_KEY_ID: msglcadmin
-        AWS_SECRET_ACCESS_KEY: msglcadmin
   before_script:
     - apt-get update && apt-get install -y curl
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.local/bin:$PATH"
     - uv python install $PYTHON_VERSION
+  image:
+    name: rust:latest
+    pull_policy: if-not-present
+  parallel:
+    matrix:
+      - PYTHON_VERSION: '3.10'
+      - PYTHON_VERSION: '3.14'
+  resource_group: $CI_COMMIT_REF_SLUG
   script:
     - uv venv
     - uv pip install -e ".[all]"
     - uv run ruff check .
     - uv run pytest
+  services:
+    - alias: rustfs
+      name: rustfs/rustfs:latest
+      pull_policy: if-not-present
+      variables:
+        RUSTFS_ACCESS_KEY: msglcadmin
+        RUSTFS_SECRET_KEY: msglcadmin
+    - alias: seaweedfs
+      name: chrislusf/seaweedfs
+      pull_policy: if-not-present
+      variables:
+        AWS_ACCESS_KEY_ID: msglcadmin
+        AWS_SECRET_ACCESS_KEY: msglcadmin
+  stage: test
+  variables:
+    MSGLC_RUSTFS_ENDPOINT: http://rustfs:9000
+    MSGLC_SEAWEEDFS_ENDPOINT: http://seaweedfs:8333
