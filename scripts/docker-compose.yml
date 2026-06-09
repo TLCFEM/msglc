@@ -1,27 +1,27 @@
 services:
   rustfs:
-    image: rustfs/rustfs:latest
-    restart: no
     container_name: rustfs
     environment:
       RUSTFS_ACCESS_KEY: msglcadmin
       RUSTFS_SECRET_KEY: msglcadmin
+    image: rustfs/rustfs:latest
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '9000:9000'
+      - '9001:9001'
+    restart: 'no'
     volumes:
       - msglc_rustfs_data:/data
   seaweedfs:
-    image: chrislusf/seaweedfs
-    restart: no
     container_name: seaweedfs
     environment:
       AWS_ACCESS_KEY_ID: msglcadmin
       AWS_SECRET_ACCESS_KEY: msglcadmin
+    image: chrislusf/seaweedfs
     ports:
-      - "8333:8333"
+      - '8333:8333'
+    restart: 'no'
     volumes:
       - msglc_seaweedfs_data:/data
 volumes:
-  msglc_rustfs_data:
-  msglc_seaweedfs_data:
+  msglc_rustfs_data: null
+  msglc_seaweedfs_data: null
