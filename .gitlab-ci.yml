@@ -11,7 +11,7 @@ test:
     pull_policy: if-not-present
   parallel:
     matrix:
-      - PYTHON_VERSION: '3.10'
+      - PYTHON_VERSION: '3.11'
       - PYTHON_VERSION: '3.14'
   resource_group: $CI_COMMIT_REF_SLUG
   script:
