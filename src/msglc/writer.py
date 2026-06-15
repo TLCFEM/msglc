@@ -18,7 +18,7 @@ from __future__ import annotations
 import os.path
 from io import BufferedReader, BytesIO
 from tempfile import TemporaryFile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from upath import UPath
 
@@ -351,6 +351,6 @@ class LazyCombiner(LazyBuffer):
             self._buffer.write(chunk)
 
         if name is None:
-            self._toc.append(start)
+            cast(list, self._toc).append(start)
         else:
             self._toc[name] = start

@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from .config import config
 
@@ -59,6 +59,7 @@ def _group_into_batches(
 
 
 class TOC:
+    # noinspection PyTypeChecker
     def __init__(
         self,
         *,
@@ -103,6 +104,8 @@ class TOC:
         elif isinstance(obj, set):
             obj = sorted(obj)
         elif ndarray is not list and isinstance(obj, ndarray):
+            obj = cast(ndarray, obj)
+
             if config.numpy_encoder:
                 start_pos = self._pos
                 self._writeb(self._packer.encode(obj.dumps()))
@@ -123,7 +126,7 @@ class TOC:
             for k, v in self._transform(obj.items()):
                 self._writeb(self._packer.encode(k))
                 obj_toc[k] = self._pack(v)
-            all_small_obj = all(v[2] for v in obj_toc.values())
+            all_small_obj = all(v[2] for v in cast(dict, obj_toc).values())
         elif isinstance(obj, list):
             self._writeb(self._packer.write_array_header(len(obj)))
 
@@ -176,6 +179,7 @@ class TOC:
             obj_toc = [self._pack(v) for v in self._transform(obj)]
             all_small_obj = all(v[2] for v in obj_toc)
         else:
+            # noinspection PyStringConversionWithoutDunderMethod
             raise ValueError(f"Expecting dict or list, got {obj.__class__}.")
 
         if self._pos < start_pos + config.small_obj_optimization_threshold:

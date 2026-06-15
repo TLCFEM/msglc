@@ -18,7 +18,7 @@ from __future__ import annotations
 import asyncio
 import pickle
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bitarray import bitarray
 from fsspec.implementations.local import LocalFileSystem
@@ -282,6 +282,7 @@ class LazyList(LazyItem):
             try:
                 index_range = [int(index)]
             except ValueError as err:
+                # noinspection PyStringConversionWithoutDunderMethod
                 raise TypeError(
                     f"Invalid type: {type(index)} for index {index}."
                 ) from err
@@ -628,25 +629,25 @@ class LazyReader(LazyItem):
         """
         Mimics the `get` method for dictionaries.
         """
-        return self._obj.get(key, default)
+        return cast(dict, self._obj).get(key, default)
 
     def keys(self):
         """
         Mimics the `keys` method for dictionaries.
         """
-        return self._obj.keys()
+        return cast(dict, self._obj).keys()
 
     def values(self):
         """
         Mimics the `values` method for dictionaries.
         """
-        return self._obj.values()
+        return cast(dict, self._obj).values()
 
     def items(self):
         """
         Mimics the `items` method for dictionaries.
         """
-        return self._obj.items()
+        return cast(dict, self._obj).items()
 
     def read(self, path: str | list | slice | None = None):
         """
