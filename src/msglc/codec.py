@@ -26,6 +26,9 @@ import msgpack
 class LazyCodec(ABC):
     protocol = ""
 
+    def __str__(self):
+        return self.__class__.__name__
+
     @abstractmethod
     def encode(self, data):
         raise NotImplementedError

@@ -312,6 +312,7 @@ class LazyList(LazyItem):
                             *self._pos[lookup_index][1:]
                         )
 
+            # noinspection PyTypeChecker
             return self._cache[index]
 
         for item in index_range:
@@ -327,6 +328,7 @@ class LazyList(LazyItem):
                 )
                 self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
 
+        # noinspection PyTypeChecker
         result = self._cache[index]
         self._cache = [None] * len(self)
         return result
@@ -550,8 +552,10 @@ class LazyReader(LazyItem):
         if isinstance(self._buffer_or_path, str):
             buffer = self._fs.open(self._buffer_or_path, "rb", config.read_buffer_size)
         elif isinstance(self._buffer_or_path, UPath):
+            # noinspection PyTypeChecker
             buffer = self._buffer_or_path.open("rb", config.read_buffer_size)
         elif isinstance(self._buffer_or_path, BufferReaderType):
+            # noinspection PyTypeChecker
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
@@ -623,6 +627,7 @@ class LazyReader(LazyItem):
         return len(self._obj)
 
     def __contains__(self, item):
+        # noinspection PyUnresolvedReferences
         return item in self._obj
 
     def get(self, key, default=None):
