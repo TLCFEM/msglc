@@ -1,12 +1,8 @@
-name: Sync
-on:
-  push:
-  workflow_dispatch:
 jobs:
   sync:
-    runs-on: ubuntu-slim
     permissions:
       contents: read
+    runs-on: ubuntu-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -20,3 +16,10 @@ jobs:
           git push gitlab "+HEAD:refs/heads/${{ github.ref_name }}" --follow-tags
           git remote add codeberg "https://tlcfem:${{ secrets.CODEBERG_SYNC }}@codeberg.org/${{ github.repository }}.git"
           git push codeberg "+HEAD:refs/heads/${{ github.ref_name }}" --follow-tags
+name: Sync
+'on':
+  push:
+    branches:
+      - dev
+      - master
+  workflow_dispatch: null

@@ -1,44 +1,45 @@
-name: Documentation
-on:
-    push:
-        branches: [master]
-permissions:
-    contents: write
-    pages: write
-    id-token: write
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
 jobs:
-    documentation:
-        name: Documentation
-        runs-on: ubuntu-latest
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        steps:
-            - name: Delete
-              uses: strumwolf/delete-deployment-environment@v4
-              with:
-                  token: ${{ secrets.ALL }}
-                  environment: github-pages
-            - name: Clone
-              uses: actions/checkout@v7
-            - name: Rust
-              uses: actions-rust-lang/setup-rust-toolchain@v1
-            - name: UV
-              uses: astral-sh/setup-uv@v7
-              with:
-                  python-version: "3.11"
-            - name: Build
-              run: |
-                  uv venv
-                  uv pip install ".[all]"
-                  uv run zensical build --clean
-            - name: Upload
-              uses: actions/upload-pages-artifact@v5
-              with:
-                  path: site
-            - name: Deploy
-              id: deployment
-              uses: actions/deploy-pages@v5
+  documentation:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete
+        uses: strumwolf/delete-deployment-environment@v4
+        with:
+          environment: github-pages
+          token: ${{ secrets.ALL }}
+      - name: Clone
+        uses: actions/checkout@v7
+      - name: Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: UV
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.11'
+      - name: Build
+        run: |
+          uv venv
+          uv pip install ".[all]"
+          uv run zensical build --clean
+      - name: Upload
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deployment
+        name: Deploy
+        uses: actions/deploy-pages@v5
+name: Documentation
+'on':
+  push:
+    branches:
+      - master
+permissions:
+  contents: write
+  id-token: write
+  pages: write
