@@ -23,7 +23,7 @@ jobs:
                   token: ${{ secrets.ALL }}
                   environment: github-pages
             - name: Clone
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
             - name: Rust
               uses: actions-rust-lang/setup-rust-toolchain@v1
             - name: UV
