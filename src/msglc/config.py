@@ -216,5 +216,6 @@ def decrement_gc_counter():
             )
         if _gc_counter == 0:
             gc.enable()
+            _ = gc.collect()  # force collection
 
         return _gc_counter
