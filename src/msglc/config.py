@@ -191,31 +191,27 @@ _gc_lock = Lock()
 def increment_gc_counter():
     global _gc_counter
 
-    if not config.disable_gc:
-        return _gc_counter
+    if config.disable_gc:
+        with _gc_lock:
+            if _gc_counter == 0:
+                gc.disable()
+            _gc_counter += 1
 
-    with _gc_lock:
-        if _gc_counter == 0:
-            gc.disable()
-        _gc_counter += 1
-
-        return _gc_counter
+    return _gc_counter
 
 
 def decrement_gc_counter():
     global _gc_counter
 
-    if not config.disable_gc:
-        return _gc_counter
+    if config.disable_gc:
+        with _gc_lock:
+            _gc_counter -= 1
+            if _gc_counter < 0:
+                raise RuntimeError(
+                    "GC counter underflow, check the call to increment_gc_counter() and decrement_gc_counter()."
+                )
+            if _gc_counter == 0:
+                gc.enable()
+                _ = gc.collect()  # force collection
 
-    with _gc_lock:
-        _gc_counter -= 1
-        if _gc_counter < 0:
-            raise RuntimeError(
-                "GC counter underflow, check the call to increment_gc_counter() and decrement_gc_counter()."
-            )
-        if _gc_counter == 0:
-            gc.enable()
-            _ = gc.collect()  # force collection
-
-        return _gc_counter
+    return _gc_counter
