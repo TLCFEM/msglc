@@ -44,7 +44,7 @@ class Config:
     fast_loading: bool = True
     fast_loading_threshold: float = 0.3
     trivial_size: int = 20
-    disable_gc: bool = True
+    disable_gc: bool = False
     simple_repr: bool = True
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
