@@ -297,15 +297,17 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    small_obj_optimization_threshold: int = 2 ** 13  # 8KB
-    write_buffer_size: int = 2 ** 23  # 8MB
-    read_buffer_size: int = 2 ** 16  # 64KB
+    small_obj_optimization_threshold: int = 2**13  # 8KB
+    write_buffer_size: int = 2**23  # 8MB
+    read_buffer_size: int = 2**16  # 64KB
     fast_loading: bool = True
     fast_loading_threshold: float = 0.3
     trivial_size: int = 20
-    disable_gc: bool = True
+    disable_gc: bool = False
     simple_repr: bool = True
-    copy_chunk_size: int = 2 ** 24  # 16MB
+    copy_chunk_size: int = 2**24  # 16MB
+    numpy_encoder: bool = False
+    numpy_fast_int_pack: bool = False
 ```
 
 ## Development Environment
