@@ -223,14 +223,18 @@ impl<'py> LazyWriter<'py> {
         }))
     }
 
-    fn pack_map(&mut self, value: &Bound<'py, PyDict>) -> PyResult<LazyTOC> {
+    fn pack_map(
+        &mut self,
+        iter: impl Iterator<Item = (Bound<'py, PyAny>, Bound<'py, PyAny>)>,
+        len: usize,
+    ) -> PyResult<LazyTOC> {
         let start_pos = self.offset()?;
         let mut all_trivial = true;
-        let mut items = Vec::with_capacity(value.len());
+        let mut items = Vec::with_capacity(len);
 
-        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(value.len())?).map_err(to_py)?;
+        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
 
-        for (k, v) in value.iter() {
+        for (k, v) in iter {
             write_primitive(&k, &mut self.buffer)?;
             let node = self.pack(&v)?;
             if all_trivial && !node.is_trivial(self.trivial_size) {
@@ -277,14 +281,38 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
-        if let Ok(value) = obj.cast::<PyDict>() {
-            return self.pack_map(value);
-        }
-        if let Ok(value) = obj.cast::<PyList>() {
-            return self.pack_array(value.iter(), value.len());
-        }
         if let Ok(value) = obj.cast::<PyTuple>() {
             return self.pack_array(value.iter(), value.len());
+        }
+        if obj.is_exact_instance_of::<PyDict>() {
+            let value = obj.cast::<PyDict>()?;
+            return self.pack_map(value.iter(), value.len());
+        }
+        if obj.is_exact_instance_of::<PyList>() {
+            let value = obj.cast::<PyList>()?;
+            return self.pack_array(value.iter(), value.len());
+        }
+        // handle custom classes
+        // !!! must support standard `.items()` method
+        if obj.is_instance_of::<PyDict>() {
+            let value = obj
+                .call_method0("items")?
+                .try_iter()?
+                .map(|res| {
+                    let item = res?;
+                    let tuple = item.cast::<PyTuple>()?;
+                    Ok((tuple.get_item(0)?, tuple.get_item(1)?))
+                })
+                .collect::<PyResult<Vec<(Bound<'py, PyAny>, Bound<'py, PyAny>)>>>()?;
+            let value_len = value.len();
+            return self.pack_map(value.into_iter(), value_len);
+        }
+        // handle custom classes
+        // !!! must support iterator protocol
+        if obj.is_instance_of::<PyList>() {
+            let value = obj.try_iter()?.collect::<PyResult<Vec<_>>>()?;
+            let value_len = value.len();
+            return self.pack_array(value.into_iter(), value_len);
         }
         if obj.cast::<PySet>().is_ok() {
             let value = self

@@ -121,6 +121,9 @@ class TOC:
         obj_toc: dict | list
         all_small_obj: bool
         if isinstance(obj, Mapping):
+            if type(obj) is not dict:
+                obj = {k: v for k, v in obj.items()}
+
             self._writeb(self._packer.write_map_header(len(obj)))
             obj_toc = {}
             for k, v in self._transform(obj.items()):
@@ -128,6 +131,9 @@ class TOC:
                 obj_toc[k] = self._pack(v)
             all_small_obj = all(v[2] for v in cast(dict, obj_toc).values())
         elif isinstance(obj, list):
+            if type(obj) is not list:
+                obj = [v for v in obj]
+
             self._writeb(self._packer.write_array_header(len(obj)))
 
             if (
