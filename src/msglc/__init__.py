@@ -59,6 +59,9 @@ def dump(
     :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when 'rust' backend is used
     :return: None
     """
+    if isinstance(obj, LazyReader):
+        obj = obj.unwrap()
+
     if backend == "python" or not isinstance(file, (str, UPath)):
         with LazyWriter(file, **kwargs) as msglc_writer:
             msglc_writer.write(obj)

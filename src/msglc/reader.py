@@ -654,6 +654,18 @@ class LazyReader(LazyItem):
         """
         return cast(dict, self._obj).items()
 
+    def unwrap(self):
+        """
+        Unwrap the current `LazyReader` until something is not `LazyReader`.
+
+        `LazyReader` is a thin wrapper around the underlying data which may be a lazy container or primitive data.
+        Use this method to find the actual type of the underlying data.
+        """
+        target = self._obj
+        while isinstance(target, LazyReader):
+            target = target.unwrap()
+        return target
+
     def read(self, path: str | list | slice | None = None):
         """
         Reads the data from the given path.

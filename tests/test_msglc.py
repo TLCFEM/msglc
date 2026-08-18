@@ -14,7 +14,6 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
-from collections.abc import Generator, Mapping
 from datetime import datetime
 from io import BytesIO
 from itertools import cycle
@@ -112,36 +111,6 @@ def test_msglc(
             )
 
         str(stats)
-
-
-def test_lazy_generator(tmpdir):
-    class DictSteam(Mapping):
-        def __init__(self, generator: Generator, length: int):
-            self._len = length
-            self._gen = generator
-
-        def __iter__(self):
-            pass
-
-        def __getitem__(self, key, /):
-            pass
-
-        def __len__(self):
-            return self._len
-
-        def items(self):
-            yield from self._gen
-
-    def example():
-        yield "a", 1
-        yield "b", 2
-
-    target = "example.msg"
-    with tmpdir.as_cwd():
-        dump(target, DictSteam(example(), 2))
-
-        with LazyReader(target) as reader:
-            assert reader == {"a": 1, "b": 2}
 
 
 @pytest.mark.parametrize("target", ["test.msg", BytesIO()])
@@ -625,10 +594,17 @@ def test_integer_identical_bytes(tmpdir):
     ids=["large_array", "large_dict", "array", "dict", "small_array", "small_dict"],
 )
 @pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
-def test_cbor_large_container(tmpdir, data, packer):
+def test_large_container(tmpdir, data, packer):
     with tmpdir.as_cwd():
         dump("data.pack", data, packer=packer)
         with LazyReader("data.pack", unpacker=packer) as reader:
+            assert reader == data
+
+        # direct dump of `LazyReader`
+        # this is lazily loaded
+        with LazyReader("data.pack", unpacker=packer) as reader:
+            dump("data.pack.copy", reader.unwrap(), packer=packer)
+        with LazyReader("data.pack.copy", unpacker=packer) as reader:
             assert reader == data
 
 

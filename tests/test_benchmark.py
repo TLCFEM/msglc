@@ -150,6 +150,18 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
 def test_serialize_large_json(
     tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
 ):
+    with tmpdir.as_cwd():
+        dump("repo_data.msg", repo_data, backend=backend)
+        with LazyReader("repo_data.msg") as reader:
+            dump("repo_data_copy.msg", reader, backend=backend)
+
+        with (
+            open("repo_data.msg", "rb") as f1,
+            open("repo_data_copy.msg", "rb") as f2,
+        ):
+            while (d1 := f1.read(4096)) and (d2 := f2.read(4096)):
+                assert d1 == d2
+
     def serialize_large_json():
         dump("repo_data.msg", repo_data, backend=backend)
 
