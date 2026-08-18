@@ -209,33 +209,22 @@ It is thus possible to fake a dictionary with items generated from generators.
 The following is a minimum implementation.
 
 ```python
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 
 
-class DictStream(Mapping):
-    def __init__(self, generator: Generator, length: int):
-        self._len = length
+class DictStream(dict):
+    def __init__(self, generator: Generator):
+        super.__init__()
         self._gen = generator
-
-    def __iter__(self): ...  # not used by writer but has to be implemented
-
-    def __getitem__(self, key, /): ...  # not used by writer but has to be implemented
-
-    def __len__(self):
-        # required
-        # note that the length needs to be known in advance
-        # you do not want to get it from the generator as doing so consumes it
-        return self._len
 
     def items(self):
         # required
         yield from self._gen
 ```
 
-!!! warning "length requirement"
-    Only two things will be invoked: `len()` and `.items()`.
-    Thus, `__len__(self)` and `items(self)` must be properly implemented.
-    If the length is **not** known in advance, streaming data is not feasible.
+!!! warning "protocol"
+    Only `.items()` will be used.
+    Needs to provide a valid implementation that returns key-value pairs.
 
 With the above, one can do the following.
 
@@ -250,7 +239,7 @@ def example():
 
 
 target = "example.msg"
-dump(target, DictSteam(example(), 2))
+dump(target, DictStream(example()))
 
 with LazyReader(target) as reader:
     assert reader == {"a": 1, "b": 2}

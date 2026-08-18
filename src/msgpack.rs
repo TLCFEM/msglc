@@ -14,10 +14,11 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::utility::{
-    build_tree, to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN,
+    build_tree, map_to_deque, to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
+use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufWriter, Seek, Write};
 
@@ -276,15 +277,80 @@ impl<'py> LazyWriter<'py> {
         ))
     }
 
+    fn pack_map_deque(
+        &mut self,
+        mut deque: VecDeque<(Bound<'py, PyAny>, Bound<'py, PyAny>)>,
+    ) -> PyResult<LazyTOC> {
+        let len = deque.len();
+        let start_pos = self.offset()?;
+        let mut all_trivial = true;
+        let mut items = Vec::with_capacity(len);
+
+        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
+
+        while let Some((k, v)) = deque.pop_front() {
+            write_primitive(&k, &mut self.buffer)?;
+            let node = self.pack(&v)?;
+            if all_trivial && !node.is_trivial(self.trivial_size) {
+                all_trivial = false;
+            }
+            items.push((k.unbind(), node));
+        }
+
+        Ok(build_tree(
+            start_pos,
+            self.offset()?,
+            all_trivial,
+            LazyContainer::Map(items),
+            self.small_obj_threshold,
+        ))
+    }
+
+    fn pack_array_deque(&mut self, mut deque: VecDeque<Bound<'py, PyAny>>) -> PyResult<LazyTOC> {
+        let len = deque.len();
+        let start_pos = self.offset()?;
+        let mut all_trivial = true;
+        let mut items = Vec::with_capacity(len);
+
+        rmp::encode::write_array_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
+
+        while let Some(item) = deque.pop_front() {
+            let node = self.pack(&item)?;
+            if all_trivial && !node.is_trivial(self.trivial_size) {
+                all_trivial = false;
+            }
+            items.push(node);
+        }
+
+        Ok(build_tree(
+            start_pos,
+            self.offset()?,
+            all_trivial,
+            LazyContainer::Array(items),
+            self.small_obj_threshold,
+        ))
+    }
+
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
-        if let Ok(value) = obj.cast::<PyDict>() {
-            return self.pack_map(value);
-        }
-        if let Ok(value) = obj.cast::<PyList>() {
-            return self.pack_array(value.iter(), value.len());
-        }
         if let Ok(value) = obj.cast::<PyTuple>() {
             return self.pack_array(value.iter(), value.len());
+        }
+        if obj.is_exact_instance_of::<PyDict>() {
+            return self.pack_map(obj.cast::<PyDict>()?);
+        }
+        if obj.is_exact_instance_of::<PyList>() {
+            let value = obj.cast::<PyList>()?;
+            return self.pack_array(value.iter(), value.len());
+        }
+        // handle custom classes
+        // !!! must support standard `.items()` method
+        if obj.is_instance_of::<PyDict>() {
+            return self.pack_map_deque(map_to_deque(obj)?);
+        }
+        // handle custom classes
+        // !!! must support iterator protocol
+        if obj.is_instance_of::<PyList>() {
+            return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
         }
         if obj.cast::<PySet>().is_ok() {
             let value = self

@@ -13,7 +13,10 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 use pyo3::{Py, PyAny, PyErr};
+use std::collections::VecDeque;
 
 pub const HEADER_FIELD_LEN: usize = 10;
 pub const HEADER_TOTAL_LEN: usize = 2 * HEADER_FIELD_LEN;
@@ -95,4 +98,17 @@ pub fn build_tree(
     LazyTOC::Leaf {
         pos: [start_pos, end_pos],
     }
+}
+
+pub fn map_to_deque<'py>(
+    obj: &Bound<'py, PyAny>,
+) -> PyResult<VecDeque<(Bound<'py, PyAny>, Bound<'py, PyAny>)>> {
+    obj.call_method0("items")?
+        .try_iter()?
+        .map(|res| {
+            let item = res?;
+            let tuple = item.cast::<PyTuple>()?;
+            Ok((tuple.get_item(0)?, tuple.get_item(1)?))
+        })
+        .collect()
 }
