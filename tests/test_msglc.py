@@ -17,6 +17,7 @@ import random
 from datetime import datetime
 from io import BytesIO
 from itertools import cycle
+from typing import Literal
 
 import cbor2
 import pytest
@@ -424,7 +425,8 @@ def test_combine_archives_append(tmpdir, json_after, target):
             combine(target, FileInfo("trivial.msg", "no_name"))
 
 
-def test_recursive_combine(tmpdir):
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_recursive_combine(tmpdir, backend: Literal["python", "rust"]):
     alternate = cycle(["combined.msg", "core.msg", "core.msg", "combined.msg"])
 
     def token():
@@ -447,6 +449,12 @@ def test_recursive_combine(tmpdir):
             path.append(segment)
 
         with LazyReader(target) as reader:
+            assert reader.read(list(reversed(path))) == core
+
+        with LazyReader(target) as reader:
+            dump("copy", reader, backend=backend)
+
+        with LazyReader("copy") as reader:
             assert reader.read(list(reversed(path))) == core
 
 
