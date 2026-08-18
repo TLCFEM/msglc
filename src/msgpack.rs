@@ -18,6 +18,7 @@ use crate::utility::{
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
+use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufWriter, Seek, Write};
 
@@ -223,18 +224,14 @@ impl<'py> LazyWriter<'py> {
         }))
     }
 
-    fn pack_map(
-        &mut self,
-        iter: impl Iterator<Item = (Bound<'py, PyAny>, Bound<'py, PyAny>)>,
-        len: usize,
-    ) -> PyResult<LazyTOC> {
+    fn pack_map(&mut self, value: &Bound<'py, PyDict>) -> PyResult<LazyTOC> {
         let start_pos = self.offset()?;
         let mut all_trivial = true;
-        let mut items = Vec::with_capacity(len);
+        let mut items = Vec::with_capacity(value.len());
 
-        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
+        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(value.len())?).map_err(to_py)?;
 
-        for (k, v) in iter {
+        for (k, v) in value.iter() {
             write_primitive(&k, &mut self.buffer)?;
             let node = self.pack(&v)?;
             if all_trivial && !node.is_trivial(self.trivial_size) {
@@ -280,13 +277,66 @@ impl<'py> LazyWriter<'py> {
         ))
     }
 
+    fn pack_map_deque(
+        &mut self,
+        mut deque: VecDeque<(Bound<'py, PyAny>, Bound<'py, PyAny>)>,
+    ) -> PyResult<LazyTOC> {
+        let len = deque.len();
+        let start_pos = self.offset()?;
+        let mut all_trivial = true;
+        let mut items = Vec::with_capacity(len);
+
+        rmp::encode::write_map_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
+
+        while let Some((k, v)) = deque.pop_front() {
+            write_primitive(&k, &mut self.buffer)?;
+            let node = self.pack(&v)?;
+            if all_trivial && !node.is_trivial(self.trivial_size) {
+                all_trivial = false;
+            }
+            items.push((k.unbind(), node));
+        }
+
+        Ok(build_tree(
+            start_pos,
+            self.offset()?,
+            all_trivial,
+            LazyContainer::Map(items),
+            self.small_obj_threshold,
+        ))
+    }
+
+    fn pack_array_deque(&mut self, mut deque: VecDeque<Bound<'py, PyAny>>) -> PyResult<LazyTOC> {
+        let len = deque.len();
+        let start_pos = self.offset()?;
+        let mut all_trivial = true;
+        let mut items = Vec::with_capacity(len);
+
+        rmp::encode::write_array_len(&mut self.buffer, u32::try_from(len)?).map_err(to_py)?;
+
+        while let Some(item) = deque.pop_front() {
+            let node = self.pack(&item)?;
+            if all_trivial && !node.is_trivial(self.trivial_size) {
+                all_trivial = false;
+            }
+            items.push(node);
+        }
+
+        Ok(build_tree(
+            start_pos,
+            self.offset()?,
+            all_trivial,
+            LazyContainer::Array(items),
+            self.small_obj_threshold,
+        ))
+    }
+
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
         if let Ok(value) = obj.cast::<PyTuple>() {
             return self.pack_array(value.iter(), value.len());
         }
         if obj.is_exact_instance_of::<PyDict>() {
-            let value = obj.cast::<PyDict>()?;
-            return self.pack_map(value.iter(), value.len());
+            return self.pack_map(obj.cast::<PyDict>()?);
         }
         if obj.is_exact_instance_of::<PyList>() {
             let value = obj.cast::<PyList>()?;
@@ -295,24 +345,21 @@ impl<'py> LazyWriter<'py> {
         // handle custom classes
         // !!! must support standard `.items()` method
         if obj.is_instance_of::<PyDict>() {
-            let value = obj
-                .call_method0("items")?
-                .try_iter()?
-                .map(|res| {
-                    let item = res?;
-                    let tuple = item.cast::<PyTuple>()?;
-                    Ok((tuple.get_item(0)?, tuple.get_item(1)?))
-                })
-                .collect::<PyResult<Vec<(Bound<'py, PyAny>, Bound<'py, PyAny>)>>>()?;
-            let value_len = value.len();
-            return self.pack_map(value.into_iter(), value_len);
+            return self.pack_map_deque(
+                obj.call_method0("items")?
+                    .try_iter()?
+                    .map(|res| {
+                        let item = res?;
+                        let tuple = item.cast::<PyTuple>()?;
+                        Ok((tuple.get_item(0)?, tuple.get_item(1)?))
+                    })
+                    .collect::<PyResult<VecDeque<(Bound<'py, PyAny>, Bound<'py, PyAny>)>>>()?,
+            );
         }
         // handle custom classes
         // !!! must support iterator protocol
         if obj.is_instance_of::<PyList>() {
-            let value = obj.try_iter()?.collect::<PyResult<Vec<_>>>()?;
-            let value_len = value.len();
-            return self.pack_array(value.into_iter(), value_len);
+            return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
         }
         if obj.cast::<PySet>().is_ok() {
             let value = self
