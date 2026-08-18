@@ -661,10 +661,7 @@ class LazyReader(LazyItem):
         `LazyReader` is a thin wrapper around the underlying data which may be a lazy container or primitive data.
         Use this method to find the actual type of the underlying data.
         """
-        target = self._obj
-        while isinstance(target, LazyReader):
-            target = target.unwrap()
-        return target
+        return self._obj.unwrap() if isinstance(self._obj, LazyReader) else self._obj
 
     def read(self, path: str | list | slice | None = None):
         """
