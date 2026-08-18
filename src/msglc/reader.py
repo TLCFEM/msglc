@@ -221,6 +221,9 @@ class LazyItem:
     async def async_get(self, key):
         return await asyncio.to_thread(self.__getitem__, key)
 
+    def unwrap(self):
+        return self
+
 
 class LazyList(LazyItem):
     def __init__(
