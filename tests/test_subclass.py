@@ -5,6 +5,7 @@ from typing import Literal
 import pytest
 
 from msglc import LazyReader, dump
+from msglc.codec import CBORCodec, MsgspecCodec
 
 
 class Streamable:
@@ -72,17 +73,29 @@ def generator(list_or_dict: Literal["list", "dict"]):
 
 @pytest.mark.parametrize("obj", [StreamableDictA, StreamableDictB])
 @pytest.mark.parametrize("backend", ["rust", "python"])
-def test_streamable_dict(tmpdir, obj, backend: Literal["rust", "python"]):
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_streamable_dict(tmpdir, obj, backend: Literal["rust", "python"], packer):
     with tmpdir.as_cwd():
-        dump(f"stream_{backend}", obj(generator(list_or_dict="dict")), backend=backend)
-        with LazyReader(f"stream_{backend}") as reader:
+        dump(
+            f"stream_{backend}",
+            obj(generator(list_or_dict="dict")),
+            backend=backend,
+            packer=packer,
+        )
+        with LazyReader(f"stream_{backend}", unpacker=packer) as reader:
             assert reader.to_obj() == dict(generator(list_or_dict="dict"))
 
 
 @pytest.mark.parametrize("obj", [StreamableListA, StreamableListB])
 @pytest.mark.parametrize("backend", ["rust", "python"])
-def test_streamable_list(tmpdir, obj, backend: Literal["rust", "python"]):
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_streamable_list(tmpdir, obj, backend: Literal["rust", "python"], packer):
     with tmpdir.as_cwd():
-        dump("stream", obj(generator(list_or_dict="list")), backend=backend)
-        with LazyReader("stream") as reader:
+        dump(
+            "stream",
+            obj(generator(list_or_dict="list")),
+            backend=backend,
+            packer=packer,
+        )
+        with LazyReader("stream", unpacker=packer) as reader:
             assert reader.to_obj() == list(generator(list_or_dict="list"))
