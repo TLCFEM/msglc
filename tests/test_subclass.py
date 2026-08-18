@@ -1,3 +1,4 @@
+import tracemalloc
 from collections import deque
 from collections.abc import Generator
 from typing import Literal
@@ -71,6 +72,18 @@ def generator(list_or_dict: Literal["list", "dict"]):
         n += 1
 
 
+def nest_generator(depth):
+    n = 0
+    if depth > 0:
+        while n < 10:
+            yield str(n), StreamableDictA(nest_generator(depth - 1))
+            n += 1
+    else:
+        while n < 10:
+            yield str(n), "A" * (1024 * 1024)
+            n += 1
+
+
 @pytest.mark.parametrize("obj", [StreamableDictA, StreamableDictB])
 @pytest.mark.parametrize("backend", ["rust", "python"])
 @pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
@@ -99,3 +112,22 @@ def test_streamable_list(tmpdir, obj, backend: Literal["rust", "python"], packer
         )
         with LazyReader("stream", unpacker=packer) as reader:
             assert reader.to_obj() == list(generator(list_or_dict="list"))
+
+
+@pytest.mark.parametrize("obj", [StreamableDictA, StreamableDictB])
+@pytest.mark.parametrize("backend", ["rust", "python"])
+@pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
+def test_streamable_nested_dict(
+    tmpdir, obj, backend: Literal["rust", "python"], packer
+):
+    with tmpdir.as_cwd():
+        tracemalloc.start()
+        dump(
+            f"stream_{backend}",
+            obj(nest_generator(2)),
+            backend=backend,
+            packer=packer,
+        )
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        assert peak < 50 * 1024 * 1024
