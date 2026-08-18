@@ -96,7 +96,14 @@ class TOC:
         def _generate(_start: int) -> tuple:
             return None, [_start, self._pos], self._pos <= _start + config.trivial_size
 
-        if not isinstance(obj, (Mapping, list, set, tuple, ndarray)):
+        from .reader import LazyDict, LazyList, LazyReader
+
+        if isinstance(obj, LazyReader):
+            obj = obj.unwrap()
+
+        if not isinstance(
+            obj, (LazyDict, LazyList, Mapping, list, set, tuple, ndarray)
+        ):
             start_pos = self._pos
             self._writeb(self._packer.encode(obj))
             return _generate(start_pos)
@@ -130,8 +137,8 @@ class TOC:
         obj_len: int
         obj_toc: dict | list
         all_small_obj: bool
-        if isinstance(obj, Mapping):
-            if type(obj) is dict:
+        if isinstance(obj, (LazyDict, Mapping)):
+            if type(obj) in (LazyDict, dict):
                 obj_len = len(obj)
                 gen_obj = _flexible_yield(self._transform(obj.items()))
             else:
@@ -144,8 +151,8 @@ class TOC:
                 self._writeb(self._packer.encode(k))
                 obj_toc[k] = self._pack(v)
             all_small_obj = all(v[2] for v in cast(dict, obj_toc).values())
-        elif isinstance(obj, list):
-            if type(obj) is not list:
+        elif isinstance(obj, (LazyList, list)):
+            if type(obj) not in (LazyList, list):
                 obj = deque(obj)
 
             obj_len = len(obj)

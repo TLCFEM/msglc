@@ -28,7 +28,7 @@ from generate import (
 
 from msglc import config, dump
 from msglc.codec import CBORCodec, MsgpackCodec, MsgspecCodec, OrmsgpackCodec
-from msglc.reader import LazyReader, LazyStats
+from msglc.reader import LazyDict, LazyList, LazyReader, LazyStats
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
@@ -155,6 +155,22 @@ def test_serialize_large_json(
 
     with tmpdir.as_cwd():
         benchmark(serialize_large_json)
+
+
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_repack_large_json(tmpdir, repo_data, backend: Literal["python", "rust"]):
+    with tmpdir.as_cwd():
+        dump("repo_data.msg", repo_data, backend=backend)
+        with LazyReader("repo_data.msg", cached=False) as reader:
+            assert type(reader.unwrap()) in (LazyList, LazyDict)
+            dump("repo_data_copy.msg", reader, backend=backend)
+
+        with (
+            open("repo_data.msg", "rb") as f1,
+            open("repo_data_copy.msg", "rb") as f2,
+        ):
+            while (d1 := f1.read(4096)) and (d2 := f2.read(4096)):
+                assert d1 == d2
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
