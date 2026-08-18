@@ -63,8 +63,8 @@ combine("combined.msg", [FileInfo("dict.msg", "dict"), FileInfo("list.msg", "lis
 # { 'dict' : {'1':1,'2':2,...}, 'list' : [1.0,2.0,3.0,...] }
 # so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
-    assert reader['dict/101'] == 101  # also reader['dict'][101]
-    assert reader['list/101'] == 101.0  # also reader['list'][101]
+    assert reader["dict/101"] == 101  # also reader['dict'][101]
+    assert reader["list/101"] == 101.0  # also reader['list'][101]
 ```
 
 #### Combine as `list`
@@ -84,8 +84,8 @@ combine("combined.msg", [FileInfo("dict.msg"), FileInfo("list.msg")])
 # [ {'1':1,'2':2,...}, [1.0,2.0,3.0,...] ]
 # so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
-    assert reader['0/101'] == 101  # also reader[0][101]
-    assert reader['1/101'] == 101.0  # also reader[1][101]
+    assert reader["0/101"] == 101  # also reader[0][101]
+    assert reader["1/101"] == 101.0  # also reader[1][101]
 ```
 
 It is possible to combine files with different formats together.
@@ -96,21 +96,23 @@ from msglc.codec import CBORCodec, MsgspecCodec
 from msglc.reader import LazyReader
 
 # this file uses cbor format
-dump("dict.cbor", {str(v): v for v in range(1000)}, backend='rust', packer=CBORCodec)
+dump("dict.cbor", {str(v): v for v in range(1000)}, backend="rust", packer=CBORCodec)
 # this file uses msgpack format
-dump("list.msg", [float(v) for v in range(1000)], backend='rust')
+dump("list.msg", [float(v) for v in range(1000)], backend="rust")
 
 # two files are combined together,
 # the additional metadata generated for the combined file uses msgpack format
 # but the underlying data of each file is not changed
-combine("combined.msg", [FileInfo("dict.cbor"), FileInfo("list.msg")], packer=MsgspecCodec)
+combine(
+    "combined.msg", [FileInfo("dict.cbor"), FileInfo("list.msg")], packer=MsgspecCodec
+)
 
 # the combined file uses a list layout
 # [ {'1':1,'2':2,...}, [1.0,2.0,3.0,...] ]
 # so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
-    assert reader['0/101'] == 101  # also reader[0][101]
-    assert reader['1/101'] == 101.0  # also reader[1][101]
+    assert reader["0/101"] == 101  # also reader[0][101]
+    assert reader["1/101"] == 101.0  # also reader[1][101]
 ```
 
 ## Deserialization
@@ -179,10 +181,10 @@ from msglc import FileInfo, combine, LazyReader
 
 # prepare a combined file
 combine(
-    'combined.msg',
+    "combined.msg",
     [
-        FileInfo(None, "child_dict", obj={'a': 'a', 'b': 'b'}),
-        FileInfo(None, "child_list", obj=[1, 2])
+        FileInfo(None, "child_dict", obj={"a": "a", "b": "b"}),
+        FileInfo(None, "child_list", obj=[1, 2]),
     ],
 )
 

@@ -41,7 +41,7 @@ from msglc import dump
 from msglc.codec import CBORCodec
 
 data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
-dump("data.msg", data, backend='rust', packer=CBORCodec)
+dump("data.msg", data, backend="rust", packer=CBORCodec)
 ```
 
 Use `combine` to combine several serialized files together.
@@ -64,8 +64,8 @@ combine("combined.msg", [FileInfo("dict.msg", "dict"), FileInfo("list.msg", "lis
 # { 'dict' : {'1':1,'2':2,...}, 'list' : [1.0,2.0,3.0,...] }
 # so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
-    assert reader['dict/101'] == 101  # also reader['dict'][101]
-    assert reader['list/101'] == 101.0  # also reader['list'][101]
+    assert reader["dict/101"] == 101  # also reader['dict'][101]
+    assert reader["list/101"] == 101.0  # also reader['list'][101]
 ```
 
 #### Combine as `list`
@@ -85,8 +85,8 @@ combine("combined.msg", [FileInfo("dict.msg"), FileInfo("list.msg")])
 # [ {'1':1,'2':2,...}, [1.0,2.0,3.0,...] ]
 # so one can read it as follows, details in coming section
 with LazyReader("combined.msg") as reader:
-    assert reader['0/101'] == 101  # also reader[0][101]
-    assert reader['1/101'] == 101.0  # also reader[1][101]
+    assert reader["0/101"] == 101  # also reader[0][101]
+    assert reader["1/101"] == 101.0  # also reader[1][101]
 ```
 
 ### Deserialization
@@ -121,7 +121,7 @@ If there is no need to cache the read data, pass the argument `cached=False` to 
 from msglc.reader import LazyReader, to_obj
 
 with LazyReader("data.msg", cached=False) as reader:
-    data = to_obj(reader.read('some/path/to/the/target'))
+    data = to_obj(reader.read("some/path/to/the/target"))
 ```
 
 ## Why
@@ -160,8 +160,8 @@ One can configure the buffer size for reading and writing.
 ```python
 from msglc.config import configure
 
-configure(write_buffer_size=2 ** 23)
-configure(read_buffer_size=2 ** 16)
+configure(write_buffer_size=2**23)
+configure(read_buffer_size=2**16)
 ```
 
 Combining multiple files into a single one requires copying data from one file to another.
@@ -170,7 +170,7 @@ Adjust `copy_chunk_size` to control memory footprint.
 ```python
 from msglc.config import configure
 
-configure(copy_chunk_size=2 ** 24)  # 16 MB
+configure(copy_chunk_size=2**24)  # 16 MB
 ```
 
 ### Table of Contents
@@ -185,7 +185,7 @@ This size is configurable and can be often set to the multiple of the block size
 ```python
 from msglc.config import configure
 
-configure(small_obj_optimization_threshold=2 ** 20)
+configure(small_obj_optimization_threshold=2**20)
 ```
 
 The above configuration assigns a threshold of 1 MB, containers larger than 1 MB will be indexed in the table of
@@ -216,8 +216,11 @@ toc = {"t": [{"p": [15, 18]}, {"p": [18, 24]}], "p": [14, 24]}
 # the outer dict is larger than 2 bytes, so the `t` field is included
 # the `b` field is not a container
 # the `aa` field is a container, but all its elements are small, so the `t` field is omitted
-data = {'a': {'aa': [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]}, 'b': 2}
-toc = {"t": {"a": {"t": {"aa": {"p": [31, 42]}}, "p": [27, 42]}, "b": {"p": [44, 45]}}, "p": [24, 45]}
+data = {"a": {"aa": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]}, "b": 2}
+toc = {
+    "t": {"a": {"t": {"aa": {"p": [31, 42]}}, "p": [27, 42]}, "b": {"p": [44, 45]}},
+    "p": [24, 45],
+}
 ```
 
 Due to the presence of the size threshold, the table of contents only requires a small amount of extra space.

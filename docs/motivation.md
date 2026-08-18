@@ -35,9 +35,7 @@ For primitive types, the table of contents stores the start and end positions of
 For example, the table of contents of the integer `a=10251585` would look like as follows.
 
 ```py
-{
-  "p": [start, end]
-}
+{"p": [start, end]}
 ```
 
 The `p` stands for position, and only a single character is used to save space.
@@ -52,13 +50,7 @@ table of contents also contains the tables of contents of the children under the
 For example, the table of contents of the dictionary `d={"a": 1, "b": 2}` would look like as follows.
 
 ```py
-{
-  "p": [start, end],
-  "t": {
-    "a": {"p": [start, end]},
-    "b": {"p": [start, end]}
-  }
-}
+{"p": [start, end], "t": {"a": {"p": [start, end]}, "b": {"p": [start, end]}}}
 ```
 
 The `t` stands for table, and only a single character is used to save space.
@@ -72,12 +64,8 @@ For example, the table of contents of the list `l=[1, 2, 3]` would look like as 
 
 ```py
 {
-  "p": [start, end],
-  "t": [
-    {"p": [start, end]},
-    {"p": [start, end]},
-    {"p": [start, end]}
-  ]
+    "p": [start, end],
+    "t": [{"p": [start, end]}, {"p": [start, end]}, {"p": [start, end]}],
 }
 ```
 
@@ -91,9 +79,7 @@ An alternative format of table of contents is used.
 For example, the table of contents of the list `l=[x for x in range(100000)]` would look like as follows.
 
 ```py
-{
-  "p": [[size, start, end], [size, start, end], ...]
-}
+{"p": [[size, start, end], [size, start, end], ...]}
 ```
 
 The small objects are grouped together, and the `size` field is used to indicate the number of small objects in the
@@ -143,139 +129,187 @@ The following is an example.
 ```py
 # data
 {
-  "id": [
-    {
-      "BlYFs": {
-        "KNzFKfIR2": [True, False],
-        "DZFf0InHcO": {"t32qEJJPII": 820701623, "RuUbcdXGT": 0.07535274189499452},
-      },
-      "SWCWj": {
-        "T5Jm7j1p99": {"yEsYr8Ww": "1lgCDlDR", "1041dt7DYk": "XQUFG"},
-        "ZJejJRP": {"SCIVA7Lb": 0.5045895502672991, "p5I3XN3": True},
-      },
-    },
-    {
-      "vRpNA5": {
-        "0HNVOgUVHs": {"EsvObl4Q3": -1008950541, "SacDVqMG": -764697401},
-        "XLK694": {"UdRKNQBrku": "64jiA4nTf", "dTPdzp7Cd": "bC6R6Q"},
-      },
-      "3uyABlBlY": {"7umSPsl7": {"gFa9yuPyQ": 0.24175848344688433, "UYa6UiMDZ7": True}, "zuP2wLok": "G9k2y"},
-    },
-  ]
+    "id": [
+        {
+            "BlYFs": {
+                "KNzFKfIR2": [True, False],
+                "DZFf0InHcO": {
+                    "t32qEJJPII": 820701623,
+                    "RuUbcdXGT": 0.07535274189499452,
+                },
+            },
+            "SWCWj": {
+                "T5Jm7j1p99": {"yEsYr8Ww": "1lgCDlDR", "1041dt7DYk": "XQUFG"},
+                "ZJejJRP": {"SCIVA7Lb": 0.5045895502672991, "p5I3XN3": True},
+            },
+        },
+        {
+            "vRpNA5": {
+                "0HNVOgUVHs": {"EsvObl4Q3": -1008950541, "SacDVqMG": -764697401},
+                "XLK694": {"UdRKNQBrku": "64jiA4nTf", "dTPdzp7Cd": "bC6R6Q"},
+            },
+            "3uyABlBlY": {
+                "7umSPsl7": {"gFa9yuPyQ": 0.24175848344688433, "UYa6UiMDZ7": True},
+                "zuP2wLok": "G9k2y",
+            },
+        },
+    ]
 }
 
 # table of contents (full)
 {
-  "t": {
-    "id": {
-      "t": [
-        {
-          "t": {
-            "BlYFs": {
-              "t": {
-                "KNzFKfIR2": {"p": [23, 26]},
-                "DZFf0InHcO": {
-                  "t": {"t32qEJJPII": {"p": [49, 54]}, "RuUbcdXGT": {"p": [64, 73]}},
-                  "p": [37, 73],
+    "t": {
+        "id": {
+            "t": [
+                {
+                    "t": {
+                        "BlYFs": {
+                            "t": {
+                                "KNzFKfIR2": {"p": [23, 26]},
+                                "DZFf0InHcO": {
+                                    "t": {
+                                        "t32qEJJPII": {"p": [49, 54]},
+                                        "RuUbcdXGT": {"p": [64, 73]},
+                                    },
+                                    "p": [37, 73],
+                                },
+                            },
+                            "p": [12, 73],
+                        },
+                        "SWCWj": {
+                            "t": {
+                                "T5Jm7j1p99": {
+                                    "t": {
+                                        "yEsYr8Ww": {"p": [101, 110]},
+                                        "1041dt7DYk": {"p": [121, 127]},
+                                    },
+                                    "p": [91, 127],
+                                },
+                                "ZJejJRP": {
+                                    "t": {
+                                        "SCIVA7Lb": {"p": [145, 154]},
+                                        "p5I3XN3": {"p": [162, 163]},
+                                    },
+                                    "p": [135, 163],
+                                },
+                            },
+                            "p": [79, 163],
+                        },
+                    },
+                    "p": [5, 163],
                 },
-              },
-              "p": [12, 73],
-            },
-            "SWCWj": {
-              "t": {
-                "T5Jm7j1p99": {
-                  "t": {"yEsYr8Ww": {"p": [101, 110]}, "1041dt7DYk": {"p": [121, 127]}},
-                  "p": [91, 127],
+                {
+                    "t": {
+                        "vRpNA5": {
+                            "t": {
+                                "0HNVOgUVHs": {
+                                    "t": {
+                                        "EsvObl4Q3": {"p": [194, 199]},
+                                        "SacDVqMG": {"p": [208, 213]},
+                                    },
+                                    "p": [183, 213],
+                                },
+                                "XLK694": {
+                                    "t": {
+                                        "UdRKNQBrku": {"p": [232, 242]},
+                                        "dTPdzp7Cd": {"p": [252, 259]},
+                                    },
+                                    "p": [220, 259],
+                                },
+                            },
+                            "p": [171, 259],
+                        },
+                        "3uyABlBlY": {
+                            "t": {
+                                "7umSPsl7": {
+                                    "t": {
+                                        "gFa9yuPyQ": {"p": [290, 299]},
+                                        "UYa6UiMDZ7": {"p": [310, 311]},
+                                    },
+                                    "p": [279, 311],
+                                },
+                                "zuP2wLok": {"p": [320, 326]},
+                            },
+                            "p": [269, 326],
+                        },
+                    },
+                    "p": [163, 326],
                 },
-                "ZJejJRP": {
-                  "t": {"SCIVA7Lb": {"p": [145, 154]}, "p5I3XN3": {"p": [162, 163]}},
-                  "p": [135, 163],
-                },
-              },
-              "p": [79, 163],
-            },
-          },
-          "p": [5, 163],
-        },
-        {
-          "t": {
-            "vRpNA5": {
-              "t": {
-                "0HNVOgUVHs": {
-                  "t": {"EsvObl4Q3": {"p": [194, 199]}, "SacDVqMG": {"p": [208, 213]}},
-                  "p": [183, 213],
-                },
-                "XLK694": {
-                  "t": {"UdRKNQBrku": {"p": [232, 242]}, "dTPdzp7Cd": {"p": [252, 259]}},
-                  "p": [220, 259],
-                },
-              },
-              "p": [171, 259],
-            },
-            "3uyABlBlY": {
-              "t": {
-                "7umSPsl7": {
-                  "t": {"gFa9yuPyQ": {"p": [290, 299]}, "UYa6UiMDZ7": {"p": [310, 311]}},
-                  "p": [279, 311],
-                },
-                "zuP2wLok": {"p": [320, 326]},
-              },
-              "p": [269, 326],
-            },
-          },
-          "p": [163, 326],
-        },
-      ],
-      "p": [4, 326],
-    }
-  },
-  "p": [0, 326],
+            ],
+            "p": [4, 326],
+        }
+    },
+    "p": [0, 326],
 }
 
 # table of contents (minimum block size 10 bytes)
 {
-  "t": {
-    "id": {
-      "t": [
-        {
-          "t": {
-            "BlYFs": {"t": {"KNzFKfIR2": {"p": [23, 26]}, "DZFf0InHcO": {"p": [37, 73]}}, "p": [12, 73]},
-            "SWCWj": {"t": {"T5Jm7j1p99": {"p": [91, 127]}, "ZJejJRP": {"p": [135, 163]}}, "p": [79, 163]},
-          },
-          "p": [5, 163],
-        },
-        {
-          "t": {
-            "vRpNA5": {
-              "t": {"0HNVOgUVHs": {"p": [183, 213]}, "XLK694": {"p": [220, 259]}},
-              "p": [171, 259],
-            },
-            "3uyABlBlY": {
-              "t": {"7umSPsl7": {"p": [279, 311]}, "zuP2wLok": {"p": [320, 326]}},
-              "p": [269, 326],
-            },
-          },
-          "p": [163, 326],
-        },
-      ],
-      "p": [4, 326],
-    }
-  },
-  "p": [0, 326],
+    "t": {
+        "id": {
+            "t": [
+                {
+                    "t": {
+                        "BlYFs": {
+                            "t": {
+                                "KNzFKfIR2": {"p": [23, 26]},
+                                "DZFf0InHcO": {"p": [37, 73]},
+                            },
+                            "p": [12, 73],
+                        },
+                        "SWCWj": {
+                            "t": {
+                                "T5Jm7j1p99": {"p": [91, 127]},
+                                "ZJejJRP": {"p": [135, 163]},
+                            },
+                            "p": [79, 163],
+                        },
+                    },
+                    "p": [5, 163],
+                },
+                {
+                    "t": {
+                        "vRpNA5": {
+                            "t": {
+                                "0HNVOgUVHs": {"p": [183, 213]},
+                                "XLK694": {"p": [220, 259]},
+                            },
+                            "p": [171, 259],
+                        },
+                        "3uyABlBlY": {
+                            "t": {
+                                "7umSPsl7": {"p": [279, 311]},
+                                "zuP2wLok": {"p": [320, 326]},
+                            },
+                            "p": [269, 326],
+                        },
+                    },
+                    "p": [163, 326],
+                },
+            ],
+            "p": [4, 326],
+        }
+    },
+    "p": [0, 326],
 }
 
 # table of contents (minimum block size 100 bytes)
 {
-  "t": {
-    "id": {
-      "t": [
-        {"t": {"BlYFs": {"p": [12, 73]}, "SWCWj": {"p": [79, 163]}}, "p": [5, 163]},
-        {"t": {"vRpNA5": {"p": [171, 259]}, "3uyABlBlY": {"p": [269, 326]}}, "p": [163, 326]},
-      ],
-      "p": [4, 326],
-    }
-  },
-  "p": [0, 326],
+    "t": {
+        "id": {
+            "t": [
+                {
+                    "t": {"BlYFs": {"p": [12, 73]}, "SWCWj": {"p": [79, 163]}},
+                    "p": [5, 163],
+                },
+                {
+                    "t": {"vRpNA5": {"p": [171, 259]}, "3uyABlBlY": {"p": [269, 326]}},
+                    "p": [163, 326],
+                },
+            ],
+            "p": [4, 326],
+        }
+    },
+    "p": [0, 326],
 }
 
 # table of contents (minimum block size 1000 bytes)
