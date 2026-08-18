@@ -150,9 +150,18 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
 def test_serialize_large_json(
     tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
 ):
+    def serialize_large_json():
+        dump("repo_data.msg", repo_data, backend=backend)
+
+    with tmpdir.as_cwd():
+        benchmark(serialize_large_json)
+
+
+@pytest.mark.parametrize("backend", ["python", "rust"])
+def test_repack_large_json(tmpdir, repo_data, backend: Literal["python", "rust"]):
     with tmpdir.as_cwd():
         dump("repo_data.msg", repo_data, backend=backend)
-        with LazyReader("repo_data.msg") as reader:
+        with LazyReader("repo_data.msg", cached=False) as reader:
             dump("repo_data_copy.msg", reader, backend=backend)
 
         with (
@@ -161,12 +170,6 @@ def test_serialize_large_json(
         ):
             while (d1 := f1.read(4096)) and (d2 := f2.read(4096)):
                 assert d1 == d2
-
-    def serialize_large_json():
-        dump("repo_data.msg", repo_data, backend=backend)
-
-    with tmpdir.as_cwd():
-        benchmark(serialize_large_json)
 
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
