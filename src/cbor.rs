@@ -361,12 +361,14 @@ impl<'py> LazyWriter<'py> {
         }
         // handle custom classes
         // !!! must support standard `.items()` method
-        if obj.is_instance_of::<PyDict>() {
+        let lazy_dict_t = self.py.import("msglc.reader")?.getattr("LazyDict")?;
+        if obj.is_instance_of::<PyDict>() || obj.is_instance(&lazy_dict_t)? {
             return self.pack_map_deque(map_to_deque(obj)?);
         }
         // handle custom classes
         // !!! must support iterator protocol
-        if obj.is_instance_of::<PyList>() {
+        let lazy_list_t = self.py.import("msglc.reader")?.getattr("LazyList")?;
+        if obj.is_instance_of::<PyList>() || obj.is_instance(&lazy_list_t)? {
             return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
         }
         if obj.cast::<PySet>().is_ok() {
