@@ -105,12 +105,12 @@ def test_streamable_dict(tmpdir, obj, backend: Literal["rust", "python"], packer
 def test_streamable_list(tmpdir, obj, backend: Literal["rust", "python"], packer):
     with tmpdir.as_cwd():
         dump(
-            "stream",
+            f"stream_{backend}",
             obj(generator(list_or_dict="list")),
             backend=backend,
             packer=packer,
         )
-        with LazyReader("stream", unpacker=packer) as reader:
+        with LazyReader(f"stream_{backend}", unpacker=packer) as reader:
             assert reader.to_obj() == list(generator(list_or_dict="list"))
 
 
@@ -123,10 +123,7 @@ def test_streamable_nested_dict(
     with tmpdir.as_cwd():
         tracemalloc.start()
         dump(
-            f"stream_{backend}",
-            obj(nest_generator(2)),
-            backend=backend,
-            packer=packer,
+            f"stream_{backend}", obj(nest_generator(2)), backend=backend, packer=packer
         )
         _, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
