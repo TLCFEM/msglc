@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, cast
 
@@ -56,6 +57,14 @@ def _group_into_batches(
         groups.append((group_size, group_start, group_end))
 
     return groups
+
+
+def _flexible_yield(obj):
+    if isinstance(obj, deque):
+        while obj:
+            yield obj.popleft()
+    else:
+        yield from obj
 
 
 class TOC:
@@ -118,27 +127,33 @@ class TOC:
 
         start_pos = self._pos
 
+        obj_len: int
         obj_toc: dict | list
         all_small_obj: bool
         if isinstance(obj, Mapping):
-            if type(obj) is not dict:
-                obj = {k: v for k, v in obj.items()}
+            if type(obj) is dict:
+                obj_len = len(obj)
+                gen_obj = _flexible_yield(self._transform(obj.items()))
+            else:
+                obj_len = len(deque_obj := deque(self._transform(obj.items())))
+                gen_obj = _flexible_yield(deque_obj)
 
-            self._writeb(self._packer.write_map_header(len(obj)))
+            self._writeb(self._packer.write_map_header(obj_len))
             obj_toc = {}
-            for k, v in self._transform(obj.items()):
+            for k, v in gen_obj:
                 self._writeb(self._packer.encode(k))
                 obj_toc[k] = self._pack(v)
             all_small_obj = all(v[2] for v in cast(dict, obj_toc).values())
         elif isinstance(obj, list):
             if type(obj) is not list:
-                obj = [v for v in obj]
+                obj = deque(obj)
 
-            self._writeb(self._packer.write_array_header(len(obj)))
+            obj_len = len(obj)
+            self._writeb(self._packer.write_array_header(obj_len))
 
             if (
                 self._in_numpy_array
-                and len(obj) > 0
+                and obj_len > 0
                 and (
                     isinstance(obj[0], float)
                     or (config.numpy_fast_int_pack and isinstance(obj[0], int))
@@ -146,7 +161,7 @@ class TOC:
             ):
                 list_start: int = self._pos
 
-                for v in obj:
+                for v in _flexible_yield(obj):
                     self._writeb(self._packer.encode(v))
 
                 if self._pos < start_pos + config.small_obj_optimization_threshold:
@@ -154,7 +169,7 @@ class TOC:
 
                 # assuming homogeneous list
                 # compute the groups using a cheaper method
-                total_items: int = len(obj)
+                total_items: int = obj_len
                 item_size: int = (self._pos - list_start) // total_items
                 if item_size * total_items == self._pos - list_start:
                     group_size: int = min(
@@ -182,7 +197,7 @@ class TOC:
                 self._buffer.seek(start_pos)
                 self._pos = start_pos - self._initial_pos
 
-            obj_toc = [self._pack(v) for v in self._transform(obj)]
+            obj_toc = [self._pack(v) for v in _flexible_yield(self._transform(obj))]
             all_small_obj = all(v[2] for v in obj_toc)
         else:
             # noinspection PyStringConversionWithoutDunderMethod
@@ -194,7 +209,7 @@ class TOC:
         if not all_small_obj:
             return _resume_flag((obj_toc, [start_pos, self._pos], False))
 
-        if isinstance(obj, Mapping) or len(obj) == 0:
+        if isinstance(obj, Mapping) or obj_len == 0:
             # we do not consider further optimization for dicts with all trivial children
             # since storing the structure is more expensive than storing the data
             # and since the TOC is read once, there is no motivation to chunk the actual data
