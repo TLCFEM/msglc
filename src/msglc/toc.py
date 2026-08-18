@@ -194,6 +194,7 @@ class TOC:
 
                     return _resume_flag((None, numpy_groups, False))
 
+                # size mismatch, discard encoded data and fall back to plain encoder
                 self._buffer.seek(start_pos)
                 self._pos = start_pos - self._initial_pos
 
