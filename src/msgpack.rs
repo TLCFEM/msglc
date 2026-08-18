@@ -14,7 +14,7 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::utility::{
-    build_tree, to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN,
+    build_tree, map_to_deque, to_py, LazyContainer, LazyTOC, HEADER_FIELD_LEN, HEADER_TOTAL_LEN,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
@@ -345,16 +345,7 @@ impl<'py> LazyWriter<'py> {
         // handle custom classes
         // !!! must support standard `.items()` method
         if obj.is_instance_of::<PyDict>() {
-            return self.pack_map_deque(
-                obj.call_method0("items")?
-                    .try_iter()?
-                    .map(|res| {
-                        let item = res?;
-                        let tuple = item.cast::<PyTuple>()?;
-                        Ok((tuple.get_item(0)?, tuple.get_item(1)?))
-                    })
-                    .collect::<PyResult<VecDeque<(Bound<'py, PyAny>, Bound<'py, PyAny>)>>>()?,
-            );
+            return self.pack_map_deque(map_to_deque(obj)?);
         }
         // handle custom classes
         // !!! must support iterator protocol
