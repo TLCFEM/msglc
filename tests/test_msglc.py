@@ -603,7 +603,7 @@ def test_large_container(tmpdir, data, packer):
         # direct dump of `LazyReader`
         # this is lazily loaded
         with LazyReader("data.pack", unpacker=packer) as reader:
-            dump("data.pack.copy", reader.unwrap(), packer=packer)
+            dump("data.pack.copy", reader, packer=packer)
         with LazyReader("data.pack.copy", unpacker=packer) as reader:
             assert reader == data
 

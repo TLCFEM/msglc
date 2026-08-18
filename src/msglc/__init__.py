@@ -28,7 +28,7 @@ from upath import UPath
 from .codec import LazyCodec
 from .config import config
 from .msglc_rust import dump_rust_impl_cbor, dump_rust_impl_msgpack
-from .reader import LazyReader, to_obj
+from .reader import LazyItem, LazyReader, to_obj
 from .writer import LazyCombiner, LazyWriter
 
 if TYPE_CHECKING:
@@ -175,10 +175,11 @@ class FileInfo:
         if isinstance(self.path, LazyReader):
             yield from self.path.raw_data()
         elif self.path is None:
+            target = self._obj if isinstance(self._obj, LazyItem) else to_obj(self._obj)
             with TemporaryDirectory() as _tmp_dir:
                 dump(
                     file_path := UPath(_tmp_dir) / uuid4().hex,
-                    to_obj(self._obj),
+                    target,
                     backend=backend,
                     packer=packer,
                 )
