@@ -349,6 +349,10 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
+        let lazy_reader_t = self.py.import("msglc.reader")?.getattr("LazyReader")?;
+        if obj.is_instance(&lazy_reader_t)? {
+            return self.pack(&obj.call_method0("unwrap")?);
+        }
         if let Ok(value) = obj.cast::<PyTuple>() {
             return self.pack_array(value.iter(), value.len());
         }

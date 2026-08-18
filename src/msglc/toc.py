@@ -96,7 +96,10 @@ class TOC:
         def _generate(_start: int) -> tuple:
             return None, [_start, self._pos], self._pos <= _start + config.trivial_size
 
-        from .reader import LazyDict, LazyList
+        from .reader import LazyDict, LazyList, LazyReader
+
+        if isinstance(obj, LazyReader):
+            obj = obj.unwrap()
 
         if not isinstance(
             obj, (LazyDict, LazyList, Mapping, list, set, tuple, ndarray)
