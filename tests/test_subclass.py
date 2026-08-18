@@ -80,7 +80,7 @@ def nest_generator(depth):
             n += 1
     else:
         while n < 10:
-            yield str(n), "A" * (1024 * 1024)
+            yield str(n), "A" * (256 * 1024)
             n += 1
 
 
