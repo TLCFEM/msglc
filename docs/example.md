@@ -136,6 +136,16 @@ with LazyReader("data.msg") as reader:
     b_json = to_obj(b_dict)  # ensure plain dict
 ```
 
+`LazyReader` is a thin wrapper around the underlying `LazyDict`, `LazyList` or the primitive data.
+Use `.unwrap()` method to unwrap it into the actual data, for example,
+
+```python
+from msglc.reader import LazyReader, to_obj
+
+with LazyReader("data.msg") as reader:
+    data = reader.unwrap()  # eqv. to reader.read()
+```
+
 ## Raw Data Extraction
 
 It is possible to extract the raw bytes from a `LazyReader`.
@@ -203,7 +213,7 @@ with LazyReader("child_dict.msg") as child_dict:
 The data fed to the writer does not need to be fully generated in advance.
 It is possible to generate data on the fly.
 
-The writer expects and recognizes `collections.abc.Mapping` objects.
+The writer expects and recognizes `dict` and `list` objects.
 It is thus possible to fake a dictionary with items generated from generators.
 
 The following is a minimum implementation.
@@ -212,14 +222,13 @@ The following is a minimum implementation.
 from collections.abc import Generator
 
 
-class DictStream(dict):
+class Stream(dict):
     def __init__(self, generator: Generator):
-        super.__init__()
+        super().__init__()
         self._gen = generator
 
     def items(self):
-        # required
-        yield from self._gen
+        yield from self._gen  # required
 ```
 
 !!! warning "protocol"
@@ -239,8 +248,63 @@ def example():
 
 
 target = "example.msg"
-dump(target, DictStream(example()))
+dump(target, Stream(example()))
 
 with LazyReader(target) as reader:
     assert reader == {"a": 1, "b": 2}
+```
+
+It is possible to use `LazyReader` as a generator.
+
+```python
+import tracemalloc
+from pathlib import Path
+
+from msglc import dump
+from msglc.reader import LazyDict, LazyList, LazyReader
+
+
+def nest_generator(depth):
+    n = 0
+    if depth > 0:
+        while n < 10:
+            yield str(n), Stream(nest_generator(depth - 1))
+            n += 1
+    else:
+        while n < 10:
+            yield str(n), "A" * (256 * 1024)
+            n += 1
+
+
+def visitor(obj):
+    if isinstance(obj, LazyReader):
+        yield from visitor(obj.unwrap())
+    if isinstance(obj, (LazyDict, dict)):
+        for v in obj.values():
+            yield from visitor(v)
+    elif isinstance(obj, (LazyList, list)):
+        for v in obj:
+            yield from visitor(v)
+    else:
+        yield obj
+
+
+tracemalloc.start()
+target = "example.msg"
+dump(target, Stream(nest_generator(2)))
+_, peak = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+print(f"File size: {Path(target).stat().st_size / 1024 / 1024:.3f} MB.")
+print(f"Peak memory usage during serialization: {peak / 1024 / 1024:.3f} MB.")
+
+tracemalloc.start()
+with LazyReader(target, cached=False) as reader:
+    for _ in visitor(reader):
+        ...
+_, peak = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+print(f"Peak memory usage during deserialization: {peak / 1024 / 1024:.3f} MB.")
+# File size: 250.024 MB.
+# Peak memory usage during serialization: 11.164 MB.
+# Peak memory usage during deserialization: 1.112 MB.
 ```
