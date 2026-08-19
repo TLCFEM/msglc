@@ -43,7 +43,7 @@ jobs:
           - '3.10'
           - '3.12'
           - '3.13'
-    timeout-minutes: 30
+    timeout-minutes: 60
   release:
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish]')
     name: Release
@@ -72,7 +72,44 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Version
-        run: sed -i -E 's/^version = "[0-9]{6}"$/version = "'"$(date +%y%m%d)"'"/' pyproject.toml
+        run: |
+          import json
+          import re
+          import urllib.request
+          from datetime import datetime
+          from pathlib import Path
+          
+          
+          def version_exists(version: str) -> bool:
+              try:
+                  with urllib.request.urlopen(
+                      "https://pypi.org/pypi/msglc/json", timeout=5
+                  ) as response:
+                      return version in json.load(response).get("releases", {})
+              except Exception:  # noqa
+                  return False
+          
+          
+          def new_version() -> str:
+              candidate = datetime.now().strftime("%y%m%d")
+          
+              while version_exists(candidate):
+                  candidate = str(int(candidate) + 1).zfill(6)
+          
+              return candidate
+          
+          
+          target = Path("pyproject.toml")
+          target.write_text(
+              re.sub(
+                  r'^version = "[0-9]{6}"$',
+                  f'version = "{new_version()}"',
+                  target.read_text(encoding="utf-8"),
+                  flags=re.MULTILINE,
+              ),
+              encoding="utf-8",
+          )
+        shell: python
       - name: Build
         uses: PyO3/maturin-action@v1
         with:
@@ -184,7 +221,6 @@ jobs:
               ),
               encoding="utf-8",
           )
-
         shell: python
       - name: Build
         uses: PyO3/maturin-action@v1
