@@ -167,6 +167,9 @@ struct LazyWriter<'py> {
     trivial_size: u64,
     small_obj_threshold: u64,
     numpy_encoder: bool,
+    lazy_reader_t: Bound<'py, PyAny>,
+    lazy_list_t: Bound<'py, PyAny>,
+    lazy_dict_t: Bound<'py, PyAny>,
 }
 
 impl<'py> LazyWriter<'py> {
@@ -196,6 +199,9 @@ impl<'py> LazyWriter<'py> {
                 .getattr("small_obj_optimization_threshold")?
                 .extract()?,
             numpy_encoder: config.getattr("numpy_encoder")?.extract()?,
+            lazy_reader_t: py.import("msglc.reader")?.getattr("LazyReader")?,
+            lazy_list_t: py.import("msglc.reader")?.getattr("LazyList")?,
+            lazy_dict_t: py.import("msglc.reader")?.getattr("LazyDict")?,
         })
     }
 
@@ -349,8 +355,7 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
-        let lazy_reader_t = self.py.import("msglc.reader")?.getattr("LazyReader")?;
-        if obj.is_instance(&lazy_reader_t)? {
+        if obj.is_instance(&self.lazy_reader_t)? {
             return self.pack(&obj.call_method0("unwrap")?);
         }
         if let Ok(value) = obj.cast::<PyTuple>() {
@@ -365,14 +370,12 @@ impl<'py> LazyWriter<'py> {
         }
         // handle custom classes
         // !!! must support standard `.items()` method
-        let lazy_dict_t = self.py.import("msglc.reader")?.getattr("LazyDict")?;
-        if obj.is_instance_of::<PyDict>() || obj.is_instance(&lazy_dict_t)? {
+        if obj.is_instance_of::<PyDict>() || obj.is_instance(&self.lazy_dict_t)? {
             return self.pack_map_deque(map_to_deque(obj)?);
         }
         // handle custom classes
         // !!! must support iterator protocol
-        let lazy_list_t = self.py.import("msglc.reader")?.getattr("LazyList")?;
-        if obj.is_instance_of::<PyList>() || obj.is_instance(&lazy_list_t)? {
+        if obj.is_instance_of::<PyList>() || obj.is_instance(&self.lazy_list_t)? {
             return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
         }
         if obj.cast::<PySet>().is_ok() {
