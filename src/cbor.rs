@@ -160,13 +160,15 @@ impl CBORWrite for LazyBuffer {
 }
 
 struct LazyWriter<'py> {
-    py: Python<'py>,
     encoder: Encoder<LazyBuffer>,
-    ndarray_type: Option<Py<PyAny>>,
-    sorted_fn: Py<PyAny>,
+    ndarray_type: Option<Bound<'py, PyAny>>,
+    sorted_fn: Bound<'py, PyAny>,
     trivial_size: u64,
     small_obj_threshold: u64,
     numpy_encoder: bool,
+    lazy_reader_t: Bound<'py, PyAny>,
+    lazy_list_t: Bound<'py, PyAny>,
+    lazy_dict_t: Bound<'py, PyAny>,
 }
 
 impl<'py> LazyWriter<'py> {
@@ -174,7 +176,6 @@ impl<'py> LazyWriter<'py> {
         let config = py.import("msglc.config")?.getattr("config")?;
 
         Ok(Self {
-            py,
             encoder: Encoder::new(
                 LazyBuffer::new(
                     BufWriter::with_capacity(
@@ -188,14 +189,16 @@ impl<'py> LazyWriter<'py> {
             ndarray_type: py
                 .import("numpy")
                 .ok()
-                .and_then(|m| m.getattr("ndarray").ok())
-                .map(Bound::unbind),
-            sorted_fn: py.import("builtins")?.getattr("sorted")?.unbind(),
+                .and_then(|m| m.getattr("ndarray").ok()),
+            sorted_fn: py.import("builtins")?.getattr("sorted")?,
             trivial_size: config.getattr("trivial_size")?.extract()?,
             small_obj_threshold: config
                 .getattr("small_obj_optimization_threshold")?
                 .extract()?,
             numpy_encoder: config.getattr("numpy_encoder")?.extract()?,
+            lazy_reader_t: py.import("msglc.reader")?.getattr("LazyReader")?,
+            lazy_list_t: py.import("msglc.reader")?.getattr("LazyList")?,
+            lazy_dict_t: py.import("msglc.reader")?.getattr("LazyDict")?,
         })
     }
 
@@ -223,7 +226,7 @@ impl<'py> LazyWriter<'py> {
             return Ok(None);
         };
 
-        if !obj.is_instance(ndarray_type.bind(self.py))? {
+        if !obj.is_instance(ndarray_type)? {
             return Ok(None);
         }
 
@@ -349,8 +352,7 @@ impl<'py> LazyWriter<'py> {
     }
 
     fn pack(&mut self, obj: &Bound<'py, PyAny>) -> PyResult<LazyTOC> {
-        let lazy_reader_t = self.py.import("msglc.reader")?.getattr("LazyReader")?;
-        if obj.is_instance(&lazy_reader_t)? {
+        if obj.is_instance(&self.lazy_reader_t)? {
             return self.pack(&obj.call_method0("unwrap")?);
         }
         if let Ok(value) = obj.cast::<PyTuple>() {
@@ -365,22 +367,16 @@ impl<'py> LazyWriter<'py> {
         }
         // handle custom classes
         // !!! must support standard `.items()` method
-        let lazy_dict_t = self.py.import("msglc.reader")?.getattr("LazyDict")?;
-        if obj.is_instance_of::<PyDict>() || obj.is_instance(&lazy_dict_t)? {
+        if obj.is_instance_of::<PyDict>() || obj.is_instance(&self.lazy_dict_t)? {
             return self.pack_map_deque(map_to_deque(obj)?);
         }
         // handle custom classes
         // !!! must support iterator protocol
-        let lazy_list_t = self.py.import("msglc.reader")?.getattr("LazyList")?;
-        if obj.is_instance_of::<PyList>() || obj.is_instance(&lazy_list_t)? {
+        if obj.is_instance_of::<PyList>() || obj.is_instance(&self.lazy_list_t)? {
             return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
         }
         if obj.cast::<PySet>().is_ok() {
-            let value = self
-                .sorted_fn
-                .bind(self.py)
-                .call1((obj,))?
-                .cast_into::<PyList>()?;
+            let value = self.sorted_fn.call1((obj,))?.cast_into::<PyList>()?;
             return self.pack_array(value.iter(), value.len());
         }
         if let Some(node) = self.try_pack_numpy(obj)? {
