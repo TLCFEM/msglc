@@ -160,9 +160,8 @@ impl CBORWrite for LazyBuffer {
 }
 
 struct LazyWriter<'py> {
-    py: Python<'py>,
     encoder: Encoder<LazyBuffer>,
-    ndarray_type: Option<Py<PyAny>>,
+    ndarray_type: Option<Bound<'py, PyAny>>,
     sorted_fn: Bound<'py, PyAny>,
     trivial_size: u64,
     small_obj_threshold: u64,
@@ -177,7 +176,6 @@ impl<'py> LazyWriter<'py> {
         let config = py.import("msglc.config")?.getattr("config")?;
 
         Ok(Self {
-            py,
             encoder: Encoder::new(
                 LazyBuffer::new(
                     BufWriter::with_capacity(
@@ -191,8 +189,7 @@ impl<'py> LazyWriter<'py> {
             ndarray_type: py
                 .import("numpy")
                 .ok()
-                .and_then(|m| m.getattr("ndarray").ok())
-                .map(Bound::unbind),
+                .and_then(|m| m.getattr("ndarray").ok()),
             sorted_fn: py.import("builtins")?.getattr("sorted")?,
             trivial_size: config.getattr("trivial_size")?.extract()?,
             small_obj_threshold: config
@@ -229,7 +226,7 @@ impl<'py> LazyWriter<'py> {
             return Ok(None);
         };
 
-        if !obj.is_instance(ndarray_type.bind(self.py))? {
+        if !obj.is_instance(ndarray_type)? {
             return Ok(None);
         }
 
