@@ -118,9 +118,9 @@ def configure(
             The arrays are stored as binary data directly.
             If disabled, the `numpy` arrays will be converted to lists before encoding.
     :param numpy_fast_int_pack:
-            If enabled, the integer numpy array will be packed assigning each element has identical size (4 or 8 bytes).
+            If enabled, the integer numpy array will be packed assuming each element has identical size (4 or 8 bytes).
             This improves the performance of packing by avoiding the overhead of checking the size of each element.
-            However, depending on the backend, for example, `messagepack` C implementation packs unsigned long long or long long.
+            However, depending on the backend, for example, `messagepack` C implementation packs `unsigned long long` or `long long`.
             But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
