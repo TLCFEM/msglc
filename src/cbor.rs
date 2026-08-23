@@ -32,16 +32,8 @@ fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyR
 
     if obj.is_none() {
         out.null().map_err(to_py)?;
-    } else if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
-        out.str(value.to_str()?).map_err(to_py)?;
-    } else if obj.is_instance_of::<pyo3::types::PyInt>() {
-        if let Ok(value) = obj.extract::<i64>() {
-            out.int(Int::from(value)).map_err(to_py)?;
-        } else if let Ok(value) = obj.extract::<u64>() {
-            out.int(Int::from(value)).map_err(to_py)?;
-        } else {
-            return unsupported;
-        }
+    } else if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
+        out.bool(value.is_true()).map_err(to_py)?;
     } else if let Ok(value) = obj.cast::<pyo3::types::PyFloat>() {
         let v = value.value();
         if v.is_nan() {
@@ -59,13 +51,21 @@ fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyR
         } else {
             out.f64(v).map_err(to_py)?;
         }
-    } else if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
-        out.bool(value.is_true()).map_err(to_py)?;
+    } else if obj.is_instance_of::<pyo3::types::PyInt>() {
+        if let Ok(value) = obj.extract::<i64>() {
+            out.int(Int::from(value)).map_err(to_py)?;
+        } else if let Ok(value) = obj.extract::<u64>() {
+            out.int(Int::from(value)).map_err(to_py)?;
+        } else {
+            return unsupported;
+        }
     } else if let Ok(value) = obj.cast::<PyBytes>() {
         out.bytes(value.as_bytes()).map_err(to_py)?;
     } else if let Ok(value) = obj.cast::<pyo3::types::PyByteArray>() {
         let bytes = value.to_vec();
         out.bytes(&bytes).map_err(to_py)?;
+    } else if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
+        out.str(value.to_str()?).map_err(to_py)?;
     } else {
         return unsupported;
     }
