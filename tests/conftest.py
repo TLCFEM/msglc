@@ -20,6 +20,13 @@ from urllib.request import urlopen
 import pytest
 from generate import generate_random_json
 
+from msglc.config import configure
+
+
+@pytest.fixture(scope="session", autouse=True)
+def msglc_config():
+    configure(disable_gc=True)
+
 
 @pytest.fixture(scope="function")
 def json_base():
