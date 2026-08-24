@@ -145,6 +145,9 @@ def prepare(tmpdir_factory):
 )
 def test_matrix(monkeypatch, prepare, benchmark, size, total, unpacker):
     monkeypatch.setattr(config, "enable_custom_container", False)
+    monkeypatch.setattr(config, "has_tuple", False)
+    monkeypatch.setattr(config, "has_set", False)
+    monkeypatch.setattr(config, "has_numpy", False)
     with prepare.as_cwd():
         benchmark(compare, 1, size, total, unpacker=unpacker)
 
