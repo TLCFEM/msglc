@@ -1,6 +1,6 @@
 [package]
 name = "msglc"
-edition = "2021"
+edition = "2024"
 description = "rust extension of msglc writer"
 license-file = "LICENSE"
 documentation = "https://github.com/TLCFEM/msglc"

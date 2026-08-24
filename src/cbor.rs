@@ -167,6 +167,9 @@ struct LazyWriter<'py> {
     small_obj_threshold: u64,
     numpy_encoder: bool,
     enable_custom_container: bool,
+    has_set:bool,
+    has_tuple:bool,
+    has_numpy:bool,
     lazy_reader_t: Bound<'py, PyAny>,
     lazy_list_t: Bound<'py, PyAny>,
     lazy_dict_t: Bound<'py, PyAny>,
@@ -199,6 +202,9 @@ impl<'py> LazyWriter<'py> {
                 .extract()?,
             numpy_encoder: config.getattr("numpy_encoder")?.extract()?,
             enable_custom_container: config.getattr("enable_custom_container")?.extract()?,
+            has_set: config.getattr("has_set")?.extract()?,
+            has_tuple: config.getattr("has_tuple")?.extract()?,
+            has_numpy: config.getattr("has_numpy")?.extract()?,
             lazy_reader_t: msglc_lib.getattr("LazyReader")?,
             lazy_list_t: msglc_lib.getattr("LazyList")?,
             lazy_dict_t: msglc_lib.getattr("LazyDict")?,
@@ -377,14 +383,14 @@ impl<'py> LazyWriter<'py> {
                 return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
             }
         }
-        if let Ok(value) = obj.cast::<PyTuple>() {
+        if self.has_tuple &&  let Ok(value) = obj.cast::<PyTuple>() {
             return self.pack_array(value.iter(), value.len());
         }
-        if obj.cast::<PySet>().is_ok() {
+        if self.has_set && obj.cast::<PySet>().is_ok() {
             let value = self.sorted_fn.call1((obj,))?.cast_into::<PyList>()?;
             return self.pack_array(value.iter(), value.len());
         }
-        if let Some(node) = self.try_pack_numpy(obj)? {
+        if self.has_numpy && let Some(node) = self.try_pack_numpy(obj)? {
             return Ok(node);
         }
 
