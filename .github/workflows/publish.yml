@@ -1,0 +1,83 @@
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+jobs:
+  release:
+    name: Release
+    needs:
+      - wheels
+      - sdist
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect
+        uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
+          path: dist
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+  sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone
+        uses: actions/checkout@v7
+      - name: Version
+        run: python3 scripts/version.py
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Build
+        uses: PyO3/maturin-action@v1
+        with:
+          args: "--out dist"
+          command: sdist
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist
+  wheels:
+    name: Wheels
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Clone
+        uses: actions/checkout@v7
+      - name: Version
+        run: python3 scripts/version.py
+      - name: Python
+        uses: astral-sh/setup-uv@v7
+      - name: Build
+        uses: PyO3/maturin-action@v1
+        with:
+          args: "--release --out dist --find-interpreter"
+          manylinux: auto
+          sccache: "true"
+          target: ${{ matrix.target }}
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.target }}
+          path: dist
+    strategy:
+      matrix:
+        exclude:
+          - os: windows-latest
+            target: aarch64
+          - os: windows-11-arm
+            target: x86_64
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - windows-11-arm
+          - macos-latest
+        target:
+          - x86_64
+          - aarch64
+name: Publish
+"on":
+  workflow_call: null
+  workflow_dispatch: null
+permissions:
+  contents: write

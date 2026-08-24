@@ -165,6 +165,7 @@ struct LazyWriter<'py> {
 impl<'py> LazyWriter<'py> {
     fn new(py: Python<'py>, path: &str, magic_len: usize) -> PyResult<Self> {
         let config = py.import("msglc.config")?.getattr("config")?;
+        let msglc_lib = py.import("msglc.reader")?;
 
         Ok(Self {
             buffer: LazyBuffer::new(
@@ -185,9 +186,9 @@ impl<'py> LazyWriter<'py> {
                 .getattr("small_obj_optimization_threshold")?
                 .extract()?,
             numpy_encoder: config.getattr("numpy_encoder")?.extract()?,
-            lazy_reader_t: py.import("msglc.reader")?.getattr("LazyReader")?,
-            lazy_list_t: py.import("msglc.reader")?.getattr("LazyList")?,
-            lazy_dict_t: py.import("msglc.reader")?.getattr("LazyDict")?,
+            lazy_reader_t: msglc_lib.getattr("LazyReader")?,
+            lazy_list_t: msglc_lib.getattr("LazyList")?,
+            lazy_dict_t: msglc_lib.getattr("LazyDict")?,
         })
     }
 

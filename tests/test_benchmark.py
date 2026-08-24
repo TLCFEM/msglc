@@ -14,6 +14,8 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
+from os.path import getsize
+from time import monotonic_ns
 from typing import Literal
 
 import cbor2
@@ -160,7 +162,12 @@ def test_serialize_large_json(
 @pytest.mark.parametrize("backend", ["python", "rust"])
 def test_repack_large_json(tmpdir, repo_data, backend: Literal["python", "rust"]):
     with tmpdir.as_cwd():
+        start = monotonic_ns()
         dump("repo_data.msg", repo_data, backend=backend)
+        end = monotonic_ns()
+        print(
+            f"Processing rate ({backend}): {getsize('repo_data.msg') / (end - start) * 1e9 * 2**-20} MB/s."
+        )
         with LazyReader("repo_data.msg", cached=False) as reader:
             assert type(reader.unwrap()) in (LazyList, LazyDict)
             dump("repo_data_copy.msg", reader, backend=backend)
