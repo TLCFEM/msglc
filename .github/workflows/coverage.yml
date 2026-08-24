@@ -46,7 +46,10 @@ jobs:
           - '3.13'
     timeout-minutes: 60
   publish:
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish]')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[publish]')
+    needs:
+      - benchmark
+      - test
     secrets: inherit
     uses: ./.github/workflows/publish.yml
   test:
