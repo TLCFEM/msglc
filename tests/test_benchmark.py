@@ -150,8 +150,10 @@ def test_matrix(prepare, benchmark, size, total, unpacker):
 
 @pytest.mark.parametrize("backend", ["python", "rust"])
 def test_serialize_large_json(
-    tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
+    monkeypatch, tmpdir, benchmark, repo_data, backend: Literal["python", "rust"]
 ):
+    monkeypatch.setattr(config, "enable_custom_container", True)
+
     def serialize_large_json():
         dump("repo_data.msg", repo_data, backend=backend)
 
@@ -183,14 +185,23 @@ def test_repack_large_json(tmpdir, repo_data, backend: Literal["python", "rust"]
 @pytest.mark.parametrize("backend", ["python", "rust"])
 @pytest.mark.parametrize("packer", [MsgspecCodec(), CBORCodec], ids=["msgspec", "cbor"])
 def test_random_huge_json(
-    tmpdir, benchmark, random_huge_data, backend: Literal["python", "rust"], packer
+    monkeypatch,
+    tmpdir,
+    benchmark,
+    random_huge_data,
+    backend: Literal["python", "rust"],
+    packer,
 ):
+    monkeypatch.setattr(config, "enable_custom_container", True)
     with tmpdir.as_cwd():
         benchmark(dump, "data.msg", random_huge_data, backend=backend, packer=packer)
 
 
 @pytest.mark.parametrize("packer", ["msgpack", "cbor"])
-def test_random_huge_json_reference(tmpdir, benchmark, random_huge_data, packer):
+def test_random_huge_json_reference(
+    monkeypatch, tmpdir, benchmark, random_huge_data, packer
+):
+    monkeypatch.setattr(config, "enable_custom_container", True)
     with tmpdir.as_cwd():
         module = msgpack if packer == "msgpack" else cbor2
 
