@@ -45,45 +45,10 @@ jobs:
           - '3.12'
           - '3.13'
     timeout-minutes: 60
-  release:
+  publish:
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish]')
-    name: Release
-    needs:
-      - wheels
-      - sdist
-    permissions:
-      id-token: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Collect
-        uses: actions/download-artifact@v8
-        with:
-          merge-multiple: true
-          path: dist
-      - name: Publish
-        uses: pypa/gh-action-pypi-publish@release/v1
-  sdist:
-    if: github.ref == 'refs/heads/master'
-    name: Build sdist
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone
-        uses: actions/checkout@v7
-      - name: Version
-        run: python3 scripts/version.py
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-      - name: Build
-        uses: PyO3/maturin-action@v1
-        with:
-          args: '--out dist'
-          command: sdist
-      - name: Upload
-        uses: actions/upload-artifact@v7
-        with:
-          name: sdist
-          path: dist
+    secrets: inherit
+    uses: ./.github/workflows/publish.yml
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -136,48 +101,7 @@ jobs:
         python-version:
           - '3.14'
     timeout-minutes: 60
-  wheels:
-    if: github.ref == 'refs/heads/master'
-    name: Wheels
-    needs: test
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Clone
-        uses: actions/checkout@v7
-      - name: Version
-        run: python3 scripts/version.py
-      - name: Python
-        uses: astral-sh/setup-uv@v7
-      - name: Build
-        uses: PyO3/maturin-action@v1
-        with:
-          args: '--release --out dist --find-interpreter'
-          manylinux: auto
-          sccache: 'true'
-          target: ${{ matrix.target }}
-      - name: Upload
-        uses: actions/upload-artifact@v7
-        with:
-          name: wheels-${{ matrix.os }}-${{ matrix.target }}
-          path: dist
-    strategy:
-      matrix:
-        exclude:
-          - os: windows-latest
-            target: aarch64
-          - os: windows-11-arm
-            target: x86_64
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - windows-11-arm
-          - macos-latest
-        target:
-          - x86_64
-          - aarch64
 name: CICD
 'on':
   pull_request: null
   push: null
-permissions:
-  contents: write
