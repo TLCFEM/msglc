@@ -49,6 +49,10 @@ class Config:
     copy_chunk_size: int = 2**24  # 16MB
     numpy_encoder: bool = False
     numpy_fast_int_pack: bool = False
+    enable_custom_container: bool = True
+    has_set: bool = True
+    has_tuple: bool = True
+    has_numpy: bool = True
     fs: FileSystem | None = None
     compatibility_check: Callable[[bytes], bool] | None = None
 
@@ -79,6 +83,10 @@ def configure(
     copy_chunk_size: int | None = None,
     numpy_encoder: bool | None = None,
     numpy_fast_int_pack: bool | None = None,
+    enable_custom_container: bool | None = None,
+    has_set: bool | None = None,
+    has_tuple: bool | None = None,
+    has_numpy: bool | None = None,
     magic: bytes | None = None,
     fs: FileSystem | None = None,
     compatibility_check: Callable[[bytes], bool] | None = None,
@@ -122,6 +130,15 @@ def configure(
             This improves the performance of packing by avoiding the overhead of checking the size of each element.
             However, depending on the backend, for example, `messagepack` C implementation packs `unsigned long long` or `long long`.
             But its python implementation packs integer of various lengths (1, 2, 3, 5, 9 bytes).
+    :param enable_custom_container:
+            If enabled, the packer checks custom containers derived from standard `list` and `dict`.
+            This allows for example streaming data generation but the trade-off is performance.
+    :param has_set:
+            If enabled, the packer checks `set` instances and sorts and packs as `list`.
+    :param has_tuple:
+            If enabled, the packer checks `tuple` instances and packs as `list`.
+    :param has_numpy:
+            If enabled, the packer checks `numpy.ndarray` instances.
     :param magic:
             Magic bytes (max length: 30) to set, used to identify the file format version.
     :param fs:
@@ -173,6 +190,16 @@ def configure(
 
     if isinstance(numpy_fast_int_pack, bool):
         config.numpy_fast_int_pack = numpy_fast_int_pack
+
+    if isinstance(enable_custom_container, bool):
+        config.enable_custom_container = enable_custom_container
+
+    if isinstance(has_set, bool):
+        config.has_set = has_set
+    if isinstance(has_tuple, bool):
+        config.has_tuple = has_tuple
+    if isinstance(has_numpy, bool):
+        config.has_numpy = has_numpy
 
     config.fs = fs
 
