@@ -13,8 +13,8 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::utility::{HEADER_FIELD_LEN, HEADER_TOTAL_LEN, LazyContainer, LazyTOC,
-                     build_tree, map_to_deque, to_py,
+use crate::utility::{
+    HEADER_FIELD_LEN, HEADER_TOTAL_LEN, LazyContainer, LazyTOC, build_tree, map_to_deque, to_py,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
@@ -153,14 +153,13 @@ impl<W: Write + Seek> Seek for LazyBuffer<W> {
 struct LazyWriter<'py> {
     buffer: LazyBuffer<BufWriter<File>>,
     ndarray_type: Option<Bound<'py, PyAny>>,
-    sorted_fn: Bound<'py, PyAny>,
     trivial_size: u64,
     small_obj_threshold: u64,
     numpy_encoder: bool,
     enable_custom_container: bool,
-    has_set:bool,
-    has_tuple:bool,
-    has_numpy:bool,
+    has_set: bool,
+    has_tuple: bool,
+    has_numpy: bool,
     lazy_reader_t: Bound<'py, PyAny>,
     lazy_list_t: Bound<'py, PyAny>,
     lazy_dict_t: Bound<'py, PyAny>,
@@ -184,7 +183,6 @@ impl<'py> LazyWriter<'py> {
                 .import("numpy")
                 .ok()
                 .and_then(|m| m.getattr("ndarray").ok()),
-            sorted_fn: py.import("builtins")?.getattr("sorted")?,
             trivial_size: config.getattr("trivial_size")?.extract()?,
             small_obj_threshold: config
                 .getattr("small_obj_optimization_threshold")?
@@ -366,14 +364,22 @@ impl<'py> LazyWriter<'py> {
                 return self.pack_array_deque(obj.try_iter()?.collect::<PyResult<VecDeque<_>>>()?);
             }
         }
-        if self.has_tuple && let Ok(value) = obj.cast::<PyTuple>() {
+        if self.has_tuple
+            && let Ok(value) = obj.cast::<PyTuple>()
+        {
             return self.pack_array(value.iter(), value.len());
         }
-        if self.has_set && obj.cast::<PySet>().is_ok() {
-            let value = self.sorted_fn.call1((obj,))?.cast_into::<PyList>()?;
-            return self.pack_array(value.iter(), value.len());
+        if self.has_set
+            && let Ok(value) = obj.cast::<PySet>()
+        {
+            let mut items: Vec<Bound<'py, PyAny>> = value.iter().collect();
+            items.sort_by(|a, b| a.compare(b).unwrap_or(std::cmp::Ordering::Equal));
+            let length = items.len();
+            return self.pack_array(items.into_iter(), length);
         }
-        if self.has_numpy && let Some(node) = self.try_pack_numpy(obj)? {
+        if self.has_numpy
+            && let Some(node) = self.try_pack_numpy(obj)?
+        {
             return Ok(node);
         }
 
