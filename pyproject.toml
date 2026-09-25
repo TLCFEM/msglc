@@ -1,30 +1,8 @@
 [build-system]
-requires = ["maturin>=1"]
 build-backend = "maturin"
-
-[tool.maturin]
-python-source = "src"
-module-name = "msglc.msglc_rust"
-exclude = [
-    ".github/**/*",
-    ".gitignore",
-    "docs/**/*",
-    "scripts/**/*",
-    "tests/**/*",
-    "zensical.toml",
-]
+requires = ["maturin>=1"]
 
 [project]
-version = "000000"
-name = "msglc"
-description = "binary json representation (msgpack or cbor) with lazy/partial loading containers"
-readme = "README.md"
-requires-python = ">=3.10"
-license = "GPL-3.0-or-later"
-license-files = ["LICENSE"]
-keywords = ["msgpack", "cbor", "serialization", "lazy loading"]
-authors = [{ name = "Theodore Chang", email = "tlcfem@gmail.com" }]
-maintainers = [{ name = "Theodore Chang", email = "tlcfem@gmail.com" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -35,54 +13,63 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3 :: Only"
 ]
-dependencies = [
-    "bitarray",
-    "cbor2",
-    "msgpack>=1",
-    "universal_pathlib",
-]
+dependencies = ["bitarray", "cbor2", "msgpack>=1", "universal_pathlib"]
+description = "binary json representation (msgpack or cbor) with lazy/partial loading containers"
+keywords = ["msgpack", "cbor", "serialization", "lazy loading"]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+name = "msglc"
+readme = "README.md"
+requires-python = ">=3.10"
+version = "000000"
+
+[[project.authors]]
+name = "Theodore Chang"
+email = "tlcfem@gmail.com"
+
+[[project.maintainers]]
+name = "Theodore Chang"
+email = "tlcfem@gmail.com"
 
 [project.optional-dependencies]
+all = ["msglc[dev]", "numpy", "msgspec", "ormsgpack", "s3fs"]
 dev = [
     "zensical",
     "mkdocstrings[python]",
     "pytest-asyncio",
     "pytest-benchmark",
     "pytest-cov",
-    "ruff",
+    "ruff"
 ]
-numpy = [
-    "numpy",
-]
-msgspec = [
-    "msgspec",
-]
-ormsgpack = [
-    "ormsgpack",
-]
-s3fs = [
-    "s3fs"
-]
-all = [
-    "msglc[dev]",
-    "numpy",
-    "msgspec",
-    "ormsgpack",
-    "s3fs",
-]
+msgspec = ["msgspec"]
+numpy = ["numpy"]
+ormsgpack = ["ormsgpack"]
+s3fs = ["s3fs"]
 
 [project.urls]
-"Homepage" = "https://github.com/TLCFEM/msglc"
 "Bug Reports" = "https://github.com/TLCFEM/msglc/issuess"
-"Source" = "https://github.com/TLCFEM/msglc"
+Homepage = "https://github.com/TLCFEM/msglc"
+Source = "https://github.com/TLCFEM/msglc"
 
-[tool.ruff.lint]
-select = ["E", "F", "UP", "B", "SIM", "I"]
-ignore = ["B008", "E501"]
+[tool.maturin]
+exclude = [
+    ".github/**/*",
+    ".gitignore",
+    "docs/**/*",
+    "scripts/**/*",
+    "tests/**/*",
+    "zensical.toml"
+]
+module-name = "msglc.msglc_rust"
+python-source = "src"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "strict"
 tmp_path_retention_policy = "none"
+
+[tool.ruff.lint]
+ignore = ["B008", "E501"]
+select = ["E", "F", "UP", "B", "SIM", "I"]
