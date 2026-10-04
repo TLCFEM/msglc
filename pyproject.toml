@@ -13,6 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only"
 ]
 dependencies = ["bitarray", "cbor2", "msgpack>=1", "universal_pathlib"]
@@ -34,7 +35,7 @@ name = "Theodore Chang"
 email = "tlcfem@gmail.com"
 
 [project.optional-dependencies]
-all = ["msglc[dev]", "numpy", "msgspec", "ormsgpack", "s3fs"]
+all = ["msglc[dev]", "numpy", "msgspec", "s3fs"]
 dev = [
     "zensical",
     "mkdocstrings[python]",
@@ -45,7 +46,6 @@ dev = [
 ]
 msgspec = ["msgspec"]
 numpy = ["numpy"]
-ormsgpack = ["ormsgpack"]
 s3fs = ["s3fs"]
 
 [project.urls]
