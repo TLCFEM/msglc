@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import asyncio
+import bisect
 import pickle
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
@@ -262,19 +263,7 @@ class LazyList(LazyItem):
         )
 
     def _lookup_index(self, index: int) -> int:
-        low: int = 0
-        high: int = len(self._size_list) - 1
-
-        while True:
-            mid: int = (low + high) // 2
-
-            if self._size_list[mid] <= index < self._size_list[mid + 1]:
-                return mid
-
-            if index < self._size_list[mid]:
-                high = mid
-            else:
-                low = mid
+        return bisect.bisect_right(self._size_list, index) - 1
 
     def _all(self, start: int, end: int) -> list:
         return list(self._unpacker.stream_decode(self._readb(start, end)))
