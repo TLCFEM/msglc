@@ -244,16 +244,20 @@ class LazyList(LazyItem):
         self._pos: list = toc.get("p", None)  # noqa # if None, it comes from a combined archive
         assert self._toc or self._pos, "Invalid TOC"
         self._index: int = 0
-        self._cache: list = [None] * len(self)
-        self._mask: bitarray = bitarray(len(self))
-        self._mask.setall(0)  # ensure all bits are 0
         self._full_loaded: bool = False
         self._size_list: list = [0]
+
         if self._toc is None:
-            total_size: int = 0
+            self._len: int = 0
             for size, _, _ in self._pos:
-                total_size += size
-                self._size_list.append(total_size)
+                self._len += size
+                self._size_list.append(self._len)
+        else:
+            self._len = len(self._toc)
+
+        self._cache: list = [None] * self._len
+        self._mask: bitarray = bitarray(self._len)
+        self._mask.setall(0)  # ensure all bits are 0
 
     def __repr__(self):
         return (
@@ -338,11 +342,7 @@ class LazyList(LazyItem):
         return item
 
     def __len__(self):
-        return (
-            self._toc.__len__()
-            if self._toc is not None
-            else sum(x[0] for x in self._pos)
-        )
+        return self._len
 
     def to_obj(self):
         """
