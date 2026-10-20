@@ -5,6 +5,7 @@
 .dirty
 .idea
 .venv
+opencode.json
 site
 src/msglc/*.c
 src/msglc/*.so

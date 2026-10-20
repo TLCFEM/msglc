@@ -15,6 +15,7 @@
 
 use crate::utility::{
     HEADER_FIELD_LEN, HEADER_TOTAL_LEN, LazyContainer, LazyTOC, build_tree, map_to_deque, to_py,
+    unsupported_type,
 };
 use minicbor::Encoder;
 use minicbor::data::Int;
@@ -26,10 +27,6 @@ use std::fs::File;
 use std::io::{BufWriter, Seek, Write};
 
 fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyResult<()> {
-    let unsupported = Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-        "Unsupported type.",
-    ));
-
     if obj.is_none() {
         out.null().map_err(to_py)?;
     } else if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
@@ -57,7 +54,7 @@ fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyR
         } else if let Ok(value) = obj.extract::<u64>() {
             out.int(Int::from(value)).map_err(to_py)?;
         } else {
-            return unsupported;
+            return Err(unsupported_type());
         }
     } else if let Ok(value) = obj.cast::<PyBytes>() {
         out.bytes(value.as_bytes()).map_err(to_py)?;
@@ -67,7 +64,7 @@ fn write_primitive(obj: &Bound<'_, PyAny>, out: &mut Encoder<LazyBuffer>) -> PyR
     } else if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
         out.str(value.to_str()?).map_err(to_py)?;
     } else {
-        return unsupported;
+        return Err(unsupported_type());
     }
 
     Ok(())

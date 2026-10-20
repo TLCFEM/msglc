@@ -1,50 +1,64 @@
 # msglc
 
-`msglc` is a Python library that provides a way to serialize and deserialize json objects with lazy/partial loading
-containers using
-[`msgpack`](https://github.com/msgpack/msgpack-python)
-or
-[`cbor`](https://github.com/agronholm/cbor2) as the serialization format.
+`msglc` serializes JSON compatible objects using [`msgpack`](https://github.com/msgpack/msgpack-python) or [`cbor`](https://github.com/agronholm/cbor2) and embeds a table of contents so that data can be loaded **lazily and partially**.
 
-It can be used in environments that use `msgpack` to store/exchange data that is larger than a few MBs if any of the
-followings hold.
+The encoded payload stays a valid `msgpack`/`cbor` blob.
+The extra table of contents makes it possible to jump straight to the piece of data that is actually needed.
+
+## When to use it
+
+It is a good fit for `msgpack`/`cbor` data of more than a few MB whenever one of the following holds.
 
 1. After cold storage, each retrieval only accesses part of the stored data.
-2. Cannot afford to decode the whole file due to memory limitation, performance consideration, etc.
-3. Want to combine encoded data into a single blob without decoding and re-encoding the same piece of data.
+2. Decoding the whole file is too expensive in memory or time.
+3. Several encoded blobs need to be merged into one without decoding and re-encoding the payload.
 
 ## Installation
 
-`msglc` is a pure Python library and can be installed using `pip`.
+`msglc` is published on PyPI.
 
 ```bash
 pip install msglc
 ```
 
-### `msgspec`
-
-[`msgspec`](https://jcristharif.com/msgspec/) is an alternative library that provides better decoding performance
-compared to `msgpack`.
-It is recommended to use `msgspec`.
+Optional extras:
 
 ```bash
-pip install msgspec[msgspec]
+pip install "msglc[msgspec]"   # faster msgpack decoding (recommended)
+pip install "msglc[numpy]"     # numpy.ndarray support
+pip install "msglc[s3fs]"      # S3 support
+pip install "msglc[all]"       # everything above
 ```
 
-### `numpy`
+!!! note
+    The `msgspec` extra is optional but recommended.
+    When `msgspec` is installed it becomes the default `msgpack` codec; otherwise the pure Python `msgpack` codec is used.
 
-`numpy` arrays can be serialized and deserialized, to use this feature, install `numpy`.
+## Quick start
 
-```bash
-pip install msglc[numpy]
+Serialize with `dump`, then read with `LazyReader`.
+Only the requested node is decoded.
+
+```python
+from msglc import dump
+from msglc.reader import LazyReader
+
+data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
+dump("data.msg", data)
+
+with LazyReader("data.msg") as reader:
+    print(reader["b/c"])   # 4
+    print(reader["b/d"])   # 5
+    print(list(reader.keys()))  # ['a', 'b']
 ```
 
-### `s3fs`
+All data access must happen inside the `with` block because it is read from the file on demand.
+Use [`to_obj`](api/utility.md) to fully materialize a value before leaving the block.
 
-To use `msglc` with S3 storage, install `s3fs`.
+## Where to go next
 
-```bash
-pip install s3fs
-# or in one step
-# pip install msglc[s3fs]
-```
+- **[Guide](guide.md)** — serialization, deserialization, combining archives, streaming and custom codecs.
+- **[Internals](internals.md)** — why it is fast, the binary layout and the table of contents design.
+- **[Configuration](configuration.md)** — every tunable option and its default, plus performance advice.
+- **[Storage](storage.md)** — local files, `UPath`, `fsspec` and S3.
+- **[API](api/utility.md)** — the generated reference.

@@ -25,6 +25,16 @@ pub fn to_py(e: impl std::fmt::Display) -> PyErr {
     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string())
 }
 
+/// Build the error reported for unsupported Python types.
+///
+/// A `PyErr` owns a Python exception object, so constructing it allocates. Callers on the
+/// hot serialization path must invoke this lazily (only when a type is actually
+/// unsupported); creating it eagerly adds one heap allocation per primitive node.
+#[inline]
+pub fn unsupported_type() -> PyErr {
+    PyErr::new::<pyo3::exceptions::PyTypeError, _>("Unsupported type.")
+}
+
 pub enum LazyTOC {
     Leaf {
         pos: [u64; 2],

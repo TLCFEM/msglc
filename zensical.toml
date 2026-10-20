@@ -7,10 +7,10 @@ repo_name = "msglc"
 copyright = "Copyright © 2024-2026 Theodore Chang"
 nav = [
     { "msglc" = "index.md" },
-    { "Motivation" = "motivation.md" },
-    { "Examples" = "example.md" },
-    { "S3 Support" = "s3.md" },
-    { "Performance" = "performance.md" },
+    { "Guide" = "guide.md" },
+    { "Internals" = "internals.md" },
+    { "Configuration" = "configuration.md" },
+    { "Storage" = "storage.md" },
     { "API" = [
         { "Utility" = "api/utility.md" },
         { "LazyReader" = "api/LazyReader.md" },
@@ -34,6 +34,7 @@ scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to light mode"
 
+[project.markdown_extensions.admonition]
 [project.markdown_extensions.pymdownx.arithmatex]
 generic = true
 [project.markdown_extensions.pymdownx.highlight]

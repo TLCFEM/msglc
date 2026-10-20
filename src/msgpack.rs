@@ -15,6 +15,7 @@
 
 use crate::utility::{
     HEADER_FIELD_LEN, HEADER_TOTAL_LEN, LazyContainer, LazyTOC, build_tree, map_to_deque, to_py,
+    unsupported_type,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyDict, PyList, PySet, PyTuple};
@@ -27,10 +28,6 @@ use std::io::{BufWriter, Seek, Write};
 // Both can be converted to bytes in advance.
 // One shall note that raw bytes are not supported by json specification as well.
 fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()> {
-    let unsupported = Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-        "Unsupported type.",
-    ));
-
     if obj.is_none() {
         rmp::encode::write_nil(out).map_err(to_py)?;
     } else if let Ok(value) = obj.cast::<pyo3::types::PyBool>() {
@@ -43,7 +40,7 @@ fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()
         } else if let Ok(value) = obj.extract::<u64>() {
             rmp::encode::write_uint(out, value).map_err(to_py)?;
         } else {
-            return unsupported;
+            return Err(unsupported_type());
         }
     } else if let Ok(value) = obj.cast::<PyBytes>() {
         rmp::encode::write_bin(out, value.as_bytes()).map_err(to_py)?;
@@ -56,7 +53,7 @@ fn write_primitive<W: Write>(obj: &Bound<'_, PyAny>, out: &mut W) -> PyResult<()
     } else if let Ok(value) = obj.cast::<pyo3::types::PyString>() {
         rmp::encode::write_str(out, value.to_str()?).map_err(to_py)?;
     } else {
-        return unsupported;
+        return Err(unsupported_type());
     }
 
     Ok(())
