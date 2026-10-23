@@ -36,11 +36,10 @@ def _normalise_bound(index: int, total_size: int) -> int:
     if total_size <= 0:
         return 0
 
-    while index < 1 - total_size:
-        index += total_size
-    while index >= 1 + total_size:
-        index -= total_size
-    return index
+    remainder = index % total_size
+    if index > 0 and remainder == 0:
+        return total_size
+    return remainder
 
 
 @lru_cache(maxsize=2**14)

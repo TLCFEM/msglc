@@ -146,8 +146,6 @@ class LazyWriter(LazyBuffer):
         self._no_more_writes: bool = False
 
     def __enter__(self):
-        increment_gc_counter()
-
         if isinstance(self._buffer_or_path, str):
             if self._fs:
                 # we need to seek to the beginning and overwrite the header
@@ -175,6 +173,8 @@ class LazyWriter(LazyBuffer):
         self._file_start = self._buffer.tell()
 
         self._toc_packer = self._toc_cls(packer=self._packer, buffer=self._buffer)
+
+        increment_gc_counter()
 
         return self
 
@@ -220,6 +220,9 @@ class LazyCombiner(LazyBuffer):
         :param packer: packer object to be used for packing the object
         :param fs: `FileSystem` object to be used for storing
         """
+        if mode not in ("a", "w"):
+            raise ValueError(f"Invalid mode: {mode!r}, expected 'a' or 'w'.")
+
         super().__init__(buffer_or_path, packer, fs)
 
         self._mode: str = mode
@@ -232,7 +235,7 @@ class LazyCombiner(LazyBuffer):
             # because for local storage we can skip the cache file
             if self._fs:
                 self._buffer = TemporaryFile()
-                if self._fs.exists(self._buffer_or_path):
+                if self._mode == "a" and self._fs.exists(self._buffer_or_path):
                     with self._fs.open(self._buffer_or_path, "rb") as s3_file:
                         _copy_obj(s3_file, self._buffer, True)
             else:
@@ -264,7 +267,7 @@ class LazyCombiner(LazyBuffer):
                 self._unseekable_upath = True
                 assert self._buffer is None
                 self._buffer = TemporaryFile()
-                if self._buffer_or_path.exists():
+                if self._mode == "a" and self._buffer_or_path.exists():
                     with self._buffer_or_path.open(
                         "rb", config.read_buffer_size
                     ) as source:

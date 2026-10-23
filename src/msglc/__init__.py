@@ -59,6 +59,9 @@ def dump(
     :param kwargs: additional keyword arguments to be passed to the `LazyWriter`, not used when 'rust' backend is used
     :return: None
     """
+    if backend not in ("python", "rust"):
+        raise ValueError(f"Invalid backend: {backend!r}, expected 'python' or 'rust'.")
+
     if isinstance(obj, LazyReader):
         obj = obj.unwrap()
 
@@ -222,6 +225,12 @@ def combine(
         'rust' for the Rust implementation.
     :return: None
     """
+    if backend not in ("python", "rust"):
+        raise ValueError(f"Invalid backend: {backend!r}, expected 'python' or 'rust'.")
+
+    if mode not in ("a", "w"):
+        raise ValueError(f"Invalid mode: {mode!r}, expected 'a' or 'w'.")
+
     if isinstance(files, FileInfo):
         files = [files]
 
