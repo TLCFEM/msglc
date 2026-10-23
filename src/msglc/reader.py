@@ -253,7 +253,6 @@ class LazyList(LazyItem):
         self._toc: list = toc.get("t", None)  # noqa # if None, it's a list of small objects
         self._pos: list = toc.get("p", None)  # noqa # if None, it comes from a combined archive
         assert self._toc or self._pos, "Invalid TOC"
-        self._index: int = 0
         self._full_loaded: bool = False
         self._size_list: list = [0]
 
@@ -342,14 +341,6 @@ class LazyList(LazyItem):
     def __iter__(self):
         for index in range(len(self)):
             yield self[index]
-
-    def __next__(self):
-        if self._index >= len(self):
-            raise StopIteration
-
-        item = self[self._index]
-        self._index += 1
-        return item
 
     def __len__(self):
         return self._len
@@ -551,11 +542,14 @@ class LazyReader(LazyItem):
         self._fs: FileSystem = fs or config.fs or LocalFileSystem()
 
         buffer: BufferReader
+        owned_buffer: bool = False
         if isinstance(self._buffer_or_path, str):
             buffer = self._fs.open(self._buffer_or_path, "rb", config.read_buffer_size)
+            owned_buffer = True
         elif isinstance(self._buffer_or_path, UPath):
             # noinspection PyTypeChecker
             buffer = self._buffer_or_path.open("rb", config.read_buffer_size)
+            owned_buffer = True
         elif isinstance(self._buffer_or_path, BufferReaderType):
             # noinspection PyTypeChecker
             buffer = self._buffer_or_path
@@ -573,32 +567,37 @@ class LazyReader(LazyItem):
         header: bytes = buffer.read(sep_c)
         buffer.seek(original_pos)
 
-        if not config.check_compatibility(header[:sep_a]):
-            raise ValueError("Invalid file format.")
+        try:
+            if not config.check_compatibility(header[:sep_a]):
+                raise ValueError("Invalid file format.")
 
-        if unpacker is None:
-            unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
-        elif (unpacker.protocol == "msgpack") != (header[sep_a] == 0):
-            if not kwargs.get("from_combined", False):
-                raise ValueError(
-                    f"The given unpacker {unpacker} does not match file protocol."
-                )
-            unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
+            if unpacker is None:
+                unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
+            elif (unpacker.protocol == "msgpack") != (header[sep_a] == 0):
+                if not kwargs.get("from_combined", False):
+                    raise ValueError(
+                        f"The given unpacker {unpacker} does not match file protocol."
+                    )
+                unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
 
-        super().__init__(
-            buffer,
-            original_pos + sep_c,
-            counter=counter,
-            cached=cached,
-            unpacker=unpacker,
-        )
+            super().__init__(
+                buffer,
+                original_pos + sep_c,
+                counter=counter,
+                cached=cached,
+                unpacker=unpacker,
+            )
 
-        toc_start: int = self._unpack(header[sep_a:sep_b].lstrip(b"\0"))
-        toc_size: int = self._unpack(header[sep_b:sep_c].lstrip(b"\0"))
+            toc_start: int = self._unpack(header[sep_a:sep_b].lstrip(b"\0"))
+            toc_size: int = self._unpack(header[sep_b:sep_c].lstrip(b"\0"))
 
-        self._obj = self._child(self._read(toc_start, toc_start + toc_size))
+            self._obj = self._child(self._read(toc_start, toc_start + toc_size))
 
-        self._raw_stats = LazyRawStats(original_pos, sep_c, toc_start, toc_size)
+            self._raw_stats = LazyRawStats(original_pos, sep_c, toc_start, toc_size)
+        except Exception:  # noqa
+            if owned_buffer:
+                buffer.close()
+            raise
 
     def __repr__(self):
         file_path: str = ""
