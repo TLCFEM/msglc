@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import bisect
+import io
 import pickle
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
@@ -37,6 +38,39 @@ from .writer import LazyWriter
 
 if TYPE_CHECKING:
     from .config import BufferReader, FileSystem
+
+
+class NPUnpickler(pickle.Unpickler):
+    """
+    Unpickler that only resolves the globals needed to restore numpy arrays.
+
+    `pickle` is not safe for untrusted input: an unrestricted unpickler can
+    import and call arbitrary callables while loading a payload. The reader
+    only uses pickle for the legacy ``numpy.ndarray.dumps`` representation, so
+    everything outside the numpy serialization machinery is rejected.
+    """
+
+    _ALLOWED_GLOBALS = frozenset(
+        {
+            ("_codecs", "encode"),
+            ("__builtin__", "bytes"),
+            ("builtins", "bytes"),
+            ("numpy", "dtype"),
+            ("numpy", "ndarray"),
+            ("numpy._core.multiarray", "_reconstruct"),
+            ("numpy._core.multiarray", "scalar"),
+            ("numpy.core.multiarray", "_reconstruct"),
+            ("numpy.core.multiarray", "scalar"),
+        }
+    )
+
+    def find_class(self, module: str, name: str) -> Any:
+        if (module, name) not in self._ALLOWED_GLOBALS:
+            raise pickle.UnpicklingError(
+                f"Unpickling of {module}.{name} is not allowed."
+            )
+
+        return super().find_class(module, name)
 
 
 def to_obj(v):
@@ -188,7 +222,7 @@ class LazyItem:
                     and b"multiarray" in data[:40]
                 ):
                     try:
-                        obj = pickle.loads(data)
+                        obj = NPUnpickler(io.BytesIO(data)).load()
                         if type(obj).__name__ == "ndarray" and type(
                             obj
                         ).__module__.startswith("numpy"):
