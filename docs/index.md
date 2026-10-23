@@ -47,8 +47,8 @@ data = {"a": [1, 2, 3], "b": {"c": 4, "d": 5, "e": [0x221548313] * 10}}
 dump("data.msg", data)
 
 with LazyReader("data.msg") as reader:
-    print(reader["b/c"])   # 4
-    print(reader["b/d"])   # 5
+    print(reader["b/c"])  # 4
+    print(reader["b/d"])  # 5
     print(list(reader.keys()))  # ['a', 'b']
 ```
 

@@ -41,6 +41,7 @@ with open("data.msg", "rb") as f:
 with LazyReader("data.msg") as reader:
     # the payload alone is valid msgpack
     from msgpack import unpackb
+
     print(unpackb(reader.protocol_raw_data(chunked=False)))  # -> {'a': [1, 2, 3]}
 ```
 
@@ -75,8 +76,8 @@ def toc_of(data, threshold):
 
 
 # primitives are leaves
-print(toc_of(2154848, 10))    # -> {'p': [0, 5]}
-print(toc_of("a string", 10)) # -> {'p': [0, 9]}
+print(toc_of(2154848, 10))  # -> {'p': [0, 5]}
+print(toc_of("a string", 10))  # -> {'p': [0, 9]}
 
 # a small dict: its children are indexed
 print(toc_of({"a": {"c": 4, "d": 5, "e": [1, 1, 1]}, "b": 2}, 10))

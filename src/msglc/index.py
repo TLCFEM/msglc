@@ -28,15 +28,14 @@ def _is_index(key: str) -> int | None:
 
 @lru_cache(maxsize=2**14)
 def normalise_index(index: int, total_size: int) -> int:
-    while index < -total_size:
-        index += total_size
-    while index >= total_size:
-        index -= total_size
-    return index
+    return 0 if total_size <= 0 else index % total_size
 
 
 @lru_cache(maxsize=2**14)
 def _normalise_bound(index: int, total_size: int) -> int:
+    if total_size <= 0:
+        return 0
+
     while index < 1 - total_size:
         index += total_size
     while index >= 1 + total_size:

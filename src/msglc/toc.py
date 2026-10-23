@@ -168,17 +168,26 @@ class TOC:
             ):
                 list_start: int = self._pos
 
+                first_item_size: int | None = None
+                uniform_item_size: bool = True
                 for v in _flexible_yield(obj):
-                    self._writeb(self._packer.encode(v))
+                    encoded = self._packer.encode(v)
+                    if first_item_size is None:
+                        first_item_size = len(encoded)
+                    elif len(encoded) != first_item_size:
+                        uniform_item_size = False
+                    self._writeb(encoded)
 
                 if self._pos < start_pos + config.small_obj_optimization_threshold:
                     return _resume_flag(_generate(start_pos))
 
-                # assuming homogeneous list
-                # compute the groups using a cheaper method
                 total_items: int = obj_len
-                item_size: int = (self._pos - list_start) // total_items
-                if item_size * total_items == self._pos - list_start:
+                item_size: int = first_item_size or 0
+                if (
+                    uniform_item_size
+                    and item_size > 0
+                    and item_size * total_items == self._pos - list_start
+                ):
                     group_size: int = min(
                         total_items,
                         config.small_obj_optimization_threshold // item_size + 1,
@@ -202,8 +211,8 @@ class TOC:
                     return _resume_flag((None, numpy_groups, False))
 
                 # size mismatch, discard encoded data and fall back to plain encoder
-                self._buffer.seek(start_pos)
-                self._pos = start_pos - self._initial_pos
+                self._buffer.seek(self._initial_pos + list_start)
+                self._pos = list_start
 
             obj_toc = [self._pack(v) for v in _flexible_yield(self._transform(obj))]
             all_small_obj = all(v[2] for v in obj_toc)

@@ -52,8 +52,8 @@ print(config.small_obj_optimization_threshold)  # -> 1048576
 from msglc.config import configure
 
 configure(write_buffer_size=2**23)  # 8 MiB
-configure(read_buffer_size=2**16)   # 64 KiB
-configure(copy_chunk_size=2**24)    # 16 MiB, used when combining
+configure(read_buffer_size=2**16)  # 64 KiB
+configure(copy_chunk_size=2**24)  # 16 MiB, used when combining
 ```
 
 ### Block size

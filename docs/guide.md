@@ -103,9 +103,9 @@ from msglc.reader import LazyReader
 dump("types.msg", {"tuple": (1, 2, 3), "set": {3, 1, 2}, "bytes": b"abc", "big": 2**63})
 with LazyReader("types.msg") as reader:
     print(reader["tuple"])  # -> [1, 2, 3]
-    print(reader["set"])    # -> [1, 2, 3]
+    print(reader["set"])  # -> [1, 2, 3]
     print(reader["bytes"])  # -> b'abc'
-    print(reader["big"])    # -> 9223372036854775808
+    print(reader["big"])  # -> 9223372036854775808
 ```
 
 !!! warning "Integers and CBOR"
@@ -150,9 +150,9 @@ It reads only the table of contents up front and defers reading the actual data 
 from msglc.reader import LazyReader
 
 with LazyReader("data.msg") as reader:
-    print(reader.read())        # -> the whole document
-    print(reader["b/c"])        # -> 4, subscripting is supported
-    print(reader.read("b/c"))   # -> 4, or use an explicit path
+    print(reader.read())  # -> the whole document
+    print(reader["b/c"])  # -> 4, subscripting is supported
+    print(reader.read("b/c"))  # -> 4, or use an explicit path
     print(reader.visit("b/c"))  # -> 4, string-only variant of `read`
 ```
 
@@ -168,8 +168,8 @@ Any intermediate node can be exposed as a lazy container.
 
 ```python
 with LazyReader("data.msg") as reader:
-    print(reader["a"])     # -> [1, 2, 3]
-    print(reader["a/0"])   # -> 1
+    print(reader["a"])  # -> [1, 2, 3]
+    print(reader["a/0"])  # -> 1
 ```
 
 Lists support negative indices and slices.
@@ -183,10 +183,10 @@ dump("large.msg", large)
 ```
 
 ```python
-with LazyReader("large.msg") as reader:   # large.msg has a 1000-element "items" list
-    print(reader["items/0"])       # -> first element
-    print(reader["items/-1"])      # -> last element
-    print(reader["items/2:5"])     # -> elements 2, 3, 4
+with LazyReader("large.msg") as reader:  # large.msg has a 1000-element "items" list
+    print(reader["items/0"])  # -> first element
+    print(reader["items/-1"])  # -> last element
+    print(reader["items/2:5"])  # -> elements 2, 3, 4
     print(reader["items/0:250:"])  # -> every 250th element: 0, 250, 500, 750
 ```
 
@@ -204,8 +204,8 @@ A lazy container mirrors the interface of `dict` or `list`.
 with LazyReader("data.msg") as reader:
     print(list(reader.keys()))  # -> ['a', 'b']
     print(reader.get("missing"))  # -> None
-    print("b" in reader)        # -> True
-    print(len(reader))          # -> 2
+    print("b" in reader)  # -> True
+    print(len(reader))  # -> 2
 ```
 
 `LazyDict` supports `get`, `keys`, `values`, `items`, `in`, `len` and iteration.
@@ -221,10 +221,10 @@ from msglc.reader import LazyReader
 
 with LazyReader("large.msg") as reader:
     root = reader.unwrap()
-    print(type(root).__name__)                # -> LazyDict
-    print(type(root["items"]).__name__)       # -> LazyList
-    print(len(root["items"]))                 # -> 1000
-    print(root["items"][7])                   # -> {'id': 7, 'payload': 'xxx...'}
+    print(type(root).__name__)  # -> LazyDict
+    print(type(root["items"]).__name__)  # -> LazyList
+    print(len(root["items"]))  # -> 1000
+    print(root["items"][7])  # -> {'id': 7, 'payload': 'xxx...'}
 ```
 
 By default each read node is cached so it is fetched at most once.
@@ -244,9 +244,9 @@ with LazyReader("data.msg", cached=False) as reader:
 from msglc.reader import LazyReader, to_obj
 
 with LazyReader("data.msg") as reader:
-    obj = reader.to_obj()          # plain dict / list / value
-    node = reader.unwrap()         # LazyDict / LazyList / value
-print(obj["a"])                    # safe after the context exits
+    obj = reader.to_obj()  # plain dict / list / value
+    node = reader.unwrap()  # LazyDict / LazyList / value
+print(obj["a"])  # safe after the context exits
 ```
 
 There is also a module-level `to_obj(value)` for converting an arbitrary lazy value.
@@ -289,8 +289,8 @@ from msglc.reader import LazyReader, async_to_obj
 
 async def main():
     with LazyReader("data.msg") as reader:
-        print(await reader.async_read("b/c"))          # -> 4
-        print((await async_to_obj(reader))["a"])       # -> [1, 2, 3]
+        print(await reader.async_read("b/c"))  # -> 4
+        print((await async_to_obj(reader))["a"])  # -> [1, 2, 3]
 
 
 asyncio.run(main())
@@ -315,8 +315,8 @@ dump("list.msg", [float(v) for v in range(1000)])
 # dict layout: {"dict": {...}, "list": [...]}
 combine("combined.msg", [FileInfo("dict.msg", "dict"), FileInfo("list.msg", "list")])
 with LazyReader("combined.msg") as reader:
-    print(reader["dict/101"])     # -> 101
-    print(reader["list/101"])     # -> 101.0
+    print(reader["dict/101"])  # -> 101
+    print(reader["list/101"])  # -> 101.0
     print(reader["dict"]["101"])  # -> 101, also reachable without a path
 ```
 
@@ -346,15 +346,15 @@ from upath import UPath
 combine(
     "combined.msg",
     [
-        FileInfo(None, obj={"k": "v"}),     # serialize an in-memory object
-        FileInfo(UPath("dict.msg")),        # a UPath
-        FileInfo(LazyReader("list.msg")),   # another reader, copied lazily
+        FileInfo(None, obj={"k": "v"}),  # serialize an in-memory object
+        FileInfo(UPath("dict.msg")),  # a UPath
+        FileInfo(LazyReader("list.msg")),  # another reader, copied lazily
     ],
 )
 with LazyReader("combined.msg") as reader:
-    print(reader[0]["k"])       # -> v
-    print(reader[1]["101"])     # -> 101
-    print(reader[2]["101"])     # -> 101.0
+    print(reader[0]["k"])  # -> v
+    print(reader[1]["101"])  # -> 101
+    print(reader[2]["101"])  # -> 101.0
 ```
 
 Each `FileInfo` may carry its own `fs=` so inputs can come from different filesystems.
@@ -372,7 +372,9 @@ from msglc.reader import LazyReader
 dump("dict.cbor", {str(v): v for v in range(1000)}, backend="rust", packer=CBORCodec)
 dump("list.msg", [float(v) for v in range(1000)], backend="rust")
 
-combine("combined.msg", [FileInfo("dict.cbor"), FileInfo("list.msg")], packer=MsgspecCodec)
+combine(
+    "combined.msg", [FileInfo("dict.cbor"), FileInfo("list.msg")], packer=MsgspecCodec
+)
 with LazyReader("combined.msg") as reader:
     print(reader[0]["101"])  # -> 101
     print(reader[1]["101"])  # -> 101.0
@@ -453,7 +455,7 @@ class Stream(dict):
         super().__init__()
         self._gen = generator
 
-    def items(self):          # only `items()` is used
+    def items(self):  # only `items()` is used
         yield from self._gen
 
 

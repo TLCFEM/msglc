@@ -66,7 +66,7 @@ pub fn build_tree(
     children: LazyContainer,
     small_obj_threshold: u64,
 ) -> LazyTOC {
-    if end_pos <= small_obj_threshold + start_pos {
+    if end_pos < small_obj_threshold + start_pos {
         return LazyTOC::Leaf {
             pos: [start_pos, end_pos],
         };
@@ -92,7 +92,7 @@ pub fn build_tree(
                 }
                 count += 1;
                 size += pos[1] - pos[0];
-                if size > small_obj_threshold || index + 1 == items.len() {
+                if size >= small_obj_threshold || index + 1 == items.len() {
                     blocks.push((count, block_start, pos[1]));
                     count = 0;
                     size = 0;

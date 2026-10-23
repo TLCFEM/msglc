@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import os.path
-from io import BufferedReader, BytesIO
+from io import IOBase
 from tempfile import TemporaryFile
 from typing import TYPE_CHECKING, cast
 
@@ -164,7 +164,7 @@ class LazyWriter(LazyBuffer):
                 self._unseekable_upath = True
                 self._buffer.close()
                 self._buffer = TemporaryFile()
-        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
+        elif isinstance(self._buffer_or_path, IOBase):
             self._buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
@@ -269,7 +269,7 @@ class LazyCombiner(LazyBuffer):
                         "rb", config.read_buffer_size
                     ) as source:
                         _copy_obj(source, self._buffer, True)
-        elif isinstance(self._buffer_or_path, (BytesIO, BufferedReader)):
+        elif isinstance(self._buffer_or_path, IOBase):
             self._buffer = self._buffer_or_path
             if self._mode == "a":
                 # need to read the header anyway

@@ -82,6 +82,8 @@ class LazyStats:
         return self._read_counter
 
     def bytes_per_call(self):
+        if self._call_counter == 0:
+            return 0.0
         return self._read_counter / self._call_counter
 
     def clear(self):
@@ -182,9 +184,17 @@ class LazyItem:
             ):
                 if (
                     isinstance(data := self._read(*child_pos), bytes)
+                    and data.startswith(b"\x80")
                     and b"multiarray" in data[:40]
                 ):
-                    return pickle.loads(data)
+                    try:
+                        obj = pickle.loads(data)
+                        if type(obj).__name__ == "ndarray" and type(
+                            obj
+                        ).__module__.startswith("numpy"):
+                            return obj
+                    except Exception:  # noqa
+                        pass
                 return data
 
             # {"p": [[size1, start_pos, end_pos], [size2, start_pos, end_pos], [size3, start_pos, end_pos]]}
@@ -330,8 +340,8 @@ class LazyList(LazyItem):
         return result
 
     def __iter__(self):
-        self._index = 0
-        return self
+        for index in range(len(self)):
+            yield self[index]
 
     def __next__(self):
         if self._index >= len(self):
