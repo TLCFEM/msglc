@@ -125,6 +125,7 @@ def configure(
             If enabled, the `numpy` arrays will be encoded using the `dumps` method provided by `numpy`.
             The arrays are stored as binary data directly.
             If disabled, the `numpy` arrays will be converted to lists before encoding.
+            WARNING: If enabled, decoding the binary blob calls `pickle.loads` which is NOT safe.
     :param numpy_fast_int_pack:
             If enabled, the integer numpy array will be packed assuming each element has identical size (4 or 8 bytes).
             This improves the performance of packing by avoiding the overhead of checking the size of each element.
