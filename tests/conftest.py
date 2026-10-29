@@ -23,6 +23,13 @@ from generate import generate_random_json
 from msglc.config import configure
 
 
+# https://github.com/ionelmc/pytest-benchmark/issues/321
+def pytest_collection_modifyitems(items):
+    for item in items:
+        if not hasattr(item, "_nodeid"):
+            item._nodeid = item.nodeid
+
+
 @pytest.fixture(scope="session", autouse=True)
 def msglc_config():
     configure(disable_gc=True)
