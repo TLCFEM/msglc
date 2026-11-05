@@ -118,7 +118,6 @@ class LazyItem:
     def __str__(self):
         return self.to_obj().__str__()
 
-    # noinspection SpellCheckingInspection
     def _readb(self, start: int, end: int) -> bytes:
         """
         Read `size` bytes.
@@ -134,7 +133,6 @@ class LazyItem:
 
         return self._buffer.read(size)
 
-    # noinspection SpellCheckingInspection
     def _chunked_readb(self, start: int, end: int):
         """
         Read `size` bytes in chunked fashion.
@@ -547,11 +545,9 @@ class LazyReader(LazyItem):
             buffer = self._fs.open(self._buffer_or_path, "rb", config.read_buffer_size)
             owned_buffer = True
         elif isinstance(self._buffer_or_path, UPath):
-            # noinspection PyTypeChecker
             buffer = self._buffer_or_path.open("rb", config.read_buffer_size)
             owned_buffer = True
         elif isinstance(self._buffer_or_path, BufferReaderType):
-            # noinspection PyTypeChecker
             buffer = self._buffer_or_path
         else:
             raise ValueError("Expecting a buffer or path.")
@@ -628,7 +624,6 @@ class LazyReader(LazyItem):
         return len(self._obj)
 
     def __contains__(self, item):
-        # noinspection PyUnresolvedReferences
         return item in self._obj
 
     def get(self, key, default=None):
