@@ -14,9 +14,11 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 mod cbor;
+mod cycle;
 mod msgpack;
 pub mod utility;
 use cbor::dump_rust_impl_cbor;
+use cycle::has_cycle_rust_impl;
 use msgpack::dump_rust_impl_msgpack;
 use pyo3::prelude::*;
 
@@ -24,5 +26,6 @@ use pyo3::prelude::*;
 fn msglc_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(dump_rust_impl_cbor, m)?)?;
     m.add_function(wrap_pyfunction!(dump_rust_impl_msgpack, m)?)?;
+    m.add_function(wrap_pyfunction!(has_cycle_rust_impl, m)?)?;
     Ok(())
 }

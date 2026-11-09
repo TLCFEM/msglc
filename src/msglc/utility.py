@@ -20,8 +20,26 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
+from .msglc_rust import has_cycle_rust_impl
+
 if TYPE_CHECKING:
     from io import BytesIO
+
+
+def has_cycle(obj) -> bool:
+    """
+    Return `True` if the given object contains a circular reference.
+
+    Only standard containers (`Mapping`, `list`, `tuple`, `set` and `frozenset`)
+    are traversed. Shared references that do not form a cycle are allowed.
+
+    This is an optional utility. `dump` does not check for cycles by default, so
+    users can decide whether the additional traversal is worth the overhead.
+
+    :param obj: the object to inspect
+    :return: `True` if a cycle is found, `False` otherwise
+    """
+    return has_cycle_rust_impl(obj)
 
 
 class MockIO:
