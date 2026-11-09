@@ -797,16 +797,12 @@ class LazyReader(LazyItem):
         this method extract the target child archive out, more or less like a reverse of combining.
 
         """
-        if not chunked:
-            return self._readb(
-                -self._raw_stats.header_size,
-                self._raw_stats.data_size + self._raw_stats.toc_size,
-            )
+        callee = self._chunked_readb if chunked else self._readb
 
         # because the archive can be recursively combined
         # it will be wrong to simply consume the buffer till its end
         # thus we do the math independently by counting the bytes
-        return self._chunked_readb(
+        return callee(
             -self._raw_stats.header_size,
             self._raw_stats.data_size + self._raw_stats.toc_size,
         )
@@ -819,7 +815,6 @@ class LazyReader(LazyItem):
         If `chunked=True`, returns a generator that can be consumed.
         If `chunked=False`, returns the whole bytes stream.
         """
-        if not chunked:
-            return self._readb(0, self._raw_stats.data_size)
+        callee = self._chunked_readb if chunked else self._readb
 
-        return self._chunked_readb(0, self._raw_stats.data_size)
+        return callee(0, self._raw_stats.data_size)
