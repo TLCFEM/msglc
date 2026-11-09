@@ -279,22 +279,20 @@ class LazyList(LazyItem):
     def _all(self, start: int, end: int) -> list:
         return list(self._unpacker.stream_decode(self._readb(start, end)))
 
-    def __getitem__(self, index):
+    def __getitem__(self, key):
         index_range: list | range
-        if isinstance(index, str):
+        if isinstance(key, str):
             try:
-                index_range = [int(index)]
+                index_range = [int(key)]
             except ValueError as err:
                 # noinspection PyStringConversionWithoutDunderMethod
-                raise TypeError(
-                    f"Invalid type: {type(index)} for index {index}."
-                ) from err
-        elif isinstance(index, slice):
-            index_range = range(*index.indices(len(self)))
-        elif isinstance(index, int):
-            index_range = [index]
+                raise TypeError(f"Invalid type: {type(key)} for index {key}.") from err
+        elif isinstance(key, slice):
+            index_range = range(*key.indices(len(self)))
+        elif isinstance(key, int):
+            index_range = [key]
         else:
-            raise TypeError(f"Invalid type: {type(index)} for index {index}.")
+            raise TypeError(f"Invalid type: {type(key)} for index {key}.")
 
         if self._cached:
             for item in index_range:
@@ -316,7 +314,7 @@ class LazyList(LazyItem):
                         )
 
             # noinspection PyTypeChecker
-            return self._cache[index]
+            return self._cache[key]
 
         for item in index_range:
             item = normalise_index(item, len(self))
@@ -332,7 +330,7 @@ class LazyList(LazyItem):
                 self._cache[num_start:num_end] = self._all(*self._pos[lookup_index][1:])
 
         # noinspection PyTypeChecker
-        result = self._cache[index]
+        result = self._cache[key]
         self._cache = [None] * len(self)
         return result
 
@@ -571,6 +569,7 @@ class LazyReader(LazyItem):
                 unpacker = MsgspecCodec if header[sep_a] == 0 else CBORCodec
             elif (unpacker.protocol == "msgpack") != (header[sep_a] == 0):
                 if not kwargs.get("from_combined", False):
+                    # noinspection string-conversion-without-dunder-method
                     raise ValueError(
                         f"The given unpacker {unpacker} does not match file protocol."
                     )
@@ -617,8 +616,8 @@ class LazyReader(LazyItem):
         if isinstance(self._buffer_or_path, (str, UPath)):
             self._buffer.close()
 
-    def __getitem__(self, item):
-        return self.read(item)
+    def __getitem__(self, key):
+        return self.read(key)
 
     def __len__(self):
         return len(self._obj)
